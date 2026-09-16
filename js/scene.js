@@ -274,8 +274,28 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   const hub2 = byDist(C, plain).at(-1)
   for (const t of byDist(hub2, plain.filter((s) => s !== hub2)).slice(0, mobile ? 3 : 4)) buildLane(hub2, t, { col: 0xe8cf8f, r: 0.12, opacity: 0.3, bow: 4, speed: 4.5 + rnd() * 2 })
 
-  // D: alert tiers cycling green → amber → red (never gold: colour means tier here)
-  D._tint = new THREE.Color(TIER.ok); D._noGold = true
+  // D: traceability — every action leaves a record. A ledger of thin plates stacks up beside the
+  // cube, each new record flying over as a light dot; a ring of time ticks turns around the cube.
+  const D_AZ = -1.2
+  const ledger = (() => {
+    D._tint = new THREE.Color(0x8fd4ff); D._noGold = true
+    const dx = Math.cos(D_AZ), dz = -Math.sin(D_AZ)
+    const N = 14, plates = []
+    const grp = new THREE.Group(); scene.add(grp)
+    const pg = track(new THREE.BoxGeometry(SQ * 0.9, 0.11, SQ * 0.9))
+    for (let i = 0; i < N; i++) {
+      const m = new THREE.Mesh(pg, track(new THREE.MeshStandardMaterial({ color: 0xe8cf8f, emissive: 0xe8cf8f, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.3, transparent: true, opacity: 0 })))
+      m.position.y = 0.06 + i * 0.17; grp.add(m); plates.push(m)
+    }
+    const dot = new THREE.Mesh(track(new THREE.SphereGeometry(0.22, 10, 8)), track(new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })))
+    scene.add(dot)
+    const tp = []
+    for (let i = 0; i < 48; i++) { const a = (i / 48) * Math.PI * 2, r0 = SQ * 1.25, r1 = r0 + (i % 4 ? 0.22 : 0.45); tp.push(Math.cos(a) * r0, 0, Math.sin(a) * r0, Math.cos(a) * r1, 0, Math.sin(a) * r1) }
+    const tg = track(new THREE.BufferGeometry()); tg.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3))
+    const ring = new THREE.LineSegments(tg, track(new THREE.LineBasicMaterial({ color: 0x8fd4ff, transparent: true, opacity: 0.4 })))
+    ring.position.set(D.x, 0.12, D.z); scene.add(ring)
+    return { grp, plates, dot, ring, dir: [dx, dz], N }
+  })()
 
   // E ↔ F: light points travelling along an arc between two cubes
   const EF = { curve: null, dots: [], line: null }
@@ -403,7 +423,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     { target: at(B).add(new THREE.Vector3(0, 3, 0)), dist: 30, pol: 1.1, az: -0.6, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(C.x, 3, C.z), dist: 42, pol: 1.0, az: 0.9, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(H.x + Math.cos(H_AZ) * 3.2, HOVER * 0.6, H.z - Math.sin(H_AZ) * 3.2), dist: 26, pol: 1.02, az: H_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
-    { target: at(D), dist: 22, pol: 1.05, az: -1.2, spin: 0, dim: 0, closeup: true, off: 1 },
+    { target: new THREE.Vector3(D.x + Math.cos(D_AZ) * 2.6, HOVER * 0.7, D.z - Math.sin(D_AZ) * 2.6), dist: 26, pol: 1.05, az: D_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(A), dist: 22, pol: 1.05, az: 0.5, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: mid, dist: Math.max(34, dEF * 1.3), pol: 1.08, az: 0.3, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(G), dist: 22, pol: 1.0, az: 2.2, spin: 0, dim: 0, closeup: true, off: 1 },
@@ -453,15 +473,10 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       if (s === A) lv = 0.3
       else if (s === H) lv = 0.5
       else if (s === B) { const ph = (el / 7) % 1; lv = ph < 0.8 ? smooth(ph / 0.8) : 1 - smooth((ph - 0.8) / 0.2) }
-      else if (s === D) {
-        const ph = (el / 4.8) % 1, st = ph < 0.4 ? 0 : ph < 0.7 ? 1 : 2
-        const col = [TIER.ok, TIER.warn, TIER.bad][st]
-        s._tint.lerp(new THREE.Color(col), Math.min(1, dt * 6))
-        if (st === 2 && s._lastSt !== 2) ripple(s.x, s.z, TIER.bad, 0.5)
-        s._lastSt = st; lv = 0.45
-      } else lv = reduced ? 0.4 : 0.5 + 0.5 * Math.sin(el * s._speed + s._phase) * (0.6 + 0.4 * Math.sin(el * 0.11 + s._phase * 2))
+      else if (s === D) lv = 0.4
+      else lv = reduced ? 0.4 : 0.5 + 0.5 * Math.sin(el * s._speed + s._phase) * (0.6 + 0.4 * Math.sin(el * 0.11 + s._phase * 2))
       applyLevel(s, clamp01(lv), s._tint)
-      if (s === D) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.12 + (s._lastSt === 2 ? 0.2 : 0) }
+      if (s === D) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.1 + 0.06 * Math.sin(el * 2.4) }
       if (s === H) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.14 }
       if (s === A && !reduced) {
         const ph = (el + s._phase) % period
@@ -482,6 +497,28 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       const st = s._stem.geometry.attributes.position; st.setY(1, (HOVER - SQ / 2 + bob) * sc); st.needsUpdate = true; s._stem.material.opacity = 0.22 * born
       s._shadow.scale.setScalar(sc * born); s._shadow.material.opacity = (0.9 - bob * 0.4) * born
       const ls = Math.max(0.5, sc); s._label.scale.setScalar(ls); s._label.position.x = (SQ / 2 + LABEL_W / 2 + 1) * ls; s._label.material.opacity = born
+    }
+    // D: records fly from the cube onto the ledger; the stack fills, holds, then clears; tick ring turns
+    {
+      const cyc = 10, ph = reduced ? 0.7 : (el / cyc) % 1
+      const slots = ledger.N + 2, prog = ph * slots
+      const filled = Math.min(ledger.N, Math.floor(prog)), frac = prog - Math.floor(prog)
+      const clear = smooth((ph - 0.9) / 0.1)
+      const [ldx, ldz] = ledger.dir
+      ledger.grp.position.set(D.x + ldx * SQ * 2.2 * sc, 0.1, D.z + ldz * SQ * 2.2 * sc); ledger.grp.scale.setScalar(sc)
+      ledger.plates.forEach((m, i) => {
+        m.material.opacity = (i < filled ? 0.85 : 0) * (1 - clear)
+        m.material.emissiveIntensity = i === filled - 1 ? 0.5 + 0.9 * (1 - frac) : 0.5
+      })
+      const flying = filled < ledger.N && ph < 0.9
+      ledger.dot.material.opacity = flying ? Math.sin(frac * Math.PI) * 0.95 : 0
+      if (flying) {
+        const top = new THREE.Vector3(ledger.grp.position.x, 0.1 + (0.06 + filled * 0.17) * sc, ledger.grp.position.z)
+        ledger.dot.position.set(D.x, (HOVER + SQ * 0.4) * sc, D.z).lerp(top, smooth(frac)); ledger.dot.position.y += Math.sin(frac * Math.PI) * 1.4 * sc
+      }
+      ledger.dot.scale.setScalar(Math.max(0.5, sc))
+      ledger.ring.scale.setScalar(sc); ledger.ring.rotation.y = reduced ? 0 : el * 0.12
+      ledger.ring.material.opacity = 0.25 + 0.2 * Math.sin(el * 2.4)
     }
     // H: ghost cubes materialise outward (forecast), hold, dissolve; scan plane sweeps; particles rise
     {

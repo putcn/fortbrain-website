@@ -33,9 +33,9 @@ export const TEXTS = {
       body: '预测引擎洞察到每一个 SKU、每一家店，给出最实际、最不绕弯子的决定：调多少货、什么时候补、哪家店该盯。',
     },
     p4: {
-      label: '04 · 省掉值守',
-      title: '异常自己找上门，不用人值守',
-      body: '告警分四级：L0 静默记录，L1 / L2 通知，L3 告警，L4 让助理主动开会话要确认。该响的响，不该响的不响，没有人需要整天盯着屏幕。',
+      label: '04 · 有迹可循',
+      title: '每一个动作、每一分消耗，都有迹可循',
+      body: 'AI 做过什么、为什么做、花了多少：每一次调用、每一条决定、每一笔 token 消耗都记录在案，可查、可审、可回放。授权到人，撤销即失效。这才是企业敢放心交出去的 AI。',
     },
     p1: {
       label: '05 · 人只做决定',
@@ -50,7 +50,7 @@ export const TEXTS = {
     p6: {
       label: '07 · 不换系统',
       title: '不用推翻现有系统，第一天就开始省',
-      body: 'POS、爬虫、外部系统按统一的 Addon 协议接进来，核心代码零改动；授权到人，撤销即失效。不换系统、不停业，人效从接入那天起就开始涨。',
+      body: 'POS、爬虫、外部系统按统一的 Addon 协议接进来，核心代码零改动。不换系统、不停业，人效从接入那天起就开始涨。',
     },
     result: '同样的人，管更多的店；同样的店，用更少的人。',
     answer: '<em>Fortbrain</em> 就是我们的回答。',
@@ -109,9 +109,9 @@ export const TEXTS = {
       body: 'A forecast engine with insight down to every SKU and every store, giving the most practical, no-detour decision: how much to move, when to reorder, which store needs attention.',
     },
     p4: {
-      label: '04 · No more standing watch',
-      title: 'Problems come to you, nobody stands watch',
-      body: 'Alerts have four tiers: L0 logged silently, L1 / L2 notify, L3 alerts, L4 makes the assistant open a conversation and demand confirmation. What should ring, rings; nobody stares at a screen all day.',
+      label: '04 · Fully traceable',
+      title: 'Every action and every cost leaves a trail',
+      body: 'What the AI did, why, and what it cost: every call, every decision and every token spent is on record, searchable, auditable, replayable. Access is granted per person and gone the moment it is revoked. That is what makes an AI a company can trust with real work.',
     },
     p1: {
       label: '05 · People only decide',
@@ -126,7 +126,7 @@ export const TEXTS = {
     p6: {
       label: '07 · Keep your systems',
       title: 'Keep the systems you have; start saving on day one',
-      body: 'POS, crawlers and external systems attach through one Addon protocol; the core never changes. Access is granted per person and gone the moment it is revoked. No migration, no downtime: output per person rises from the day you plug in.',
+      body: 'POS, crawlers and external systems attach through one Addon protocol; the core never changes. No migration, no downtime: output per person rises from the day you plug in.',
     },
     result: 'The same people run more stores. The same stores need fewer people.',
     answer: '<em>Fortbrain</em> is our answer.',
