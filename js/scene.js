@@ -42,6 +42,13 @@ void main(){vec2 uv=vUv;float t=uTime;float s=uSeed;
  float edge=smoothstep(0.,.12,uv.x)*smoothstep(1.,.88,uv.x)*smoothstep(0.,.12,uv.y)*smoothstep(1.,.88,uv.y);
  gl_FragColor=vec4(col*edge*uOpacity,1.);}`
 const auroraVert = `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`
+// Light pulse sliding along a TubeGeometry (uv.x runs along the curve): bright head, tail fading
+// behind it, faded in/out at the lane's ends so it never pops. Two pulses per lane, half a lap apart.
+const pulseFrag = `uniform float uHead,uLen,uAlpha;uniform vec3 uColor;varying vec2 vUv;
+float pulse(float d){float tail=smoothstep(-uLen,0.,d)*(1.-smoothstep(0.,.015,d));return tail*tail*tail;}
+void main(){float x=vUv.x;float g=pulse(x-uHead)+pulse(x-uHead+1.)+.55*pulse(x-fract(uHead+.5))+.55*pulse(x-fract(uHead+.5)+1.);
+ float ends=smoothstep(0.,.05,x)*smoothstep(1.,.95,x);float rim=.65+.35*sin(vUv.y*6.2831);
+ gl_FragColor=vec4(uColor*g*ends*rim*uAlpha,1.);}`
 
 const ease = (k) => 1 - Math.pow(1 - k, 3)
 const clamp01 = (x) => Math.max(0, Math.min(1, x))
@@ -248,11 +255,13 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     tube.position.y = 0.35; scene.add(tube)
     const halo = new THREE.Mesh(track(new THREE.TubeGeometry(curve, 48, r * 2.5, 8, false)), track(new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.07 * (opacity / 0.55), blending: THREE.AdditiveBlending, depthWrite: false })))
     halo.position.y = 0.35; scene.add(halo)
-    const SEG = 96, RAD = 8, ring = RAD * 6
-    const flow = new THREE.Mesh(track(new THREE.TubeGeometry(curve, SEG, r * 1.5, RAD, false)), track(new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })))
+    const flow = new THREE.Mesh(track(new THREE.TubeGeometry(curve, 120, r * 2.2, 8, false)), track(new THREE.ShaderMaterial({
+      vertexShader: auroraVert, fragmentShader: pulseFrag,
+      uniforms: { uHead: { value: rnd() }, uLen: { value: 0.16 }, uAlpha: { value: 1.6 }, uColor: { value: new THREE.Color(col) } },
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+    })))
     flow.position.y = 0.35; scene.add(flow)
-    const total = ring * SEG, win = ring * 6; flow.geometry.setDrawRange(0, win)
-    lanes.push({ flow, total, win, ring, u: rnd(), speed })
+    lanes.push({ flow, speed })
   }
   buildLane(tankMain, tankL); buildLane(tankMain, tankR)
 
@@ -440,7 +449,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     }
     // tanks: liquid levels drift; lanes flow
     for (const tk of tanks) setLevel(tk, reduced ? 0.55 : 0.5 + 0.42 * Math.sin(el * 0.23 + tk.phase))
-    for (const ln of lanes) { ln.u = (ln.u + (reduced ? 0 : dt / (ln.speed || 3.4))) % 1; ln.flow.geometry.setDrawRange(Math.floor(((ln.total - ln.win) * ln.u) / ln.ring) * ln.ring, ln.win) }
+    for (const ln of lanes) { const h = ln.flow.material.uniforms.uHead; h.value = (h.value + (reduced ? 0 : dt / ln.speed)) % 1 }
     // message dots on the communication links
     for (const d of comm.dots) {
       if (!d.link) {
