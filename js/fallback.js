@@ -45,7 +45,7 @@ export function create(canvas, { mobile = false, reduced = false } = {}) {
     octx.globalCompositeOperation = 'source-over'
     octx.clearRect(0, 0, w, h)
     octx.globalCompositeOperation = 'lighter'
-    const count = 1 + Math.floor(p * 3.2), strength = 0.3 + 0.7 * p
+    const count = 1 + Math.floor(p * 3.2), strength = 0.45 + 0.75 * p
     for (let b = 0; b < Math.min(count, BANDS.length); b++) {
       const band = BANDS[b], strip = strips[b]
       octx.globalAlpha = strength * (b === count - 1 ? Math.min(1, ((p * 3.2) % 1) + 0.35) : 1) * 0.55
@@ -60,8 +60,11 @@ export function create(canvas, { mobile = false, reduced = false } = {}) {
       }
     }
     ctx.globalCompositeOperation = 'source-over'
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.fillStyle = '#050b18'; ctx.fillRect(0, 0, W, H)
     ctx.imageSmoothingEnabled = true
+    // tilt the curtain so it pours from the top-left to the bottom-right (same as the 3D finale)
+    ctx.translate(W / 2, H / 2); ctx.rotate(0.5); ctx.scale(1.6, 1.6); ctx.translate(-W / 2, -H / 2)
     ctx.drawImage(off, 0, 0, W, H)
   }
   return { setProgress, tick, resize, dispose() {} }

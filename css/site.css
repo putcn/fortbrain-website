@@ -83,7 +83,7 @@ h2 {
 .hint::after { content: ""; display: block; width: 1px; height: 36px; margin-top: 14px; background: linear-gradient(rgba(227,241,255,.5), transparent); }
 @keyframes hint { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
 
-.s-end .copy { max-width: 720px; }
+.s-end .copy { max-width: 860px; }
 .answer { font-size: clamp(1.8rem, 3.6vw, 2.8rem); font-weight: 300; }
 .answer em { font-style: normal; font-weight: 500; color: var(--gold); }
 .contact { margin-top: 28px; font-family: var(--mono); font-size: 13px; letter-spacing: .06em; color: var(--dim) !important; }
@@ -155,13 +155,13 @@ h2 {
     padding: 0 20px 14svh;
     background: linear-gradient(transparent 35%, rgba(5, 11, 24, .82) 62%, rgba(5, 11, 24, .92));
   }
-  .s-hero .copy { justify-content: center; background: none; }
+  .s-hero .copy { justify-content: center; background: none; text-shadow: 0 2px 24px rgba(5, 11, 24, .9), 0 0 6px rgba(5, 11, 24, .8); }
   .copy p { max-width: none; }
   .hint { margin-top: 40px; }
   .brand { left: 20px; bottom: 16px; }
   #langBtn { top: 14px; right: 14px; }
   #layers { perspective: 1100px; perspective-origin: 50% 30%; }
-  #layers .stage { transform: translate(6vw, -22svh) scale(.5) rotateX(58deg) rotateZ(-45deg); }
+  #layers .stage { transform: translate(-14vw, -16svh) scale(.42) rotateX(58deg) rotateZ(-45deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {

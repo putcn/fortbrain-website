@@ -35,11 +35,11 @@ const auroraFrag = `uniform float uTime,uOpacity,uSeed;varying vec2 vUv;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<OCT;i++){v+=a*noise(p);p*=2.1;a*=.5;}return v;}
-float band(vec2 uv,float y,float w,float seed,float t){float c=y+(fbm(vec2(uv.x*2.2+t*.06,seed))-.5)*.35;float d=abs(uv.y-c);float f=fbm(vec2(uv.x*7.-t*.12,seed+3.))*.7+.3;return smoothstep(w,0.,d)*f;}
+float band(vec2 uv,float y,float w,float seed,float t){float c=y+(fbm(vec2(uv.x*2.2-t*.22,seed))-.5)*.35;float d=abs(uv.y-c);float up=1.-smoothstep(0.,w,d);up*=up;float f=fbm(vec2(uv.x*7.-t*.12,seed+3.))*.7+.3;float fil=.55+.45*noise(vec2(uv.x*140.+t*2.,seed*9.));float fil2=.6+.4*noise(vec2(uv.x*38.-t*.8,seed*5.));return up*f*fil*fil2;}
 void main(){vec2 uv=vUv;float t=uTime;float s=uSeed;
- vec3 col=vec3(.37,.88,1.)*band(uv,.42,.16,1.3+s,t)+vec3(.62,.55,1.)*band(uv,.55,.14,7.1+s,t)+vec3(.91,.81,.56)*band(uv,.68,.11,3.7+s,t)*.8+vec3(.37,.88,1.)*band(uv,.3,.12,11.9+s,t)*.7;
- col*=smoothstep(0.,.35,uv.y);
- float edge=smoothstep(0.,.18,uv.x)*smoothstep(1.,.82,uv.x)*smoothstep(0.,.15,uv.y)*smoothstep(1.,.85,uv.y);
+ vec3 col=vec3(.30,.85,1.)*band(uv,.40,.13,1.3+s,t)+vec3(.60,.45,1.)*band(uv,.55,.12,7.1+s,t)*1.15+vec3(.95,.80,.45)*band(uv,.69,.10,3.7+s,t)*.95+vec3(.30,.85,1.)*band(uv,.25,.10,11.9+s,t)*.75;
+ col*=.75;
+ float edge=smoothstep(0.,.12,uv.x)*smoothstep(1.,.88,uv.x)*smoothstep(0.,.12,uv.y)*smoothstep(1.,.88,uv.y);
  gl_FragColor=vec4(col*edge*uOpacity,1.);}`
 const auroraVert = `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`
 
@@ -287,22 +287,22 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   }
 
   // ── aurora: the noise shader is rendered once per frame into a small offscreen texture
-  // (full-screen fbm on three big planes was fill-rate bound); three vertical curtains on the
-  // northern horizon just sample that texture, mirrored / tinted so they don't read as copies.
-  const auroraRT = track(new THREE.WebGLRenderTarget(mobile ? 384 : 640, mobile ? 128 : 224, { depthBuffer: false }))
+  // (full-screen fbm on a huge plane was fill-rate bound). One flat plane hangs over the city,
+  // turned 45° so its bands pour from the top-left of the screen to the bottom-right like a river;
+  // the camera sits above it and looks down through it at the map (additive, so the city shows).
+  const auroraRT = track(new THREE.WebGLRenderTarget(mobile ? 512 : 1024, mobile ? 256 : 512, { depthBuffer: false }))
   const auroraMat = track(new THREE.ShaderMaterial({
     vertexShader: auroraVert, fragmentShader: auroraFrag.replace('OCT', mobile ? '3' : '4'),
     uniforms: { uTime: { value: 0 }, uOpacity: { value: 1 }, uSeed: { value: 0 } }, depthTest: false, depthWrite: false,
   }))
   const auroraScene = new THREE.Scene(), auroraCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
   auroraScene.add(new THREE.Mesh(track(new THREE.PlaneGeometry(2, 2)), auroraMat))
-  const auroras = []
-  for (const [z, w, h, y0, gain, flip, tint] of [[-620, 1500, 380, 40, 0.55, 1, 0xffffff], [-780, 1900, 460, 60, 0.4, -1, 0xcfd6ff], [-940, 2300, 520, 80, 0.3, 1, 0xbfefff]]) {
-    const m = new THREE.Mesh(track(new THREE.PlaneGeometry(w, h)), track(new THREE.MeshBasicMaterial({
-      map: auroraRT.texture, color: tint, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false,
-    })))
-    m.position.set(0, y0 + h / 2, z); m.scale.x = flip; m.visible = false; m.userData.gain = gain; scene.add(m); auroras.push(m)
-  }
+  const aurora = new THREE.Mesh(track(new THREE.PlaneGeometry(1100, 520)), track(new THREE.MeshBasicMaterial({
+    map: auroraRT.texture, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false,
+  })))
+  // Euler XYZ: the Z turn happens in the plane's own space first, then X lays it flat, so the
+  // band direction (local +x) ends up along world (+x, +z): screen top-left → bottom-right at az≈0.
+  aurora.rotation.set(-Math.PI / 2, 0, -Math.PI / 4); aurora.position.set(0, 110, 0); aurora.visible = false; scene.add(aurora)
 
   // ── camera keyframes per stage
   const at = (s) => new THREE.Vector3(s.x, HOVER, s.z)
@@ -311,14 +311,14 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   const KEYS = [
     { target: new THREE.Vector3(0, 0, 0), dist: 300, pol: 0.95, az: 0, spin: 0.045, dim: 0, closeup: true, off: 0.7 },
     { target: new THREE.Vector3(0, 0, 0), dist: 230, pol: 0.85, az: 0.8, spin: 0.045, dim: 0, closeup: true, off: 0.7 },
-    { target: new THREE.Vector3(0, 0, 0), dist: 480, pol: 0.55, az: 1.6, spin: 0.045, dim: 0.62, closeup: false, off: 0 },
+    { target: new THREE.Vector3(0, 0, 0), dist: 480, pol: 0.55, az: 1.6, spin: 0.045, dim: 0.5, closeup: false, off: 0 },
     { target: at(A), dist: 22, pol: 1.05, az: 0.5, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(B).add(new THREE.Vector3(0, 3, 0)), dist: 30, pol: 1.1, az: -0.6, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(C.x, 3, C.z), dist: 42, pol: 1.0, az: 0.9, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(D), dist: 22, pol: 1.05, az: -1.2, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: mid, dist: Math.max(34, dEF * 1.3), pol: 1.08, az: 0.3, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(G), dist: 22, pol: 1.0, az: 2.2, spin: 0, dim: 0, closeup: true, off: 1 },
-    { target: new THREE.Vector3(0, 110, -160), dist: 560, pol: 1.38, az: 0.12, spin: 0, dim: 0, closeup: false, off: 0 },
+    { target: new THREE.Vector3(0, 0, 0), dist: 340, pol: 0.95, az: 0.25, spin: 0.02, dim: 0, closeup: true, off: 0.45 },
   ]
   if (mobile) for (const k of KEYS) k.dist *= 1.35
   const cur = { target: KEYS[0].target.clone(), dist: KEYS[0].dist, pol: KEYS[0].pol, az: KEYS[0].az, dim: 0, off: 0 }
@@ -371,6 +371,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
         s._lastSt = st; lv = 0.45
       } else lv = reduced ? 0.4 : 0.5 + 0.5 * Math.sin(el * s._speed + s._phase) * (0.6 + 0.4 * Math.sin(el * 0.11 + s._phase * 2))
       applyLevel(s, clamp01(lv), s._tint)
+      if (s === D) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.12 + (s._lastSt === 2 ? 0.2 : 0) }
       if (s === A && !reduced) {
         const ph = (el + s._phase) % period
         const boost = ph < 0.25 ? ph / 0.25 : Math.max(0, 1 - (ph - 0.25) / 1.4)
@@ -420,9 +421,9 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     const auroraT = stageK === STAGES.length - 1 ? smooth(stageU / 0.6) : stageK === STAGES.length - 2 ? smooth((stageU - 0.7) / 0.3) * 0.3 : 0
     if (auroraT > 0.001) {
       auroraMat.uniforms.uTime.value = reduced ? 0 : el * 0.35
-      renderer.setRenderTarget(auroraRT); renderer.render(auroraScene, auroraCam); renderer.setRenderTarget(null)
+      renderer.setRenderTarget(auroraRT); renderer.setClearColor(0x000000, 0); renderer.render(auroraScene, auroraCam); renderer.setRenderTarget(null)
     }
-    for (const a of auroras) { a.visible = auroraT > 0.001; a.material.opacity = auroraT * a.userData.gain }
+    aurora.visible = auroraT > 0.001; aurora.material.opacity = auroraT * 0.75
 
     renderer.render(scene, camera)
   }
