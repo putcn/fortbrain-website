@@ -163,7 +163,11 @@ h2 {
   .brand { left: 20px; bottom: 16px; }
   #langBtn { top: 14px; right: 14px; }
   #layers { perspective: 1100px; perspective-origin: 50% 30%; }
-  #layers .stage { transform: translate(-14vw, -16svh) scale(.42) rotateX(58deg) rotateZ(-45deg); }
+  /* phones: pull the three layers closer together, scale the stage by viewport width and
+     keep it centred above the copy (the copy takes the bottom ~45% of the screen) */
+  #layers .stage { transform: translate(-18vw, -22svh) scale(var(--stage-scale, .45)) rotateX(58deg) rotateZ(-45deg); }
+  .layer.list { left: 150px; top: 40px; }
+  .layer.main { left: 380px; top: 70px; width: 440px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

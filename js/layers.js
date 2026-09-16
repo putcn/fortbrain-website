@@ -19,6 +19,10 @@ const easeIn = (x) => x * x * x
 export function createLayers(root, { reduced = false } = {}) {
   const layers = [...root.querySelectorAll('.layer')]
   let shown = false, k = -1, u = 0
+  // phones: the stage is a fixed 1040px design, so scale it by viewport width (CSS can't divide
+  // a length into a plain number for scale(), hence the variable set from here)
+  const fit = () => root.style.setProperty('--stage-scale', Math.min(0.6, window.innerWidth / 1050).toFixed(3))
+  fit(); window.addEventListener('resize', fit)
   const show = (v) => { if (v !== shown) { shown = v; root.classList.toggle('show', v) } }
 
   function setProgress(stage, prog) { k = stage; u = prog }
