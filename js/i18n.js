@@ -51,6 +51,8 @@ export const TEXTS = {
     contactPre: 'Demo 与细节，请联系',
     ui: {
       brand: 'Fortbrain',
+      storeWord: '门店',
+      storeSub: '今日 · 演示数据',
       nav: ['今日概览', '私人助理', '沟通', '项目', '日历', '通知', '数据告警', '组织', '知识库', '零售', '销售大屏', '仓储物流大屏'],
       tabs: ['我的对话', '助理之间'],
       search: '搜索对话…',
@@ -118,6 +120,8 @@ export const TEXTS = {
     contactPre: 'For a demo and details, contact',
     ui: {
       brand: 'Fortbrain',
+      storeWord: 'Store',
+      storeSub: 'Today · demo data',
       nav: ['Today', 'Assistant', 'Chat', 'Projects', 'Calendar', 'Notifications', 'Data alerts', 'Organization', 'Knowledge', 'Retail', 'Sales screen', 'Warehouse screen'],
       tabs: ['My chats', 'Agent to agent'],
       search: 'Search conversations…',

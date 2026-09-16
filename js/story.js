@@ -4,21 +4,28 @@
  * the UI-layers module. Nothing here touches Three.js.
  */
 
-/** Screen-heights per stage. Stage 2 (exploded UI layers) gets two screens of travel. */
+/**
+ * Screen-heights per stage (must match the sections' min-height in CSS). Stage 2 (exploded UI
+ * layers) and the last stage get two screens: the page can only scroll until the last section's
+ * top reaches the viewport top, so the finale needs an extra screen to have any travel at all.
+ */
 export const LAYERS_STAGE = 2
-export const STAGES = [1, 1, 2, 1, 1, 1, 1, 1, 1, 1]
+export const STAGES = [1, 1, 2, 1, 1, 1, 1, 1, 1, 2]
 const TOTAL = STAGES.reduce((a, b) => a + b, 0)
+const SCROLLABLE = TOTAL - 1
+const LAST = STAGES.length - 1
 
 export function progressToStage(p) {
   if (!(p > 0)) return { k: 0, u: 0 }
-  if (p >= 1) return { k: STAGES.length - 1, u: 1 }
-  let acc = 0
+  if (p >= 1) return { k: LAST, u: 1 }
+  const screens = p * SCROLLABLE
+  let start = 0
   for (let k = 0; k < STAGES.length; k++) {
-    const w = STAGES[k] / TOTAL
-    if (p < acc + w) return { k, u: (p - acc) / w }
-    acc += w
+    const w = k === LAST ? STAGES[k] - 1 : STAGES[k]
+    if (screens < start + w || k === LAST) return { k, u: Math.min(1, (screens - start) / w) }
+    start += w
   }
-  return { k: STAGES.length - 1, u: 1 }
+  return { k: LAST, u: 1 }
 }
 
 const smooth = (x) => x * x * (3 - 2 * x)
@@ -32,13 +39,14 @@ export function blend(k, u) {
 }
 
 /**
- * Wire scroll + resize to `onProgress(k, u, p)`, throttled to one call per animation frame,
- * and toggle `.on` on each <section> as it enters the viewport (copy fade-in).
+ * Story reader: `poll()` (call it once per animation frame from the render loop) reads the scroll
+ * position and fires `onProgress(k, u, p)` when it changed. Reading in the loop rather than on
+ * scroll events keeps the scene and the page in step even after the tab was hidden for a while.
+ * Also toggles `.on` on each <section> as it enters the viewport (copy fade-in).
  */
 export function initStory({ onProgress, sections = document.querySelectorAll('main > section') }) {
-  let queued = false, last = -1
-  const read = () => {
-    queued = false
+  let last = -1
+  const poll = () => {
     const max = document.documentElement.scrollHeight - window.innerHeight
     const p = max > 0 ? Math.max(0, Math.min(1, window.scrollY / max)) : 0
     if (p === last) return
@@ -46,13 +54,10 @@ export function initStory({ onProgress, sections = document.querySelectorAll('ma
     const { k, u } = progressToStage(p)
     onProgress(k, u, p)
   }
-  const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(read) } }
-  window.addEventListener('scroll', schedule, { passive: true })
-  window.addEventListener('resize', schedule)
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) e.target.classList.toggle('on', e.isIntersecting)
   }, { threshold: 0.35 })
   for (const s of sections) io.observe(s)
-  read()
-  return { refresh: () => { last = -1; read() } }
+  poll()
+  return { poll, refresh: () => { last = -1; poll() } }
 }

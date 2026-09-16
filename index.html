@@ -2,429 +2,153 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Fortbrain — AI Native Enterprise AI</title>
-<style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #05050b;
-    --text: #c8c8d4;
-    --text-dim: #6a6a7a;
-    --text-bright: #e8e8f2;
-    --accent: #7eb8c9;
-    --accent2: #a09ec4;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: "PingFang SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    overflow-x: hidden;
-    cursor: default;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── Aurora Canvas ── */
-  #aurora {
-    position: fixed; inset: 0; z-index: 0;
-    pointer-events: none;
-  }
-
-  /* ── Language Toggle ── */
-  .lang-toggle {
-    position: fixed; top: 28px; right: 32px; z-index: 10;
-    font-size: 13px; letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: none; border: 1px solid rgba(255,255,255,0.08);
-    padding: 6px 14px; border-radius: 20px;
-    cursor: pointer; transition: all 0.35s;
-    font-family: inherit;
-  }
-  .lang-toggle:hover {
-    color: var(--text-bright);
-    border-color: rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.03);
-  }
-
-  /* ── Main Container ── */
-  .main {
-    position: relative; z-index: 2;
-    min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 40px 24px;
-  }
-
-  /* ── States ── */
-  .site-intro .reveal-area { display: none; }
-  .site-intro .entry-question { display: flex; }
-  .site-revealed .entry-question { display: none; }
-  .site-revealed .reveal-area { display: block; }
-
-  /* ── Entry Question ── */
-  .entry-question {
-    flex-direction: column; align-items: center; gap: 48px;
-    cursor: pointer; user-select: none;
-    transition: opacity 0.8s;
-  }
-  .entry-question h1 {
-    font-size: clamp(1.4rem, 3.5vw, 2rem);
-    font-weight: 300; letter-spacing: 0.08em;
-    color: var(--text-dim);
-    text-align: center; line-height: 1.6;
-    max-width: 640px;
-    transition: color 0.6s;
-  }
-  .entry-question:hover h1 { color: var(--text-bright); }
-
-  .entry-hint {
-    font-size: 12px; letter-spacing: 0.12em;
-    color: rgba(255,255,255,0.15);
-    animation: hintPulse 4s ease-in-out infinite;
-  }
-  @keyframes hintPulse {
-    0%, 100% { opacity: 0.25; }
-    50% { opacity: 0.55; }
-  }
-
-  /* ── Reveal Content ── */
-  .reveal-area {
-    max-width: 720px; width: 100%;
-    animation: fadeUp 1s ease-out;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(32px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .tagline {
-    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-    font-weight: 300; letter-spacing: 0.06em;
-    color: var(--text-dim);
-    margin-bottom: 64px;
-    line-height: 1.7;
-    text-align: center;
-  }
-
-  .section {
-    margin-bottom: 56px;
-    opacity: 0; transform: translateY(24px);
-    animation: fadeUpItem 0.7s ease-out forwards;
-  }
-  .section:nth-child(2) { animation-delay: 0.2s; }
-  .section:nth-child(3) { animation-delay: 0.4s; }
-  .section:nth-child(4) { animation-delay: 0.6s; }
-  .section:nth-child(5) { animation-delay: 0.8s; }
-  @keyframes fadeUpItem {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .section-label {
-    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-    color: rgba(255,255,255,0.2);
-    margin-bottom: 16px;
-  }
-
-  .section-title {
-    font-size: clamp(1.3rem, 3vw, 1.7rem);
-    font-weight: 400; letter-spacing: 0.04em;
-    color: var(--text-bright);
-    margin-bottom: 24px;
-    line-height: 1.5;
-  }
-
-  .section p {
-    font-size: 15px; line-height: 1.85; letter-spacing: 0.03em;
-    color: var(--text-dim);
-    max-width: 600px;
-  }
-
-  .reasons {
-    list-style: none; padding: 0;
-    margin-top: 20px;
-    counter-reset: reason;
-  }
-  .reasons li {
-    font-size: 14px; line-height: 2.0; letter-spacing: 0.04em;
-    color: var(--text-dim);
-    padding-left: 0;
-  }
-  .reasons li::before {
-    counter-increment: reason;
-    content: counter(reason) ".";
-    color: rgba(255,255,255,0.18);
-    margin-right: 12px;
-    font-size: 12px;
-  }
-
-  .answer-line {
-    margin-top: 64px;
-    font-size: clamp(1.2rem, 2.8vw, 1.6rem);
-    font-weight: 300; letter-spacing: 0.06em;
-    color: var(--text-bright);
-    text-align: center;
-    line-height: 1.7;
-  }
-  .answer-line em {
-    font-style: normal;
-    font-weight: 500;
-    color: var(--accent);
-  }
-
-  /* ── Contact ── */
-  .contact {
-    margin-top: 80px;
-    text-align: center;
-    font-size: 14px; letter-spacing: 0.05em;
-    color: var(--text-dim);
-    opacity: 0; animation: fadeUpItem 0.7s ease-out 1.2s forwards;
-  }
-  .contact a {
-    color: var(--accent2);
-    text-decoration: none;
-    border-bottom: 1px solid rgba(160,158,196,0.2);
-    transition: border-color 0.3s;
-  }
-  .contact a:hover { border-color: rgba(160,158,196,0.5); }
-
-  /* ── Footer ── */
-  .footer {
-    position: fixed; bottom: 28px; left: 32px; z-index: 10;
-    font-size: 11px; letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.1);
-  }
-
-  @media (max-width: 600px) {
-    .lang-toggle { top: 16px; right: 16px; font-size: 12px; padding: 4px 12px; }
-    .section { margin-bottom: 40px; }
-    .footer { bottom: 16px; left: 16px; }
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Fortbrain — 让 AI 成为企业不知疲倦的成长动力。降人力成本，增加单位人效。">
+<meta name="theme-color" content="#050b18">
+<title>Fortbrain</title>
+<link rel="stylesheet" href="css/site.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
 </head>
-<body class="site-intro">
+<body>
 
-<!-- Aurora Canvas -->
-<canvas id="aurora"></canvas>
+<canvas id="gl" aria-hidden="true"></canvas>
+<canvas id="aurora2d" aria-hidden="true" hidden></canvas>
 
-<!-- Language Toggle -->
-<button class="lang-toggle" id="langBtn" aria-label="Switch language">中文 / EN</button>
-
-<!-- Footer -->
-<div class="footer">Fortbrain</div>
-
-<!-- Main -->
-<div class="main">
-
-  <!-- ─── Entry Question ─── -->
-  <div class="entry-question" id="entryQuestion">
-    <h1 id="entryText">今天的企业到底需要怎样的智能化</h1>
-    <div class="entry-hint" id="entryHint">— Click to explore —</div>
-  </div>
-
-  <!-- ─── Revealed Content ─── -->
-  <div class="reveal-area" id="revealArea">
-
-    <div class="tagline" id="taglineText">
-      What kind of intelligence do enterprises truly need today —<br>
-      intelligence that creates value, not intelligence for its own sake.
+<!-- Stage 2: the Fortbrain workbench, exploded into three layers (rebuilt in HTML, demo data only) -->
+<div id="layers" aria-hidden="true">
+  <div class="stage">
+    <div class="layer nav">
+      <div class="brandrow"><span class="logo">F</span><span data-i18n="ui.brand"></span></div>
+      <ul>
+        <li data-i18n="ui.nav" data-i18n-index="0"></li>
+        <li class="cur" data-i18n="ui.nav" data-i18n-index="1"></li>
+        <li data-i18n="ui.nav" data-i18n-index="2"></li>
+        <li data-i18n="ui.nav" data-i18n-index="3"></li>
+        <li data-i18n="ui.nav" data-i18n-index="4"></li>
+        <li data-i18n="ui.nav" data-i18n-index="5"></li>
+        <li data-i18n="ui.nav" data-i18n-index="6"></li>
+        <li data-i18n="ui.nav" data-i18n-index="7"></li>
+        <li data-i18n="ui.nav" data-i18n-index="8"></li>
+        <li class="grp" data-i18n="ui.nav" data-i18n-index="9"></li>
+        <li data-i18n="ui.nav" data-i18n-index="10"></li>
+        <li data-i18n="ui.nav" data-i18n-index="11"></li>
+      </ul>
     </div>
-
-    <div class="section">
-      <div class="section-label">/ Step One</div>
-      <div class="section-title" id="section1Title">Eliminate the "Human Robots" in enterprises</div>
-      <p id="section1P">
-        By &ldquo;human robots,&rdquo; we mean roles that can be defined simply as:<br>
-        <em>&ldquo;When X happens, then do Y.&rdquo;</em><br>
-        In the AI era, having such roles performed by real people is a wasteful misuse of human talent.
-      </p>
+    <div class="layer list">
+      <div class="tabs"><span class="cur" data-i18n="ui.tabs" data-i18n-index="0"></span><span data-i18n="ui.tabs" data-i18n-index="1"></span></div>
+      <div class="search" data-i18n="ui.search"></div>
+      <div class="rows">
+        <div class="row cur"><b data-i18n="ui.list.0.0"></b><span data-i18n="ui.list.0.1"></span></div>
+        <div class="row"><b data-i18n="ui.list.1.0"></b><span data-i18n="ui.list.1.1"></span></div>
+        <div class="row"><b data-i18n="ui.list.2.0"></b><span data-i18n="ui.list.2.1"></span></div>
+        <div class="row"><b data-i18n="ui.list.3.0"></b><span data-i18n="ui.list.3.1"></span></div>
+        <div class="row"><b data-i18n="ui.list.4.0"></b><span data-i18n="ui.list.4.1"></span></div>
+        <div class="row"><b data-i18n="ui.list.5.0"></b><span data-i18n="ui.list.5.1"></span></div>
+      </div>
     </div>
-
-    <div class="section">
-      <div class="section-label">/ The Question</div>
-      <div class="section-title" id="section2Title">Why weren't these eliminated in the information age?</div>
-      <p id="section2P">
-        Because the &ldquo;when&rdquo; often demanded professional judgment,<br>
-        while the &ldquo;then&rdquo; required specialized knowledge and flexibility.<br>
-        Rule engines could not handle ambiguity; traditional software was too rigid.
-      </p>
+    <div class="layer main">
+      <div class="head"><span class="dot"></span><span data-i18n="ui.chat.title"></span></div>
+      <div class="msg bot">
+        <div class="card">
+          <b data-i18n="ui.chat.card.0"></b>
+          <p data-i18n="ui.chat.card.1"></p>
+          <p class="sug" data-i18n="ui.chat.card.2"></p>
+        </div>
+      </div>
+      <div class="msg me"><span data-i18n="ui.chat.user"></span></div>
+      <div class="msg bot"><p data-i18n="ui.chat.reply"></p></div>
     </div>
-
-    <div class="section">
-      <div class="section-label">/ Why Now</div>
-      <div class="section-title" id="section3Title">Why it is unacceptable for such roles to remain human-based</div>
-      <ol class="reasons">
-        <li id="r1">AI can do it — reasoning, retrieval, tool orchestration are production-ready.</li>
-        <li id="r2">AI is affordable — per-task costs have dropped by orders of magnitude.</li>
-        <li id="r3">AI does not need vacations — 24×7 operation with consistent quality.</li>
-        <li id="r4">AI knowledge is retained &amp; transferred — no single-point-of-failure expertise.</li>
-        <li id="r5">AI keeps getting stronger &amp; cheaper — the gap only widens over time.</li>
-      </ol>
-    </div>
-
-    <div class="answer-line" id="answerLine">
-      <em>Fortbrain</em> is our answer to this challenge.
-    </div>
-
-    <div class="contact" id="contactArea">
-      了解更多，请联系 <a href="#" id="contactLink">contact@fortbrain.local</a>
-    </div>
-
   </div>
 </div>
 
-<script>
-(function() {
-  const canvas = document.getElementById('aurora');
-  const ctx = canvas.getContext('2d');
-  let W, H;
+<button id="langBtn" type="button" aria-label="Switch language" data-i18n="lang"></button>
+<div class="brand" aria-hidden="true">Fortbrain</div>
 
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
+<main>
+  <section data-stage="0" class="s-hero">
+    <div class="copy">
+      <h1 data-i18n="q"></h1>
+      <div class="hint" data-i18n="hint"></div>
+    </div>
+  </section>
 
-  function drawBand(cx, cy, rx, ry, hue, alpha) {
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
-    const hsla = (a) => 'hsla(' + hue + ', 55%, 50%, ' + (a * alpha).toFixed(4) + ')';
-    grad.addColorStop(0, hsla(0.85));
-    grad.addColorStop(0.35, hsla(0.45));
-    grad.addColorStop(0.65, hsla(0.12));
-    grad.addColorStop(1, hsla(0));
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  <section data-stage="1">
+    <div class="copy">
+      <div class="label" data-i18n="thesis.label"></div>
+      <h2 data-i18n="thesis.title"></h2>
+      <p data-i18n="thesis.body"></p>
+    </div>
+  </section>
 
-  function draw(ts) {
-    var t = ts * 0.00008;
-    ctx.clearRect(0, 0, W, H);
+  <section data-stage="2" class="s-layers">
+    <div class="copy">
+      <div class="label" data-i18n="layers.label"></div>
+      <h2 data-i18n="layers.title"></h2>
+      <p data-i18n="layers.body"></p>
+    </div>
+  </section>
 
-    drawBand(
-      W * (0.35 + 0.30 * Math.sin(t * 1.1)),
-      H * (0.32 + 0.06 * Math.sin(t * 0.7 + 2)),
-      W * 0.65, H * 0.28, 200, 0.38
-    );
-    drawBand(
-      W * (0.45 + 0.25 * Math.sin(t * 0.9 + 2.5)),
-      H * (0.44 + 0.05 * Math.sin(t * 0.6 + 4)),
-      W * 0.55, H * 0.22, 225, 0.32
-    );
-    drawBand(
-      W * (0.55 + 0.20 * Math.sin(t * 0.8 + 1.2)),
-      H * (0.55 + 0.07 * Math.sin(t * 0.5 + 0.8)),
-      W * 0.50, H * 0.20, 180, 0.28
-    );
-    drawBand(
-      W * (0.60 + 0.18 * Math.sin(t * 0.7 + 3.8)),
-      H * (0.68 + 0.04 * Math.sin(t * 0.65 + 1.5)),
-      W * 0.60, H * 0.25, 245, 0.25
-    );
+  <section data-stage="3">
+    <div class="copy">
+      <div class="label" data-i18n="p1.label"></div>
+      <h2 data-i18n="p1.title"></h2>
+      <p data-i18n="p1.body"></p>
+    </div>
+  </section>
 
-    requestAnimationFrame(draw);
-  }
+  <section data-stage="4">
+    <div class="copy">
+      <div class="label" data-i18n="p2.label"></div>
+      <h2 data-i18n="p2.title"></h2>
+      <p data-i18n="p2.body"></p>
+    </div>
+  </section>
 
-  requestAnimationFrame(draw);
-})();
-</script>
+  <section data-stage="5">
+    <div class="copy">
+      <div class="label" data-i18n="p3.label"></div>
+      <h2 data-i18n="p3.title"></h2>
+      <p data-i18n="p3.body"></p>
+    </div>
+  </section>
 
-<script>
-// ─── DOM Ready ──────────────────────────────────────────────────────
-(function() {
+  <section data-stage="6">
+    <div class="copy">
+      <div class="label" data-i18n="p4.label"></div>
+      <h2 data-i18n="p4.title"></h2>
+      <p data-i18n="p4.body"></p>
+    </div>
+  </section>
 
-// ─── Language System ────────────────────────────────────────────────
-const lang = { current: 'en' };
+  <section data-stage="7">
+    <div class="copy">
+      <div class="label" data-i18n="p5.label"></div>
+      <h2 data-i18n="p5.title"></h2>
+      <p data-i18n="p5.body"></p>
+    </div>
+  </section>
 
-const texts = {
-  en: {
-    entry: "What kind of intelligence do enterprises truly need today?",
-    hint: "— Click to explore —",
-    tagline: "What kind of intelligence do enterprises truly need today?<br>What makes intelligence valuable — not intelligence for its own sake.",
-    s1Title: 'Step One: Eliminate the &ldquo;Human Robots&rdquo; in enterprises',
-    s1P: 'By &ldquo;human robots,&rdquo; we mean roles that can be defined simply as:<br><em>&ldquo;When X happens, then do Y.&rdquo;</em><br>In the AI era, having such roles performed by real people is a wasteful misuse of human talent.',
-    s2Title: 'Why weren&rsquo;t these eliminated in the information age?',
-    s2P: 'Because the &ldquo;when&rdquo; often demanded professional judgment,<br>while the &ldquo;then&rdquo; required specialized knowledge and flexibility.<br>Rule engines could not handle ambiguity; traditional software was too rigid.',
-    s3Title: 'Why it is unacceptable for such roles to remain human-based',
-    r1: 'AI can do it — reasoning, retrieval, tool orchestration are production-ready.',
-    r2: 'AI is affordable — per-task costs have dropped by orders of magnitude.',
-    r3: 'AI does not need vacations — 24×7 operation with consistent quality.',
-    r4: 'AI knowledge is retained &amp; transferred — no single-point-of-failure expertise.',
-    r5: 'AI keeps getting stronger &amp; cheaper — the gap only widens over time.',
-    answer: '<em>Fortbrain</em> is our answer to this challenge.',
-    contactPre: 'Learn more: ',
-  },
-  cn: {
-    entry: '今天的企业到底需要怎样的智能化',
-    hint: '— 点击探索 —',
-    tagline: '今天的企业到底需要怎样的智能化 —<br>什么样的智能化是有价值的智能化，而不是为了智能化而智能化的智能化。',
-    s1Title: '第一步：干掉企业中的\u201c机械人\u201d',
-    s1P: '机械人是指在企业中可以用<em>\u201cwhen X happens, then do Y\u201d</em>来定义的角色。<br>在AI时代，以真人的形式存在就是犯罪。',
-    s2Title: '为什么这样的角色在信息化时代没有被干掉？',
-    s2P: '因为这些角色在\u201cwhen\u201d的时候需要有专业判断，<br>\u201cthen\u201d的时候需要知识的支撑和灵活性。<br>规则引擎无法处理模糊性，传统软件太过僵硬。',
-    s3Title: '为什么这样的角色在AI时代存在就是犯罪',
-    r1: 'AI 可以做到 — 推理、检索、工具编排都已生产就绪。',
-    r2: 'AI 够便宜了 — 每次任务成本下降了数个数量级。',
-    r3: 'AI 不需要休假 — 24×7运行，质量稳定如一。',
-    r4: 'AI 的知识可以传承 — 不存在单点失效的专业知识瓶颈。',
-    r5: 'AI 一直在变强、变更便宜 — 这个差距只会越来越大。',
-    answer: '<em>Fortbrain</em>就是我们对这件事的回答。',
-    contactPre: '了解更多，请联系 ',
-  }
-};
+  <section data-stage="8">
+    <div class="copy">
+      <div class="label" data-i18n="p6.label"></div>
+      <h2 data-i18n="p6.title"></h2>
+      <p data-i18n="p6.body"></p>
+    </div>
+  </section>
 
-// ─── Anti-Spam Email ────────────────────────────────────────────────
-const EMAIL_USER = 'putcncx';
-const EMAIL_DOMAIN = 'gmail.com';
+  <section data-stage="9" class="s-end">
+    <div class="copy">
+      <h2 class="answer" data-i18n="answer"></h2>
+      <p class="contact"><span data-i18n="contactPre"></span> <a id="mail" href="#"></a></p>
+    </div>
+  </section>
+</main>
 
-function buildContactHTML(l) {
-  var t = texts[l];
-  var email = EMAIL_USER + '@' + EMAIL_DOMAIN;
-  return t.contactPre + '<a href="mailto:' + email + '">' + email + '</a>';
-}
-
-// ─── Apply Language ─────────────────────────────────────────────────
-function applyLang(l) {
-  lang.current = l;
-  var t = texts[l];
-
-  document.getElementById('entryText').innerHTML = t.entry;
-  document.getElementById('entryHint').textContent = t.hint;
-  document.getElementById('taglineText').innerHTML = t.tagline;
-  document.getElementById('section1Title').innerHTML = t.s1Title;
-  document.getElementById('section1P').innerHTML = t.s1P;
-  document.getElementById('section2Title').innerHTML = t.s2Title;
-  document.getElementById('section2P').innerHTML = t.s2P;
-  document.getElementById('section3Title').innerHTML = t.s3Title;
-  document.getElementById('r1').innerHTML = t.r1;
-  document.getElementById('r2').innerHTML = t.r2;
-  document.getElementById('r3').innerHTML = t.r3;
-  document.getElementById('r4').innerHTML = t.r4;
-  document.getElementById('r5').innerHTML = t.r5;
-  document.getElementById('answerLine').innerHTML = t.answer;
-  document.getElementById('contactArea').innerHTML = buildContactHTML(l);
-}
-
-// ─── Entry Click → Reveal ───────────────────────────────────────────
-document.getElementById('entryQuestion').addEventListener('click', function() {
-  document.body.classList.remove('site-intro');
-  document.body.classList.add('site-revealed');
-});
-
-// ─── Language Toggle ─────────────────────────────────────────────────
-document.getElementById('langBtn').addEventListener('click', function() {
-  var next = lang.current === 'en' ? 'cn' : 'en';
-  this.textContent = next === 'en' ? '中文 / EN' : 'EN / 中文';
-  applyLang(next);
-});
-
-// ─── Init ────────────────────────────────────────────────────────────
-applyLang('en');
-document.getElementById('langBtn').textContent = '中文 / EN';
-
-})();
-</script>
-
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
