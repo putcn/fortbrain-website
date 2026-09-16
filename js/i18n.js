@@ -19,13 +19,13 @@ export const TEXTS = {
     },
     p2: {
       label: '01 · 省掉录数与做表',
-      title: '数据自己进来，报表自己生成',
-      body: 'POS 数据自动汇入，今日收入与订单逐笔回放在城市地图上；日报、周报由助理自动整理。原来录数、对账、做表的那些人时，不再需要。',
+      title: '数据自己进来，报表自己写好',
+      body: '每一笔成交、每一轮采集都是一个事件，AI 据此<strong>主动</strong>行动：POS 数据自动汇入，今日收入与订单逐笔回放在城市地图上，日报、周报到点自己写好。它不知疲倦、不休假，边做边学、自主进化，越用越准。原来录数、对账、做表的人时，不再需要。',
     },
     p3: {
       label: '02 · 省掉盯库存',
-      title: '货自己会走，不用人盯',
-      body: '仓、店、供应商都是玻璃罐，液面就是有货比例；货道发光，每一单在途走到哪一步一眼看清。没有人需要每天翻库存表。',
+      title: 'AI 7×24 盯着库存，物流一屏看清',
+      body: 'AI 全天候盯着每一家店、每一个 SKU：缺货、偏低、在途逾期，第一时间知道。仓储物流大屏上，仓、店、供应商是玻璃罐，液面就是有货比例，货道发光，每一单在途走到哪一步一目了然。没有人需要每天翻库存表。',
     },
     insight: {
       label: '03 · 省掉盘算',
@@ -96,12 +96,12 @@ export const TEXTS = {
     p2: {
       label: '01 · No more keying and charting',
       title: 'Data comes in by itself, reports write themselves',
-      body: 'POS data flows in on its own; today’s revenue and orders replay, one by one, on a real city map; daily and weekly reports are compiled by the assistant. The hours once spent keying, reconciling and charting are gone.',
+      body: 'Every sale and every collection run is an event, and the AI <strong>acts on it</strong>: POS data flows in on its own, today’s revenue and orders replay one by one on a real city map, daily and weekly reports are written on schedule. It never tires, never takes leave, learns as it works and keeps getting sharper. The hours once spent keying, reconciling and charting are gone.',
     },
     p3: {
       label: '02 · No more watching stock',
-      title: 'Stock moves on its own, nobody has to watch it',
-      body: 'Warehouses, stores and suppliers are glass tanks; the liquid level is stock coverage. Lanes glow, and every shipment shows how far along it is. Nobody pages through stock sheets every morning.',
+      title: 'AI watches stock 24×7, logistics on one screen',
+      body: 'The AI keeps watch over every store and every SKU around the clock: stock-outs, low levels and overdue shipments are caught the moment they happen. On the warehouse screen, warehouses, stores and suppliers are glass tanks, the liquid level is stock coverage, lanes glow, and every shipment shows how far along it is. Nobody pages through stock sheets every morning.',
     },
     insight: {
       label: '03 · No more guesswork',
