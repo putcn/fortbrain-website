@@ -88,6 +88,7 @@ h2 {
 .s-end .copy { max-width: 860px; }
 .answer { font-size: clamp(1.8rem, 3.6vw, 2.8rem); font-weight: 300; }
 .answer em { font-style: normal; font-weight: 500; color: var(--gold); }
+.answer-sub { margin-top: 18px; color: #b9cde3 !important; }
 .contact { margin-top: 28px; font-family: var(--mono); font-size: 13px; letter-spacing: .06em; color: var(--dim) !important; }
 .contact a { color: var(--acc); text-decoration: none; border-bottom: 1px solid rgba(166, 220, 255, .3); transition: border-color .3s; }
 .contact a:hover { border-color: var(--acc); }

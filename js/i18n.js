@@ -48,6 +48,7 @@ export const TEXTS = {
       body: 'POS、爬虫、外部系统按统一的 Addon 协议接进来，核心代码零改动。授权到人，撤销即失效。',
     },
     answer: '<em>Fortbrain</em> 就是我们的回答。',
+    answerSub: '零售只是我们第一个落地的垂直行业，其他行业敬请期待。',
     contactPre: 'Demo 与细节，请联系',
     ui: {
       brand: 'Fortbrain',
@@ -117,6 +118,7 @@ export const TEXTS = {
       body: 'POS, crawlers and external systems attach through one Addon protocol; the core never changes. Access is granted per person and gone the moment it is revoked.',
     },
     answer: '<em>Fortbrain</em> is our answer.',
+    answerSub: 'Retail is only the first industry we have gone live in. More are on the way.',
     contactPre: 'For a demo and details, contact',
     ui: {
       brand: 'Fortbrain',
