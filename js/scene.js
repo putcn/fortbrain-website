@@ -454,9 +454,10 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     { target: new THREE.Vector3(0, 0, 0), dist: 340, pol: 0.95, az: 0.25, spin: 0.02, dim: 0, closeup: true, off: 0.45 },
   ]
   if (mobile) for (const k of KEYS) k.dist *= 1.35
-  // portrait phones: the map is wider east–west than north–south, so open with the camera a
-  // quarter turn round and the long axis running down the screen
-  if (mobile) KEYS[0].az = Math.PI / 2
+  // portrait phones: the map is wider east–west than north–south, so the two full-map views
+  // (opening and finale) get a quarter turn and the long axis runs down the screen. The aurora
+  // plane turns with the finale camera so the curtain still pours top-left → bottom-right.
+  if (mobile) { KEYS[0].az += Math.PI / 2; KEYS[STAGES.length - 1].az += Math.PI / 2; aurora.rotation.z += Math.PI / 2 }
   const cur = { target: KEYS[0].target.clone(), dist: KEYS[0].dist, pol: KEYS[0].pol, az: KEYS[0].az, dim: 0, off: 0 }
   let stageK = 0, stageU = 0, firstFrame = true
   function setProgress(k, u) { stageK = k; stageU = u }
