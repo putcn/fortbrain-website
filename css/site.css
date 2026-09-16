@@ -42,8 +42,10 @@ html:lang(en) body { font-family: var(--sans); }
 
 /* ── scrolling copy ── */
 main { position: relative; z-index: 2; }
-section { position: relative; min-height: 100svh; }
-section.s-layers, section.s-end { min-height: 200svh; }
+/* two screens per section with a one-screen sticky copy: each stage stays pinned for a full
+   screen of scrolling before it moves on */
+section { position: relative; min-height: 200svh; }
+section.s-layers { min-height: 300svh; }
 
 .copy {
   position: sticky; top: 0;

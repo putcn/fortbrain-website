@@ -5,12 +5,14 @@
  */
 
 /**
- * Screen-heights per stage (must match the sections' min-height in CSS). Stage 2 (exploded UI
- * layers) and the last stage get two screens: the page can only scroll until the last section's
- * top reaches the viewport top, so the finale needs an extra screen to have any travel at all.
+ * Screen-heights per stage (must match the sections' min-height in CSS). Every section is two
+ * screens tall with a one-screen sticky copy block, so each stage stays pinned for a full screen
+ * of scrolling (reading time) before it scrolls out; the exploded-UI stage gets three screens.
+ * The page can only scroll until the last section's top reaches the viewport top, so the finale's
+ * second screen is the one screen of travel it actually has.
  */
 export const LAYERS_STAGE = 2
-export const STAGES = [1, 1, 2, 1, 1, 1, 1, 1, 1, 2]
+export const STAGES = [2, 2, 3, 2, 2, 2, 2, 2, 2, 2]
 const TOTAL = STAGES.reduce((a, b) => a + b, 0)
 const SCROLLABLE = TOTAL - 1
 const LAST = STAGES.length - 1
@@ -46,18 +48,27 @@ export function blend(k, u) {
  */
 export function initStory({ onProgress, sections = document.querySelectorAll('main > section') }) {
   let last = -1
+  const copies = [...sections].map((s) => [s, s.querySelector('.copy') || s])
+  // Copy fade-in is computed here rather than with IntersectionObserver: the copy blocks are
+  // position: sticky, and Chrome does not re-evaluate intersections when only the sticky offset
+  // changes, so a pinned block could sit fully in view with no callback ever firing.
+  const reveal = () => {
+    const ih = window.innerHeight
+    for (const [sec, c] of copies) {
+      const r = c.getBoundingClientRect()
+      const visible = Math.min(r.bottom, ih) - Math.max(r.top, 0)
+      sec.classList.toggle('on', r.height > 0 && visible / r.height >= 0.4)
+    }
+  }
   const poll = () => {
     const max = document.documentElement.scrollHeight - window.innerHeight
     const p = max > 0 ? Math.max(0, Math.min(1, window.scrollY / max)) : 0
     if (p === last) return
     last = p
+    reveal()
     const { k, u } = progressToStage(p)
     onProgress(k, u, p)
   }
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) e.target.classList.toggle('on', e.isIntersecting)
-  }, { threshold: 0.35 })
-  for (const s of sections) io.observe(s)
   poll()
   return { poll, refresh: () => { last = -1; poll() } }
 }
