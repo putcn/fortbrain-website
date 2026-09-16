@@ -88,6 +88,7 @@ h2 {
 .s-end .copy { max-width: 860px; }
 .answer { font-size: clamp(1.8rem, 3.6vw, 2.8rem); font-weight: 300; }
 .answer em { font-style: normal; font-weight: 500; color: var(--gold); }
+.result { font-size: clamp(1.05rem, 1.6vw, 1.3rem) !important; color: var(--acc) !important; margin-bottom: 22px; letter-spacing: .02em; }
 .answer-sub { margin-top: 18px; color: #b9cde3 !important; }
 .contact { margin-top: 28px; font-family: var(--mono); font-size: 13px; letter-spacing: .06em; color: var(--dim) !important; }
 .contact a { color: var(--acc); text-decoration: none; border-bottom: 1px solid rgba(166, 220, 255, .3); transition: border-color .3s; }
@@ -168,7 +169,8 @@ h2 {
   #layers { perspective: 1100px; perspective-origin: 50% 30%; }
   /* phones: pull the three layers closer together, scale the stage by viewport width and
      keep it centred above the copy (the copy takes the bottom ~45% of the screen) */
-  #layers .stage { transform: translate(var(--stage-dx, -18vw), var(--stage-dy, -22svh)) scale(var(--stage-scale, .45)) rotateX(58deg) rotateZ(-45deg); }
+  /* more upright on phones (48° instead of 58°) so the panels read taller and clearer */
+  #layers .stage { transform: translate(var(--stage-dx, -18vw), var(--stage-dy, -22svh)) scale(var(--stage-scale, .45)) rotateX(48deg) rotateZ(-45deg); }
   .layer.list { left: 150px; top: 40px; }
   .layer.main { left: 380px; top: 70px; width: 440px; }
 }

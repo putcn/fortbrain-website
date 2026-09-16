@@ -36,7 +36,7 @@ export function createLayers(root, { reduced = false } = {}) {
     for (const el of layers) { const b = el.getBoundingClientRect(); x0 = Math.min(x0, b.left); y0 = Math.min(y0, b.top); x1 = Math.max(x1, b.right); y1 = Math.max(y1, b.bottom) }
     layers.forEach((el, i) => { el.style.transform = saved[i] })
     if (!isFinite(x0)) return
-    const dx = window.innerWidth / 2 - (x0 + x1) / 2, dy = window.innerHeight * 0.3 - (y0 + y1) / 2
+    const dx = window.innerWidth / 2 - (x0 + x1) / 2, dy = window.innerHeight * 0.37 - (y0 + y1) / 2
     root.style.setProperty('--stage-dx', dx.toFixed(1) + 'px'); root.style.setProperty('--stage-dy', dy.toFixed(1) + 'px')
   }
   fit(); window.addEventListener('resize', fit)
