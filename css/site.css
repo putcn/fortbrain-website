@@ -153,7 +153,9 @@ h2 {
   .copy {
     max-width: none; justify-content: flex-end;
     padding: 0 20px 14svh;
-    background: linear-gradient(transparent 35%, rgba(5, 11, 24, .82) 62%, rgba(5, 11, 24, .92));
+    /* fade out at the bottom too: the panel is exactly one screen tall, so a solid bottom edge
+       shows up as a hard line sliding over the next section while scrolling */
+    background: linear-gradient(transparent 35%, rgba(5, 11, 24, .82) 62%, rgba(5, 11, 24, .92) 86%, transparent 100%);
   }
   .s-hero .copy { justify-content: center; background: none; text-shadow: 0 2px 24px rgba(5, 11, 24, .9), 0 0 6px rgba(5, 11, 24, .8); }
   .copy p { max-width: none; }
