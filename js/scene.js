@@ -238,23 +238,32 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   const tankMain = buildTank(C.x, C.z, SQ * 1.3, 9.5, 0x3a3020)
   const tankL = buildTank(C.x - 11, C.z + 5, SQ, 6.5, 0x16283f), tankR = buildTank(C.x + 12, C.z - 4, SQ, 7, 0x16283f)
   const lanes = []
-  function buildLane(a, b) {
+  /** A logistics lane: glowing tube on the ground from a to b with a pulse sliding along it. */
+  function buildLane(a, b, { col = TIER.ok, r = 0.2, opacity = 0.55, bow = 2.2, speed = 3.4 } = {}) {
     const A0 = new THREE.Vector3(a.x, 0.5, a.z), B0 = new THREE.Vector3(b.x, 0.5, b.z)
     const mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, len = Math.hypot(b.x - a.x, b.z - a.z) || 1
     const px = -(b.z - a.z) / len, pz = (b.x - a.x) / len
-    const curve = new THREE.CatmullRomCurve3([A0, new THREE.Vector3(mx + px * 2.2, 0.5, mz + pz * 2.2), B0])
-    const col = TIER.ok
-    const tube = new THREE.Mesh(track(new THREE.TubeGeometry(curve, 48, 0.2, 8, false)), track(new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9, roughness: 0.35, metalness: 0.2, transparent: true, opacity: 0.55 })))
+    const curve = new THREE.CatmullRomCurve3([A0, new THREE.Vector3(mx + px * bow, 0.5, mz + pz * bow), B0])
+    const tube = new THREE.Mesh(track(new THREE.TubeGeometry(curve, 48, r, 8, false)), track(new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9, roughness: 0.35, metalness: 0.2, transparent: true, opacity })))
     tube.position.y = 0.35; scene.add(tube)
-    const halo = new THREE.Mesh(track(new THREE.TubeGeometry(curve, 48, 0.5, 8, false)), track(new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false })))
+    const halo = new THREE.Mesh(track(new THREE.TubeGeometry(curve, 48, r * 2.5, 8, false)), track(new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.07 * (opacity / 0.55), blending: THREE.AdditiveBlending, depthWrite: false })))
     halo.position.y = 0.35; scene.add(halo)
     const SEG = 96, RAD = 8, ring = RAD * 6
-    const flow = new THREE.Mesh(track(new THREE.TubeGeometry(curve, SEG, 0.3, RAD, false)), track(new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })))
+    const flow = new THREE.Mesh(track(new THREE.TubeGeometry(curve, SEG, r * 1.5, RAD, false)), track(new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })))
     flow.position.y = 0.35; scene.add(flow)
     const total = ring * SEG, win = ring * 6; flow.geometry.setDrawRange(0, win)
-    lanes.push({ flow, total, win, ring, u: rnd() })
+    lanes.push({ flow, total, win, ring, u: rnd(), speed })
   }
   buildLane(tankMain, tankL); buildLane(tankMain, tankR)
+
+  // ── the distribution network: the warehouse tank supplies the nearest stores, a second hub
+  // (the store farthest from it) supplies its own neighbours. Thinner and dimmer than the featured
+  // lanes so they read as background, but always moving.
+  const byDist = (o, list) => [...list].sort((a, b) => Math.hypot(a.x - o.x, a.z - o.z) - Math.hypot(b.x - o.x, b.z - o.z))
+  const plain = stores.filter((s) => s !== C && s !== E && s !== F)
+  for (const t of byDist(C, plain).slice(0, mobile ? 4 : 6)) buildLane(tankMain, t, { col: 0x63d9a0, r: 0.12, opacity: 0.3, bow: 4, speed: 4.5 + rnd() * 2 })
+  const hub2 = byDist(C, plain).at(-1)
+  for (const t of byDist(hub2, plain.filter((s) => s !== hub2)).slice(0, mobile ? 3 : 4)) buildLane(hub2, t, { col: 0xe8cf8f, r: 0.12, opacity: 0.3, bow: 4, speed: 4.5 + rnd() * 2 })
 
   // D: alert tiers cycling green → amber → red (never gold: colour means tier here)
   D._tint = new THREE.Color(TIER.ok); D._noGold = true
@@ -271,6 +280,34 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     for (let i = 0; i < 4; i++) {
       const d = new THREE.Mesh(dotGeo, track(new THREE.MeshBasicMaterial({ color: i % 2 ? 0x9d8cff : 0x5ee0ff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })))
       scene.add(d); EF.dots.push({ m: d, u: i / 4, dir: i % 2 ? -1 : 1 })
+    }
+  }
+
+  // ── communication links: every store talks to a couple of others. Thin arcs in the air
+  // between cubes; a pool of "message" dots picks a link, flies across, fades, picks another.
+  const comm = { links: [], dots: [] }
+  {
+    const talkers = stores.filter((s) => s !== C)
+    const seen = new Set()
+    const arc = (a, b) => {
+      const p0 = new THREE.Vector3(a.x, HOVER, a.z), p1 = new THREE.Vector3(b.x, HOVER, b.z)
+      const m = p0.clone().add(p1).multiplyScalar(0.5); m.y = HOVER + Math.hypot(b.x - a.x, b.z - a.z) * 0.18
+      return new THREE.CatmullRomCurve3([p0, m, p1])
+    }
+    for (const a of talkers) {
+      for (const b of byDist(a, talkers.filter((s) => s !== a)).slice(1, 3)) {           // skip the very nearest: those are lanes' territory
+        const key = a.id < b.id ? a.id + '-' + b.id : b.id + '-' + a.id
+        if (seen.has(key) || (a === E && b === F) || (a === F && b === E)) continue
+        seen.add(key)
+        const curve = arc(a, b)
+        const line = new THREE.Line(track(new THREE.BufferGeometry().setFromPoints(curve.getPoints(40))), track(new THREE.LineBasicMaterial({ color: 0x9d8cff, transparent: true, opacity: 0.16 })))
+        scene.add(line); comm.links.push({ curve, line })
+      }
+    }
+    const dotGeo = track(new THREE.SphereGeometry(0.34, 10, 8))
+    for (let i = 0; i < (mobile ? 6 : 12); i++) {
+      const m = new THREE.Mesh(dotGeo, track(new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x5ee0ff : 0x9d8cff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })))
+      scene.add(m); comm.dots.push({ m, link: null, u: rnd(), dir: 1, wait: rnd() * 2 })
     }
   }
 
@@ -403,7 +440,22 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     }
     // tanks: liquid levels drift; lanes flow
     for (const tk of tanks) setLevel(tk, reduced ? 0.55 : 0.5 + 0.42 * Math.sin(el * 0.23 + tk.phase))
-    for (const ln of lanes) { ln.u = (ln.u + (reduced ? 0 : dt / 3.4)) % 1; ln.flow.geometry.setDrawRange(Math.floor(((ln.total - ln.win) * ln.u) / ln.ring) * ln.ring, ln.win) }
+    for (const ln of lanes) { ln.u = (ln.u + (reduced ? 0 : dt / (ln.speed || 3.4))) % 1; ln.flow.geometry.setDrawRange(Math.floor(((ln.total - ln.win) * ln.u) / ln.ring) * ln.ring, ln.win) }
+    // message dots on the communication links
+    for (const d of comm.dots) {
+      if (!d.link) {
+        d.wait -= dt
+        if (d.wait > 0 || !comm.links.length) continue
+        d.link = comm.links[Math.floor(rnd() * comm.links.length)]; d.dir = rnd() < 0.5 ? 1 : -1; d.u = d.dir > 0 ? 0 : 1
+        d.link.line.material.opacity = 0.42
+      }
+      d.u += (reduced ? 0.02 : dt * 0.45) * d.dir
+      const k = d.dir > 0 ? d.u : 1 - d.u
+      d.link.curve.getPoint(Math.max(0, Math.min(1, d.u)), d.m.position)
+      d.m.material.opacity = 0.9 * Math.sin(Math.max(0, Math.min(1, k)) * Math.PI)
+      d.link.line.material.opacity = Math.max(0.16, d.link.line.material.opacity - dt * 0.12)
+      if (k >= 1) { d.link = null; d.wait = 0.4 + rnd() * 2.2; d.m.material.opacity = 0 }
+    }
     // E ↔ F light points
     for (const d of EF.dots) {
       if (!reduced) d.u += dt * 0.22 * d.dir
