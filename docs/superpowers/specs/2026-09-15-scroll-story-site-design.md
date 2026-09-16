@@ -48,7 +48,7 @@ js/i18n.js            中英文案表 + applyLang()；只管 DOM 文字，不碰
 js/geo.js             地理算术（投影、散开、错位网格落位），从大屏 geo.js 移植，无 Three 依赖
 js/scene.js           Three.js 场景：底图、方块（六种材质）、极光、镜头；对外只暴露 setProgress / tick / resize
 js/story.js           把滚动进度映射成「第几段、段内进度」，喂给 scene；用 IntersectionObserver 控制文字进出场
-js/fallback.js        WebGL 不可用时的 canvas 2D 极光（旧站代码搬过来）
+js/fallback.js        WebGL 不可用时的 canvas 2D 极光（重新设计实现，见 §8.1，不沿用旧站代码）
 data/xuzhou.json      简化后的徐州底图（< 300KB）
 scripts/build-geo.py  从 ~/Fortbrain/packs/mxipos/app/geo/320300.json 生成 data/xuzhou.json（开发机跑一次，产物进仓库）
 ```
@@ -132,7 +132,23 @@ fbm 噪声生成三四条色带（青 / 紫 / 淡金），沿 x 缓慢流动，�
 
 - `visualViewport` 高度变化（地址栏收起）不重排段高：段高用 `100svh`。
 - `document.hidden` 时停渲染循环。
-- WebGL 创建失败或底图加载失败：画布隐藏，`body` 退回一层 CSS 渐变 + 旧站那种 canvas 2D 极光；文字段落照常，镜头脚本空转。
+- WebGL 创建失败或底图加载失败：3D 画布隐藏，退回 §8.1 的 canvas 2D 极光；文字段落照常，镜头脚本空转。
+
+### 8.1 canvas 2D 极光（降级层，重新设计）
+
+旧站那几个椭圆径向渐变太糊、太像光斑，不用。新的做法要像**极光幕**，并与 §5.1 的 3D 极光同一套配色（青 / 紫 / 淡金），
+让两种情况下的结尾看起来是同一件东西：
+
+- **幕**：3–4 条色带，每条是一条沿 x 方向的曲线（值噪声取样的折线，`t` 缓慢推进），曲线下方画**竖向的光丝**：
+  每隔 6–10px 一根，从曲线向下拉一段长度随噪声变化的渐变线（顶端亮、向下透明），这是极光「窗帘」质感的来源。
+- **颜色**：色带分别取青 `#5ee0ff`、紫 `#9d8cff`、淡金 `#e8cf8f`，用 `globalCompositeOperation = 'lighter'` 叠加；
+  整层用低透明度（0.35–0.5），叠在深蓝底 `#050b18` 上。
+- **动**：曲线的噪声偏移随时间推进（约每秒 0.02 个噪声单位），光丝长度另有一套更快的噪声（约 0.08），
+  看起来是一层慢慢漂、一层轻轻抖。
+- **随滚动变**：开场只有很淡的一条带在顶部；随滚动进度带数增多、亮度提高；到结尾段全部展开，
+  与 3D 版结尾的节奏一致。
+- **性能**：离屏 canvas 按 0.5 倍分辨率画，再放大贴到全屏；`document.hidden` 停止；手机上光丝间距加大到 12px。
+- 也用于 `prefers-reduced-motion`？不用——那种情况下 3D 仍可用，只是不动；降级层只在 WebGL 不可用时出现。
 
 ---
 
@@ -155,5 +171,5 @@ fbm 噪声生成三四条色带（青 / 紫 / 淡金），沿 x 缓慢流动，�
 ## 11. 影响面
 
 - 新增：上表所有文件、`docs/superpowers/specs/` 本文。
-- 替换：`index.html` 整个重写。旧站的极光 canvas 代码作为 WebGL 失败时的降级保留在 `js/fallback.js`。
+- 替换：`index.html` 整个重写。旧站的极光 canvas 代码**不保留**，降级层按 §8.1 重新实现。
 - 不变：`CNAME`、部署方式。
