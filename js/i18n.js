@@ -52,6 +52,11 @@ export const TEXTS = {
       title: '不用推翻现有系统，第一天就开始省',
       body: 'POS、爬虫、外部系统按统一的 Addon 协议接进来，核心代码零改动。不换系统、不停业，人效从接入那天起就开始涨。',
     },
+    p7: {
+      label: '08 · 自我诊断，自我愈合',
+      title: '有问题？直接问。不解决，不罢休',
+      body: 'Fortbrain 自带源码级文档查询 MCP 和日志分析 MCP。使用上有疑问？直接问。哪个模块不工作？直接问。它自己查文档、自己翻日志、自己修，问题不解决到底不罢休。IT 部门从此只需要关注真正有挑战性的问题。',
+    },
     result: '现代企业到底需要什么样的智能化？',
     answer: '<em>Fortbrain</em> 就是我们的回答。',
     answerSub: '零售只是我们第一个落地的垂直行业，其他行业敬请期待。',
@@ -127,6 +132,11 @@ export const TEXTS = {
       label: '07 · Keep your systems',
       title: 'Keep the systems you have; start saving on day one',
       body: 'POS, crawlers and external systems attach through one Addon protocol; the core never changes. No migration, no downtime: output per person rises from the day you plug in.',
+    },
+    p7: {
+      label: '08 · Self-diagnosing, self-healing',
+      title: 'Something wrong? Just ask. It doesn’t stop until it’s fixed.',
+      body: 'Fortbrain ships with its own source-level documentation MCP and log-analysis MCP. Not sure how to use something? Just ask. A module not working? Just ask. It reads the docs, digs through the logs and repairs itself, and doesn’t let go until the problem is solved. IT only has to look at the genuinely hard problems from now on.',
     },
     result: 'What kind of intelligence does a modern enterprise actually need?',
     answer: '<em>Fortbrain</em> is our answer.',

@@ -199,11 +199,11 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     r.material.opacity = op; r.material.color.setHex(color); r.scale.setScalar(SQ * 0.6); scene.add(r); ripples.push({ m: r, t: 0, op })
   }
 
-  // ── featured cubes A..G for stages 3..8 (stage 7 uses E and its nearest neighbour F)
-  const featured = pickFeatured(stores, 7)
-  const [A, B, C, D, E, G, H] = featured
+  // ── featured cubes A..J for stages 3..10 (stage 7 uses E and its nearest neighbour F)
+  const featured = pickFeatured(stores, 8)
+  const [A, B, C, D, E, G, H, J] = featured
   const F = stores.filter((s) => !featured.includes(s)).sort((a, b) => Math.hypot(a.x - E.x, a.z - E.z) - Math.hypot(b.x - E.x, b.z - E.z))[0] || featured[1]
-  const isFixed = (s) => [B, C, D, H].includes(s)
+  const isFixed = (s) => [B, C, D, H, J].includes(s)
 
   // A: "people only decide" — a pending card rises from the cube (amber), turns green the moment
   // it is approved, then three light streaks fan out to three small satellite cubes (the transfer,
@@ -390,6 +390,18 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     H._cube.add(scan)
     return { list, scan, dir: [dx, dz] }
   })()
+
+  // J: self-diagnosis / self-healing — the cube runs green, glitches red (a fault), an amber scan
+  // ring sweeps it bottom-to-top twice (reading docs and logs), then it snaps back green with a
+  // ripple (healed) and runs on. Its own loop, like the other featured states.
+  const J_AZ = 1.4
+  const heal = (() => {
+    J._tint = new THREE.Color(TIER.ok); J._noGold = true
+    const ring = new THREE.Mesh(ringGeo, track(new THREE.MeshBasicMaterial({ color: TIER.warn, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false })))
+    ring.rotation.x = -Math.PI / 2; scene.add(ring)
+    const ok = new THREE.Color(TIER.ok), bad = new THREE.Color(TIER.bad), warn = new THREE.Color(TIER.warn), col = new THREE.Color(TIER.ok)
+    return { ring, ok, bad, warn, col, lastPh: 0 }
+  })()
   const stream = (() => {                                   // data particles rising into the cube
     const N = mobile ? 50 : 90
     const pos = new Float32Array(N * 3), ph = new Float32Array(N), rad = new Float32Array(N), ang = new Float32Array(N)
@@ -451,6 +463,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     { target: at(A).add(new THREE.Vector3(0, 0.8, 0)), dist: 24, pol: 1.05, az: A_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: mid, dist: Math.max(34, dEF * 1.3), pol: 1.08, az: 0.3, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(G), dist: 22, pol: 1.0, az: 2.2, spin: 0, dim: 0, closeup: true, off: 1 },
+    { target: at(J).add(new THREE.Vector3(0, 0.8, 0)), dist: 25, pol: 1.05, az: J_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(0, 0, 0), dist: 340, pol: 0.95, az: 0.25, spin: 0.02, dim: 0, closeup: true, off: 0.45 },
   ]
   if (mobile) for (const k of KEYS) k.dist *= 1.35
@@ -491,6 +504,22 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     if (mobile) camera.setViewOffset(VW, VH, 0, VH * 0.2 * cur.off, VW, VH); else camera.setViewOffset(VW, VH, -VW * 0.16 * cur.off, 0, VW, VH)
     renderer.toneMappingExposure = 0.95 * (1 - 0.65 * cur.dim)
 
+    // ── J cycle: healthy (0–.25) → fault (.25–.45) → scan (.45–.72) → healed flash (.72–.8) → healthy
+    {
+      const ph = reduced ? 0.1 : (el / 8) % 1
+      const fault = smooth((ph - 0.25) / 0.06) * (1 - smooth((ph - 0.72) / 0.04))
+      const scanT = (ph - 0.45) / 0.27
+      const flash = ph >= 0.72 ? Math.max(0, 1 - (ph - 0.72) / 0.1) : 0
+      const flicker = fault > 0 && !reduced ? 0.55 + 0.45 * Math.abs(Math.sin(el * 23) * Math.sin(el * 7.3)) : 1
+      heal.col.copy(heal.ok).lerp(heal.bad, fault).lerp(heal.warn, scanT > 0 && scanT < 1 ? 0.5 * Math.sin(scanT * Math.PI) : 0)
+      heal.level = 0.55 - 0.4 * fault
+      heal.em = (0.12 + 0.05 * Math.sin(el * 2)) * flicker * (1 - fault * 0.4) + flash * 0.5
+      heal.edge = (0.6 + 0.4 * flash) * (fault > 0 ? flicker : 1)
+      if (!reduced && ph >= 0.25 && heal.lastPh < 0.25) ripple(J.x, J.z, TIER.bad, 0.5)
+      if (!reduced && ph >= 0.72 && heal.lastPh < 0.72) ripple(J.x, J.z, TIER.ok, 0.6)
+      heal.lastPh = ph
+      heal._scanT = scanT
+    }
     // ── stores breathing + featured states
     const sc = Math.max(0.42, Math.min(1, cur.dist / 330))
     const period = 3.2
@@ -502,10 +531,12 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       else if (s === H) lv = 0.5
       else if (s === B) { const ph = (el / 7) % 1; lv = ph < 0.8 ? smooth(ph / 0.8) : 1 - smooth((ph - 0.8) / 0.2) }
       else if (s === D) lv = 0.4
+      else if (s === J) lv = heal.level
       else lv = reduced ? 0.4 : 0.5 + 0.5 * Math.sin(el * s._speed + s._phase) * (0.6 + 0.4 * Math.sin(el * 0.11 + s._phase * 2))
       applyLevel(s, clamp01(lv), s._tint)
       if (s === D) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.1 + 0.06 * Math.sin(el * 2.4) }
       if (s === H) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.14 }
+      if (s === J) { s._edges.material.color.copy(heal.col); s._shell.material.emissive.copy(heal.col); s._core.material.uniforms.uTint.value.copy(heal.col); s._emBase = heal.em; s._edges.material.opacity = heal.edge }
       if (s === A && !reduced) {
         const ph = (el / 7) % 1                                  // same clock as the decision cycle below
         const boost = ph < 0.15 ? ph / 0.15 : Math.max(0, 1 - (ph - 0.15) / 0.5)
@@ -524,6 +555,16 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       const st = s._stem.geometry.attributes.position; st.setY(1, (HOVER - SQ / 2 + bob) * sc); st.needsUpdate = true; s._stem.material.opacity = 0.22 * born
       s._shadow.scale.setScalar(sc * born); s._shadow.material.opacity = (0.9 - bob * 0.4) * born
       const ls = Math.max(0.5, sc); s._label.scale.setScalar(ls); s._label.position.x = (SQ / 2 + LABEL_W / 2 + 1) * ls; s._label.material.opacity = born
+    }
+    // J: the amber scan ring sweeps the cube bottom-to-top twice while it diagnoses itself
+    {
+      const t = heal._scanT
+      const on = t > 0 && t < 1
+      const sweep = on ? (t * 2) % 1 : 0
+      const bottom = (HOVER - SQ / 2) * sc, top = (HOVER + SQ * 0.5 * J._hf) * sc
+      heal.ring.position.set(J.x, bottom + (top - bottom) * sweep, J.z)
+      heal.ring.scale.setScalar(SQ * 0.95 * sc)
+      heal.ring.material.opacity = on ? 0.85 * Math.sin(sweep * Math.PI) : 0
     }
     // A: decision cycle — card rises (pending) → approved (green flash) → three streaks fan out → satellites light → fade
     {

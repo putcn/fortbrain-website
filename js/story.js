@@ -15,7 +15,7 @@
  * second screen is the one screen of travel it actually has.
  */
 export const LAYERS_STAGE = 2
-export const STAGES = [1, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]
+export const STAGES = [1, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 /** Fraction of a stage the camera holds before easing to the next stage (hero: almost none). */
 export const HOLD = STAGES.map((_, k) => (k === 0 ? 0.2 : 0.5))
 const TOTAL = STAGES.reduce((a, b) => a + b, 0)
