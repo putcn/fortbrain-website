@@ -21,8 +21,26 @@ export function createLayers(root, { reduced = false } = {}) {
   let shown = false, k = -1, u = 0
   // phones: the stage is a fixed 1040px design, so scale it by viewport width (CSS can't divide
   // a length into a plain number for scale(), hence the variable set from here)
-  const fit = () => root.style.setProperty('--stage-scale', Math.min(0.6, window.innerWidth / 1050).toFixed(3))
+  const phone = window.matchMedia('(max-width: 767px), (pointer: coarse) and (max-width: 1024px)')
+  const stage = root.querySelector('.stage')
+  const fit = () => {
+    root.style.setProperty('--stage-scale', Math.min(0.6, window.innerWidth / 1050).toFixed(3))
+    if (!phone.matches) return
+    // Measure where the three layers actually land (the isometric stage's visual centre is nowhere
+    // near its box centre) and shift the stage so their union is centred, in the top ~30% of the
+    // screen above the copy. Done in screen space: the outer translate of the stage transform.
+    root.style.setProperty('--stage-dx', '0px'); root.style.setProperty('--stage-dy', '0px')
+    const saved = layers.map((el) => el.style.transform)
+    layers.forEach((el, i) => { el.style.transform = `translate3d(0px, 0px, ${CFG[i].z}px)` })
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    for (const el of layers) { const b = el.getBoundingClientRect(); x0 = Math.min(x0, b.left); y0 = Math.min(y0, b.top); x1 = Math.max(x1, b.right); y1 = Math.max(y1, b.bottom) }
+    layers.forEach((el, i) => { el.style.transform = saved[i] })
+    if (!isFinite(x0)) return
+    const dx = window.innerWidth / 2 - (x0 + x1) / 2, dy = window.innerHeight * 0.3 - (y0 + y1) / 2
+    root.style.setProperty('--stage-dx', dx.toFixed(1) + 'px'); root.style.setProperty('--stage-dy', dy.toFixed(1) + 'px')
+  }
   fit(); window.addEventListener('resize', fit)
+  void stage
   const show = (v) => { if (v !== shown) { shown = v; root.classList.toggle('show', v) } }
 
   function setProgress(stage, prog) { k = stage; u = prog }

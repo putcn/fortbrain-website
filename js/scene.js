@@ -200,10 +200,10 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   }
 
   // ── featured cubes A..G for stages 3..8 (stage 7 uses E and its nearest neighbour F)
-  const featured = pickFeatured(stores, 6)
-  const [A, B, C, D, E, G] = featured
+  const featured = pickFeatured(stores, 7)
+  const [A, B, C, D, E, G, H] = featured
   const F = stores.filter((s) => !featured.includes(s)).sort((a, b) => Math.hypot(a.x - E.x, a.z - E.z) - Math.hypot(b.x - E.x, b.z - E.z))[0] || featured[1]
-  const isFixed = (s) => [B, C, D].includes(s)
+  const isFixed = (s) => [B, C, D, H].includes(s)
 
   // B: gold, grows with "sales"
   B._tint = new THREE.Color(T.tint)
@@ -320,6 +320,48 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     }
   }
 
+  // H: data intelligence — the cube itself does the talking. Ahead of the solid "now" cube a
+  // trail of translucent ghost cubes materialises one after another, each taller than the last
+  // (the forecast reaching forward); inside the real cube a scan plane sweeps bottom to top
+  // (analysis); data particles rise from the ground into it; a violet scan ring sweeps out.
+  const H_AZ = -2.0
+  const NG = 5
+  const ghosts = (() => {
+    H._tint = new THREE.Color(0x9d8cff); H._noGold = true
+    const dx = Math.cos(H_AZ), dz = -Math.sin(H_AZ)                    // screen-right for the H keyframe
+    const list = []
+    const fillGeo = track(new THREE.BoxGeometry(SQ, SQ, SQ)), edgeG = track(new THREE.EdgesGeometry(fillGeo))
+    for (let i = 1; i <= NG; i++) {
+      const g = new THREE.Group()
+      const hf = 1 + 0.24 * i
+      const fill = new THREE.Mesh(fillGeo, track(new THREE.MeshBasicMaterial({ color: 0x9d8cff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })))
+      const edges = new THREE.LineSegments(edgeG, track(new THREE.LineBasicMaterial({ color: 0xe8cf8f, transparent: true, opacity: 0 })))
+      g.add(fill, edges)
+      g.position.set(H.x + dx * i * SQ * 1.35, HOVER - SQ / 2 + (SQ * hf) / 2, H.z + dz * i * SQ * 1.35)
+      g.scale.set(1, hf, 1)
+      scene.add(g); list.push({ g, fill, edges, i, hf })
+    }
+    // scan plane inside the real cube (child of the cube group so it turns with it)
+    const scan = new THREE.Mesh(track(new THREE.BoxGeometry(SQ * 0.78, 0.07, SQ * 0.78)), track(new THREE.MeshBasicMaterial({ color: 0xd9ccff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })))
+    H._cube.add(scan)
+    return { list, scan, dir: [dx, dz] }
+  })()
+  const stream = (() => {                                   // data particles rising into the cube
+    const N = mobile ? 50 : 90
+    const pos = new Float32Array(N * 3), ph = new Float32Array(N), rad = new Float32Array(N), ang = new Float32Array(N)
+    const r1 = lcg(53)
+    for (let i = 0; i < N; i++) { ph[i] = r1(); rad[i] = 1.6 + r1() * 2.6; ang[i] = r1() * Math.PI * 2 }
+    const g = track(new THREE.BufferGeometry()); g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+    const dotCv = document.createElement('canvas'); dotCv.width = dotCv.height = 64
+    const dc = dotCv.getContext('2d'), dg = dc.createRadialGradient(32, 32, 2, 32, 32, 30)
+    dg.addColorStop(0, 'rgba(255,255,255,1)'); dg.addColorStop(0.35, 'rgba(170,240,255,.8)'); dg.addColorStop(1, 'rgba(120,220,255,0)')
+    dc.fillStyle = dg; dc.fillRect(0, 0, 64, 64)
+    const dotTex = track(new THREE.CanvasTexture(dotCv)); dotTex.colorSpace = THREE.SRGBColorSpace
+    const pts = new THREE.Points(g, track(new THREE.PointsMaterial({ map: dotTex, color: 0x8ff0ff, size: 0.55, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true })))
+    scene.add(pts)
+    return { pts, pos, ph, rad, ang, N, top: HOVER + SQ * 0.4 }
+  })()
+
   // G: assembles from wireframe, face by face
   const faceMats = []
   {
@@ -361,6 +403,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     { target: at(A), dist: 22, pol: 1.05, az: 0.5, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(B).add(new THREE.Vector3(0, 3, 0)), dist: 30, pol: 1.1, az: -0.6, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(C.x, 3, C.z), dist: 42, pol: 1.0, az: 0.9, spin: 0, dim: 0, closeup: true, off: 1 },
+    { target: new THREE.Vector3(H.x + Math.cos(H_AZ) * 3.2, HOVER * 0.6, H.z - Math.sin(H_AZ) * 3.2), dist: 26, pol: 1.02, az: H_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(D), dist: 22, pol: 1.05, az: -1.2, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: mid, dist: Math.max(34, dEF * 1.3), pol: 1.08, az: 0.3, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(G), dist: 22, pol: 1.0, az: 2.2, spin: 0, dim: 0, closeup: true, off: 1 },
@@ -396,8 +439,8 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     const sp = Math.sin(cur.pol), cp = Math.cos(cur.pol)
     camera.position.set(cur.target.x + cur.dist * sp * Math.sin(cur.az), cur.target.y + cur.dist * cp, cur.target.z + cur.dist * sp * Math.cos(cur.az))
     camera.up.set(0, 1, 0); camera.lookAt(cur.target)
-    const W = window.innerWidth, H = window.innerHeight
-    if (mobile) camera.setViewOffset(W, H, 0, H * 0.2 * cur.off, W, H); else camera.setViewOffset(W, H, -W * 0.16 * cur.off, 0, W, H)
+    const VW = window.innerWidth, VH = window.innerHeight
+    if (mobile) camera.setViewOffset(VW, VH, 0, VH * 0.2 * cur.off, VW, VH); else camera.setViewOffset(VW, VH, -VW * 0.16 * cur.off, 0, VW, VH)
     renderer.toneMappingExposure = 0.95 * (1 - 0.65 * cur.dim)
 
     // ── stores breathing + featured states
@@ -408,6 +451,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       s._core.material.uniforms.uTime.value = el
       let lv
       if (s === A) lv = 0.3
+      else if (s === H) lv = 0.5
       else if (s === B) { const ph = (el / 7) % 1; lv = ph < 0.8 ? smooth(ph / 0.8) : 1 - smooth((ph - 0.8) / 0.2) }
       else if (s === D) {
         const ph = (el / 4.8) % 1, st = ph < 0.4 ? 0 : ph < 0.7 ? 1 : 2
@@ -418,6 +462,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       } else lv = reduced ? 0.4 : 0.5 + 0.5 * Math.sin(el * s._speed + s._phase) * (0.6 + 0.4 * Math.sin(el * 0.11 + s._phase * 2))
       applyLevel(s, clamp01(lv), s._tint)
       if (s === D) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.12 + (s._lastSt === 2 ? 0.2 : 0) }
+      if (s === H) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.14 }
       if (s === A && !reduced) {
         const ph = (el + s._phase) % period
         const boost = ph < 0.25 ? ph / 0.25 : Math.max(0, 1 - (ph - 0.25) / 1.4)
@@ -437,6 +482,29 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       const st = s._stem.geometry.attributes.position; st.setY(1, (HOVER - SQ / 2 + bob) * sc); st.needsUpdate = true; s._stem.material.opacity = 0.22 * born
       s._shadow.scale.setScalar(sc * born); s._shadow.material.opacity = (0.9 - bob * 0.4) * born
       const ls = Math.max(0.5, sc); s._label.scale.setScalar(ls); s._label.position.x = (SQ / 2 + LABEL_W / 2 + 1) * ls; s._label.material.opacity = born
+    }
+    // H: ghost cubes materialise outward (forecast), hold, dissolve; scan plane sweeps; particles rise
+    {
+      const ph = reduced ? 0.6 : (el / 6.5) % 1
+      const out = smooth((ph - 0.72) / 0.22)
+      const [gdx, gdz] = ghosts.dir
+      for (const gh of ghosts.list) {                       // same distance-based scale `sc` as the real cubes
+        const a = smooth((ph - gh.i * 0.09) / 0.2) * (1 - out)
+        gh.fill.material.opacity = 0.09 * a
+        gh.edges.material.opacity = (0.8 - gh.i * 0.08) * a
+        gh.g.scale.set(sc, sc * gh.hf, sc)
+        const step = gh.i * SQ * 1.35 * sc
+        gh.g.position.set(H.x + gdx * step, (HOVER - SQ / 2) * sc + (SQ * gh.hf * sc) / 2 + (reduced ? 0 : Math.sin(el * 0.8 + gh.i) * 0.2 * sc), H.z + gdz * step)
+      }
+      ghosts.scan.position.y = -SQ / 2 + 0.12 + (SQ - 0.24) * (reduced ? 0.5 : (el * 0.55) % 1)
+      const a = stream.pos
+      for (let i = 0; i < stream.N; i++) {
+        const k = reduced ? stream.ph[i] : (stream.ph[i] + el * 0.16) % 1
+        const r = stream.rad[i] * (1 - k * 0.85), th = stream.ang[i] + k * 4.5
+        a[i * 3] = H.x + Math.cos(th) * r * sc; a[i * 3 + 1] = 0.2 + k * stream.top * sc; a[i * 3 + 2] = H.z + Math.sin(th) * r * sc
+      }
+      stream.pts.geometry.attributes.position.needsUpdate = true
+      if (!reduced && (el % 4) < dt) ripple(H.x, H.z, 0x9d8cff, 0.45)
     }
     // G assembling: faces appear one by one, hold, then dissolve
     {
@@ -460,7 +528,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       }
       d.u += (reduced ? 0.02 : dt * 0.45) * d.dir
       const k = d.dir > 0 ? d.u : 1 - d.u
-      d.link.curve.getPoint(Math.max(0, Math.min(1, d.u)), d.m.position)
+      d.link.curve.getPoint(Math.max(0, Math.min(1, d.u)), d.m.position); d.m.scale.setScalar(Math.max(0.5, sc))
       d.m.material.opacity = 0.9 * Math.sin(Math.max(0, Math.min(1, k)) * Math.PI)
       d.link.line.material.opacity = Math.max(0.16, d.link.line.material.opacity - dt * 0.12)
       if (k >= 1) { d.link = null; d.wait = 0.4 + rnd() * 2.2; d.m.material.opacity = 0 }
@@ -469,7 +537,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     for (const d of EF.dots) {
       if (!reduced) d.u += dt * 0.22 * d.dir
       if (d.u > 1) { d.u = 1; d.dir = -1 } else if (d.u < 0) { d.u = 0; d.dir = 1 }
-      EF.curve.getPoint(d.u, d.m.position)
+      EF.curve.getPoint(d.u, d.m.position); d.m.scale.setScalar(Math.max(0.5, sc))
       d.m.material.opacity = 0.35 + 0.6 * Math.sin(d.u * Math.PI)
     }
     // ripples
@@ -492,6 +560,9 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   return {
     setProgress,
     tick,
+    /** debugging aid: which demo store plays which role */
+    roles: () => ({ A: A.id, B: B.id, C: C.id, D: D.id, E: E.id, F: F.id, G: G.id, H: H.id }),
+    debugH: () => ({ edge: H._edges.material.color.getHexString(), em: H._shell.material.emissiveIntensity, level: H._level, ghosts: ghosts.list.map((g) => [g.edges.material.opacity.toFixed(2), g.g.position.x.toFixed(1), g.g.position.y.toFixed(1), g.g.position.z.toFixed(1), g.g.scale.y.toFixed(2)]), scanY: ghosts.scan.position.y.toFixed(2), scanVisible: ghosts.scan.visible, p0: [stream.pos[0], stream.pos[1], stream.pos[2]].map((v) => v.toFixed(1)), H: [H.x.toFixed(1), H.z.toFixed(1)], cubeScale: H._cube.scale.y.toFixed(2) }),
     setStoreWord(word, sub) { storeWord = word; for (const s of stores) s._sub = sub; paintLabels() },
     resize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight, false) },
     dispose() { for (const r of ripples) { scene.remove(r.m); r.m.material.dispose() } for (const o of junk) o.dispose?.(); scene.clear(); renderer.dispose() },

@@ -168,7 +168,7 @@ h2 {
   #layers { perspective: 1100px; perspective-origin: 50% 30%; }
   /* phones: pull the three layers closer together, scale the stage by viewport width and
      keep it centred above the copy (the copy takes the bottom ~45% of the screen) */
-  #layers .stage { transform: translate(-18vw, -22svh) scale(var(--stage-scale, .45)) rotateX(58deg) rotateZ(-45deg); }
+  #layers .stage { transform: translate(var(--stage-dx, -18vw), var(--stage-dy, -22svh)) scale(var(--stage-scale, .45)) rotateX(58deg) rotateZ(-45deg); }
   .layer.list { left: 150px; top: 40px; }
   .layer.main { left: 380px; top: 70px; width: 440px; }
 }

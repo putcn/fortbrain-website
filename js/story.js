@@ -12,7 +12,7 @@
  * second screen is the one screen of travel it actually has.
  */
 export const LAYERS_STAGE = 2
-export const STAGES = [2, 2, 3, 2, 2, 2, 2, 2, 2, 2]
+export const STAGES = [2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]
 const TOTAL = STAGES.reduce((a, b) => a + b, 0)
 const SCROLLABLE = TOTAL - 1
 const LAST = STAGES.length - 1

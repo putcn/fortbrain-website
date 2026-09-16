@@ -32,18 +32,23 @@ export const TEXTS = {
       title: '库存像液体一样流动',
       body: '仓、店、供应商都是玻璃罐，液面就是有货比例。货道发光，在途的车走到哪一步一眼看清。',
     },
+    insight: {
+      label: '04 · 洞察',
+      title: '基于数据的智能',
+      body: '强大的预测引擎，洞察深入到每一个 SKU、每一家店。给出的是最实际、最不绕弯子的商业决策：调多少货、什么时候补、哪家店该盯。',
+    },
     p4: {
-      label: '04 · 分级',
+      label: '05 · 分级',
       title: '告警分级，不打扰',
       body: 'L0 静默记录，L1 / L2 普通通知，L3 告警，L4 让助理主动开会话并要求确认。该响的响，不该响的不响。',
     },
     p5: {
-      label: '05 · 协作',
+      label: '06 · 协作',
       title: '智能体之间会协作',
       body: '你的助理可以去问同事的助理，跨部门知识库直接对话，委托子任务。四道防风暴机制，不会自己聊起来。',
     },
     p6: {
-      label: '06 · 接入',
+      label: '07 · 接入',
       title: '零改动接入',
       body: 'POS、爬虫、外部系统按统一的 Addon 协议接进来，核心代码零改动。授权到人，撤销即失效。',
     },
@@ -102,18 +107,23 @@ export const TEXTS = {
       title: 'Inventory flows like liquid',
       body: 'Warehouses, stores and suppliers are glass tanks; the liquid level is stock coverage. Lanes glow, and every shipment shows how far along it is.',
     },
+    insight: {
+      label: '04 · Insight',
+      title: 'Intelligence built on data',
+      body: 'A strong forecast engine, with insight down to every SKU and every store. What comes out is the most practical, no-detour business decision: how much to move, when to reorder, which store needs attention.',
+    },
     p4: {
-      label: '04 · Tiered',
+      label: '05 · Tiered',
       title: 'Tiered alerts, no nagging',
       body: 'L0 is logged silently, L1 / L2 notify, L3 alerts, L4 makes the assistant open a conversation and demand confirmation. What should ring, rings.',
     },
     p5: {
-      label: '05 · Collaborate',
+      label: '06 · Collaborate',
       title: 'Agents collaborate',
       body: 'Your assistant can ask a colleague’s assistant, query another department’s knowledge base, delegate a subtask. Four storm guards keep them from chatting among themselves.',
     },
     p6: {
-      label: '06 · Plug in',
+      label: '07 · Plug in',
       title: 'Plug in with zero core changes',
       body: 'POS, crawlers and external systems attach through one Addon protocol; the core never changes. Access is granted per person and gone the moment it is revoked.',
     },
