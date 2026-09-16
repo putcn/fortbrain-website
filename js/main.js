@@ -2,6 +2,9 @@ import { TEXTS, detectLang, applyLang } from './i18n.js'
 import { initStory } from './story.js'
 import { createLayers } from './layers.js'
 
+// Bump on each deploy: the scene module is imported with this as a query so browsers (and the
+// 10-minute GitHub Pages cache) never keep serving an old scene.js against a new page.
+const VERSION = '2026-09-16a'
 const params = new URLSearchParams(location.search)
 const errors = []
 window.addEventListener('error', (e) => errors.push(String(e.message || e)))
@@ -38,7 +41,7 @@ async function boot() {
   if (hasWebGL()) {
     try {
       const [{ create }, geo] = await Promise.all([
-        import('./scene.js'),
+        import(`./scene.js?v=${VERSION}`),
         fetch('data/xuzhou.json').then((r) => { if (!r.ok) throw new Error('basemap ' + r.status); return r.json() }),
       ])
       view = create(gl, { geo, mobile, reduced })
@@ -49,7 +52,7 @@ async function boot() {
   }
   if (!view) {
     gl.hidden = true; a2d.hidden = false
-    const { create } = await import('./fallback.js')
+    const { create } = await import(`./fallback.js?v=${VERSION}`)
     view = create(a2d, { mobile, reduced })
   }
   view.setStoreWord?.(TEXTS[lang].ui.storeWord, TEXTS[lang].ui.storeSub)

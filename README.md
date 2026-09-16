@@ -9,9 +9,11 @@
 ## 本地预览
 
 ```bash
-python3 -m http.server 8931 --bind 127.0.0.1     # 任意静态服务器都行；直接双击 index.html 不行（ES module 需要 http）
+python3 scripts/serve.py        # 127.0.0.1:8931，带 no-store 头（普通 http.server 会让浏览器缓存旧的 scene.js）
 open http://127.0.0.1:8931/
 ```
+
+直接双击 `index.html` 不行（ES module 需要 http）。每次部署前把 `js/main.js` 里的 `VERSION` 改一下，场景模块按版本号缓存。
 
 调试参数：`?lang=zh|en` 强制语言；`?nogl=1` 强制走 canvas 2D 极光降级层。控制台 `window.__fb` 有 view / story / errors。
 

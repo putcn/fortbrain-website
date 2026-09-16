@@ -205,6 +205,30 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
   const F = stores.filter((s) => !featured.includes(s)).sort((a, b) => Math.hypot(a.x - E.x, a.z - E.z) - Math.hypot(b.x - E.x, b.z - E.z))[0] || featured[1]
   const isFixed = (s) => [B, C, D, H].includes(s)
 
+  // A: "people only decide" — a pending card rises from the cube (amber), turns green the moment
+  // it is approved, then three light streaks fan out to three small satellite cubes (the transfer,
+  // the calendar, the system) which light up one after another: the assistant did the rest.
+  const A_AZ = 0.5
+  const decide = (() => {
+    const right = [Math.cos(A_AZ), -Math.sin(A_AZ)], down = [Math.sin(A_AZ), Math.cos(A_AZ)]
+    const at2 = (r, d) => [right[0] * r + down[0] * d, right[1] * r + down[1] * d]
+    const offsets = [at2(1, 0.45), at2(-0.95, 0.5), at2(0.75, -0.85)]          // right-front, left-front, right-back
+    const card = new THREE.Mesh(track(new THREE.BoxGeometry(SQ * 0.95, 0.09, SQ * 0.62)), track(new THREE.MeshBasicMaterial({ color: 0xe0a33e, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })))
+    const cardEdge = new THREE.LineSegments(track(new THREE.EdgesGeometry(card.geometry)), track(new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 })))
+    card.add(cardEdge); scene.add(card)
+    const satGeo = track(new THREE.BoxGeometry(SQ * 0.5, SQ * 0.5, SQ * 0.5)), satEdge = track(new THREE.EdgesGeometry(satGeo))
+    const sats = offsets.map((o) => {
+      const g = new THREE.Group()
+      const m = new THREE.Mesh(satGeo, track(new THREE.MeshStandardMaterial({ color: 0x16283f, emissive: 0x63d9a0, emissiveIntensity: 0, roughness: 0.4, metalness: 0.5 })))
+      const e = new THREE.LineSegments(satEdge, track(new THREE.LineBasicMaterial({ color: T.acc, transparent: true, opacity: 0.5 })))
+      g.add(m, e); scene.add(g)
+      return { g, m, e, o }
+    })
+    const dotGeo = track(new THREE.SphereGeometry(0.2, 10, 8))
+    const dots = sats.map(() => { const d = new THREE.Mesh(dotGeo, track(new THREE.MeshBasicMaterial({ color: 0x9ff5c8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }))); scene.add(d); return d })
+    return { card, cardEdge, sats, dots, lastPh: 0 }
+  })()
+
   // B: gold, grows with "sales"
   B._tint = new THREE.Color(T.tint)
 
@@ -424,7 +448,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     { target: new THREE.Vector3(C.x, 3, C.z), dist: 42, pol: 1.0, az: 0.9, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(H.x + Math.cos(H_AZ) * 3.2, HOVER * 0.6, H.z - Math.sin(H_AZ) * 3.2), dist: 26, pol: 1.02, az: H_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(D.x + Math.cos(D_AZ) * 2.6, HOVER * 0.7, D.z - Math.sin(D_AZ) * 2.6), dist: 26, pol: 1.05, az: D_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
-    { target: at(A), dist: 22, pol: 1.05, az: 0.5, spin: 0, dim: 0, closeup: true, off: 1 },
+    { target: at(A).add(new THREE.Vector3(0, 0.8, 0)), dist: 24, pol: 1.05, az: A_AZ, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: mid, dist: Math.max(34, dEF * 1.3), pol: 1.08, az: 0.3, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: at(G), dist: 22, pol: 1.0, az: 2.2, spin: 0, dim: 0, closeup: true, off: 1 },
     { target: new THREE.Vector3(0, 0, 0), dist: 340, pol: 0.95, az: 0.25, spin: 0.02, dim: 0, closeup: true, off: 0.45 },
@@ -479,11 +503,10 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       if (s === D) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.1 + 0.06 * Math.sin(el * 2.4) }
       if (s === H) { s._edges.material.color.copy(s._tint); s._shell.material.emissive.copy(s._tint); s._emBase = 0.14 }
       if (s === A && !reduced) {
-        const ph = (el + s._phase) % period
-        const boost = ph < 0.25 ? ph / 0.25 : Math.max(0, 1 - (ph - 0.25) / 1.4)
+        const ph = (el / 7) % 1                                  // same clock as the decision cycle below
+        const boost = ph < 0.15 ? ph / 0.15 : Math.max(0, 1 - (ph - 0.15) / 0.5)
         s._core.material.uniforms.uBoost.value = boost * 0.9
         s._shell.material.emissiveIntensity = s._emBase + boost * 0.16
-        if (ph < 0.05 && !s._rippled) { ripple(s.x, s.z, T.acc, 0.5); s._rippled = true } else if (ph > 0.5) s._rippled = false
       } else if (s === B && !reduced) {
         s._shell.material.emissiveIntensity = s._emBase
         if (rnd() < dt * 0.9) ripple(s.x, s.z, PAY[Math.floor(rnd() * 3)], 0.4)
@@ -497,6 +520,35 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
       const st = s._stem.geometry.attributes.position; st.setY(1, (HOVER - SQ / 2 + bob) * sc); st.needsUpdate = true; s._stem.material.opacity = 0.22 * born
       s._shadow.scale.setScalar(sc * born); s._shadow.material.opacity = (0.9 - bob * 0.4) * born
       const ls = Math.max(0.5, sc); s._label.scale.setScalar(ls); s._label.position.x = (SQ / 2 + LABEL_W / 2 + 1) * ls; s._label.material.opacity = born
+    }
+    // A: decision cycle — card rises (pending) → approved (green flash) → three streaks fan out → satellites light → fade
+    {
+      const ph = reduced ? 0.7 : (el / 7) % 1
+      const APPROVE = 0.34, fade = smooth((ph - 0.9) / 0.1)
+      const rise = smooth(ph / 0.15)
+      const topY = (HOVER + SQ * 0.5 * A._hf) * sc
+      decide.card.position.set(A.x, topY + (0.6 + 1.4 * rise) * sc + (reduced ? 0 : Math.sin(el * 1.6) * 0.12 * sc), A.z)
+      decide.card.rotation.y = A._cube.rotation.y; decide.card.scale.setScalar(sc)
+      const approved = smooth((ph - APPROVE) / 0.05)
+      decide.card.material.color.setHex(0xe0a33e).lerp(new THREE.Color(0x63d9a0), approved)
+      decide.card.material.opacity = (0.55 + 0.35 * approved) * rise * (1 - fade)
+      decide.cardEdge.material.opacity = 0.9 * rise * (1 - fade)
+      if (!reduced && ph >= APPROVE && decide.lastPh < APPROVE) ripple(A.x, A.z, TIER.ok, 0.55)
+      decide.lastPh = ph
+      decide.sats.forEach((st, i) => {
+        const R = SQ * 2.6 * sc
+        st.g.position.set(A.x + st.o[0] * R, (SQ * 0.25) * sc, A.z + st.o[1] * R); st.g.scale.setScalar(sc)
+        const t = (ph - (0.42 + i * 0.13)) / 0.16
+        const lit = smooth((ph - (0.58 + i * 0.13)) / 0.04) * (1 - fade)
+        st.m.material.emissiveIntensity = 1.1 * lit
+        st.e.material.opacity = 0.5 + 0.5 * lit
+        const d = decide.dots[i]
+        if (t > 0 && t < 1) {
+          d.position.set(A.x, topY, A.z).lerp(new THREE.Vector3(st.g.position.x, st.g.position.y + SQ * 0.25 * sc, st.g.position.z), smooth(t))
+          d.position.y += Math.sin(t * Math.PI) * 0.9 * sc
+          d.material.opacity = Math.sin(t * Math.PI); d.scale.setScalar(Math.max(0.5, sc))
+        } else d.material.opacity = 0
+      })
     }
     // D: records fly from the cube onto the ledger; the stack fills, holds, then clears; tick ring turns
     {
@@ -599,6 +651,7 @@ export function create(canvas, { geo = null, mobile = false, reduced = false } =
     tick,
     /** debugging aid: which demo store plays which role */
     roles: () => ({ A: A.id, B: B.id, C: C.id, D: D.id, E: E.id, F: F.id, G: G.id, H: H.id }),
+    debugA: () => ({ A: [A.x.toFixed(1), A.z.toFixed(1), A._hf.toFixed(2)], card: [decide.card.position.x.toFixed(1), decide.card.position.y.toFixed(2), decide.card.position.z.toFixed(1), decide.card.material.opacity.toFixed(2), decide.card.scale.x.toFixed(2)], sats: decide.sats.map((st) => [st.g.position.x.toFixed(1), st.g.position.y.toFixed(2), st.g.position.z.toFixed(1), st.g.scale.x.toFixed(2), st.e.material.opacity.toFixed(2)]), lastPh: decide.lastPh.toFixed(2) }),
     debugH: () => ({ edge: H._edges.material.color.getHexString(), em: H._shell.material.emissiveIntensity, level: H._level, ghosts: ghosts.list.map((g) => [g.edges.material.opacity.toFixed(2), g.g.position.x.toFixed(1), g.g.position.y.toFixed(1), g.g.position.z.toFixed(1), g.g.scale.y.toFixed(2)]), scanY: ghosts.scan.position.y.toFixed(2), scanVisible: ghosts.scan.visible, p0: [stream.pos[0], stream.pos[1], stream.pos[2]].map((v) => v.toFixed(1)), H: [H.x.toFixed(1), H.z.toFixed(1)], cubeScale: H._cube.scale.y.toFixed(2) }),
     setStoreWord(word, sub) { storeWord = word; for (const s of stores) s._sub = sub; paintLabels() },
     resize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight, false) },
