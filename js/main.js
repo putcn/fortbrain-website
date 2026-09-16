@@ -4,7 +4,7 @@ import { createLayers } from './layers.js'
 
 // Bump on each deploy: the scene module is imported with this as a query so browsers (and the
 // 10-minute GitHub Pages cache) never keep serving an old scene.js against a new page.
-const VERSION = '2026-09-16a'
+const VERSION = '2026-09-16b'
 const params = new URLSearchParams(location.search)
 const errors = []
 window.addEventListener('error', (e) => errors.push(String(e.message || e)))

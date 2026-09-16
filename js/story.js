@@ -8,11 +8,16 @@
  * Screen-heights per stage (must match the sections' min-height in CSS). Every section is two
  * screens tall with a one-screen sticky copy block, so each stage stays pinned for a full screen
  * of scrolling (reading time) before it scrolls out; the exploded-UI stage gets three screens.
+ * The hero is a single screen: it is not pinned at all, so the very first scroll already moves
+ * the title, and the camera starts leaving early (see HOLD) — visitors who saw nothing change
+ * after a small scroll used to stop scrolling.
  * The page can only scroll until the last section's top reaches the viewport top, so the finale's
  * second screen is the one screen of travel it actually has.
  */
 export const LAYERS_STAGE = 2
-export const STAGES = [2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]
+export const STAGES = [1, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]
+/** Fraction of a stage the camera holds before easing to the next stage (hero: almost none). */
+export const HOLD = STAGES.map((_, k) => (k === 0 ? 0.2 : 0.5))
 const TOTAL = STAGES.reduce((a, b) => a + b, 0)
 const SCROLLABLE = TOTAL - 1
 const LAST = STAGES.length - 1
@@ -32,11 +37,12 @@ export function progressToStage(p) {
 
 const smooth = (x) => x * x * (3 - 2 * x)
 
-/** Hold stage k for the first half of the section, then ease toward k+1 in the second half. */
+/** Hold stage k for the first HOLD[k] of the section, then ease toward k+1 over the rest. */
 export function blend(k, u) {
   const b = Math.min(k + 1, STAGES.length - 1)
   if (b === k) return { a: k, b, t: 1 }
-  const t = u <= 0.5 ? 0 : smooth(Math.min(1, (u - 0.5) * 2))
+  const h = HOLD[k]
+  const t = u <= h ? 0 : smooth(Math.min(1, (u - h) / (1 - h)))
   return { a: k, b, t }
 }
 

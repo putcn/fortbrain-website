@@ -46,6 +46,8 @@ main { position: relative; z-index: 2; }
    screen of scrolling before it moves on */
 section { position: relative; min-height: 200svh; }
 section.s-layers { min-height: 300svh; }
+/* the hero is one screen and never pinned: the first scroll already moves the title */
+section.s-hero { min-height: 100svh; }
 
 .copy {
   position: sticky; top: 0;
