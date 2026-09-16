@@ -55,7 +55,7 @@ data/xuzhou.json      简化后的徐州底图（< 300KB）
 scripts/build-geo.py  从 ~/Fortbrain/packs/mxipos/app/geo/320300.json 生成 data/xuzhou.json（开发机跑一次，产物进仓库）
 ```
 
-- Three.js 0.160 通过 CDN importmap 引入（jsdelivr），不引入构建工具。
+- Three.js 0.160 自托管在 `vendor/three/`（min build + 用到的两个 addon），importmap 指向本地；不引入构建工具。（原用 jsdelivr CDN，2026-09-15 用户指出国内可能访问不到）
 - 场景**不知道**文案和语言；文字**不知道**镜头。两者只通过「滚动进度」这一个数字联系。
 
 ---

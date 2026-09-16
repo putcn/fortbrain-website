@@ -16,7 +16,7 @@
 - 联系邮箱 putcncx@gmail.com 在 DOM 里拆成 user/domain 两段运行时拼接。
 - 不劫持滚动：不监听 wheel 做 preventDefault；段高用 `100svh`。
 - 底图 `data/xuzhou.json` < 300KB；结构与大屏 `320300.json` 一致（center/districts/roads/water）。
-- Three.js 版本锁 0.160.0；importmap 指向 `https://cdn.jsdelivr.net/npm/three@0.160.0/`。
+- Three.js 版本锁 0.160.0；自托管在 `vendor/three/`，importmap 指向本地（不依赖 CDN）。
 - 手机：DPR 1、关 transmission、只 motorway、~14 个方块、镜头距离 ×1.35。
 - `prefers-reduced-motion`：关自转和呼吸，镜头段切换直接跳。
 - 文案总纲：「我们的目标是实际地为企业降人力成本、增加单位人效，让 AI 成为企业不知疲倦的成长动力。」
