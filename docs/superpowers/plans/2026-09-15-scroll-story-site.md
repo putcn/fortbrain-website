@@ -70,8 +70,8 @@
 - Create: `tests/story.test.mjs`
 
 **Interfaces:**
-- Produces: `SECTIONS = 9`；`progressToStage(p, n=9)->{k, u}`；`blend(k,u)->{a:k, b:min(k+1,n-1), t}`（u<0.5→t=0，u≥0.5→t=smoothstep((u-.5)*2)）；`initStory({onProgress})`（绑定 scroll/resize，rAF 节流，IntersectionObserver 给 `section` 加 `.on`）。
-- [ ] **Step 1: 测试** p=0→k0 u0；p=1→k8 u1；p=0.5→k4 u=0.5；blend 单调。
+- Produces: `STAGES`（每段权重，段 2 占 2 屏）；`progressToStage(p)->{k, u}`（按权重换算）；`blend(k,u)->{a:k, b:min(k+1,n-1), t}`（u<0.5→t=0，u≥0.5→t=smoothstep((u-.5)*2)）；`initStory({onProgress})`（绑定 scroll/resize，rAF 节流，IntersectionObserver 给 `section` 加 `.on`）。
+- [ ] **Step 1: 测试** p=0→k0 u0；p=1→k9 u1；权重段边界正确；blend 单调。
 - [ ] **Step 2: 失败 → 实现 → 通过。**
 - [ ] **Step 3: Commit** `feat: scroll-to-stage mapping`
 
@@ -89,6 +89,16 @@
 - [ ] **Step 4: 用 `?nogl=1` 强制走降级，在浏览器走查九段与语言切换。**
 - [ ] **Step 5: Commit** `feat: page skeleton, copy, language toggle, 2D aurora fallback`
 
+### Task 5b: 界面拆解层（spec §5.2）
+
+**Files:**
+- Create: `js/layers.js`；Modify: `index.html`（段 2 加 `#layers` 舞台与三层 HTML）、`css/site.css`
+
+- [ ] **Step 1: HTML 三层**（导航 / 列表 / 主内容），文字 data-i18n。
+- [ ] **Step 2: CSS 等距舞台**：perspective 1600、rotateX 58 / rotateZ −45、三层 translateZ 0/60/120、玻璃面板样式、手机缩放 0.55。
+- [ ] **Step 3: layers.js** `create()->{setProgress(k,u)}`：u 分三段（飞入 / 停留 / 飞出）写 transform 与 opacity。
+- [ ] **Step 4: 走查桌面 + 手机。Commit** `feat: exploded UI layers section`
+
 ### Task 6: 3D 场景 · 底图 + 陪衬方块 + 全景镜头
 
 **Files:**
@@ -96,7 +106,7 @@
 
 **Interfaces:**
 - `create(canvas, {geo, mobile, reduced})`；内部：渲染器、灯光、地面、区县挤出、道路/水系 LineSegments（照大屏），22/14 个方块（共用玻璃壳 + 流体核 shader），高度随噪声呼吸；镜头 `view {target, dist, az, tilt}`；`KEYS[9]` 关键帧；`setProgress(k,u)` 用 Task 4 的 `blend` 在关键帧间插值并指数平滑。
-- [ ] **Step 1: 场景 + 底图 + 方块 + 段 0/1 全景慢转。** 走查桌面。
+- [ ] **Step 1: 场景 + 底图 + 方块 + 段 0/1/2 全景慢转（段 2 拉远并 `setDim`）。** 走查桌面。
 - [ ] **Step 2: 手机参数分支**（DPR、materials、道路、数量、距离 ×1.35、target 偏移）。用 Chrome 设备模拟走查。
 - [ ] **Step 3: Commit** `feat: 3D basemap scene with breathing store cubes`
 
@@ -105,7 +115,7 @@
 **Files:**
 - Modify: `js/scene.js`
 
-- [ ] **Step 1: `pickFeatured` 选 7 个方块 A–G，分配到段 2–7（段 6 用 E+F）。** 每段关键帧 target = 方块位置，dist 45。
+- [ ] **Step 1: `pickFeatured` 选 7 个方块 A–G，分配到段 3–8（段 7 用 E+F）。** 每段关键帧 target = 方块位置，dist 45。
 - [ ] **Step 2: 各材质/状态**：A 内核 uBoost 周期自亮 + 涟漪；B 金色、高度随时间长高；C 开口玻璃罐 + 液体 + 液面 + 两条到邻居的 TubeGeometry 货道带 drawRange 流动脉冲（照仓储大屏）；D 颜色在 `#63d9a0/#e0a33e/#e2706b` 循环，红时涟漪；E↔F 弧线光点往返；G 线框→按面拼装→实体循环。
 - [ ] **Step 3: 走查每段桌面 + 手机。**
 - [ ] **Step 4: Commit** `feat: six featured cube states`
@@ -115,7 +125,7 @@
 **Files:**
 - Modify: `js/scene.js`
 
-- [ ] **Step 1: 段 8 关键帧 dist 600、tilt 接近垂直；极光 ShaderMaterial 平面 y=120，AdditiveBlending，fbm 三条色带，段 7→8 间 uOpacity 淡入。**
+- [ ] **Step 1: 段 9 关键帧 dist 600、tilt 接近垂直；极光 ShaderMaterial 平面 y=120，AdditiveBlending，fbm 三条色带，段 7→8 间 uOpacity 淡入。**
 - [ ] **Step 2: 走查。Commit** `feat: finale ascent with aurora`
 
 ### Task 9: 收尾
