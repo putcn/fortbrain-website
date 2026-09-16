@@ -85,8 +85,8 @@ export const TEXTS = {
     q: 'What kind of intelligence does<br>a modern enterprise actually need?',
     thesis: {
       label: 'Our goal',
-      title: 'Cut real labor cost. Raise output per person.',
-      body: 'Let AI be the tireless engine of the company’s growth. Every point below is one job that people still do today and will not have to do tomorrow.',
+      title: 'Cut real labor costs. Raise output per person.',
+      body: 'Let AI be the tireless engine of the company’s growth.',
     },
     layers: {
       label: 'One workbench',
