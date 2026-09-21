@@ -25,7 +25,7 @@ document.getElementById('langBtn').addEventListener('click', () => setLang(lang 
 
 // ── contact (assembled at runtime so the address is not in the HTML)
 const mail = document.getElementById('mail')
-const addr = ['putcncx', 'gmail.com'].join('@')
+const addr = ['sales', 'fortbrain.ai'].join('@')
 mail.textContent = addr; mail.href = 'mailto:' + addr
 
 // ── background: 3D scene, or the 2D aurora if WebGL / the basemap is unavailable
