@@ -15,7 +15,7 @@ open http://127.0.0.1:8931/
 
 直接双击 `index.html` 不行（ES module 需要 http）。每次部署前把 `js/main.js` 里的 `VERSION` 改一下，场景模块按版本号缓存。
 
-调试参数：`?lang=zh|en` 强制语言；`?nogl=1` 强制走 canvas 2D 极光降级层。控制台 `window.__fb` 有 view / story / errors。
+调试参数：`?lang=zh|en` 强制语言；`?nogl=1` 强制走 canvas 2D 极光降级层。`#demo=hybrid` 直接打开某个演示。控制台 `window.__fb` 有 view / story / demos / errors。
 
 ## 测试
 
@@ -38,6 +38,8 @@ python3 scripts/build-geo.py     # 读 ~/Fortbrain/packs/mxipos/app/geo/320300.j
 | `index.html` / `css/site.css` | 页面骨架、十段文字、界面拆解三层的 HTML、响应式 |
 | `js/main.js` | 启动：语言、联系邮箱拼接、WebGL 检测、渲染循环 |
 | `js/scene.js` | Three.js 场景：底图、方块、七个特写状态、极光、滚动驱动的镜头 |
+| `js/demo.js` / `js/demo-steps.js` / `js/demos/*.js` | 演示浮层壳、步骤机（纯逻辑，有测试）、每章一个前端 mock 演示；`#demo=hybrid` 直达 |
+| `css/demo.css` | 演示浮层与产品暗色令牌（`fbd-` 前缀） |
 | `js/layers.js` | 界面拆解段的 CSS 3D 飞入 / 停留 / 飞出 |
 | `js/story.js` | 滚动进度 → 段号与段内进度；段落淡入 |
 | `js/i18n.js` | 中英文案表 |
