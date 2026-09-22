@@ -11,7 +11,7 @@ const hide = (n) => n.classList.add('fbd-hide')
 function bubble(root, cls, text) {
   const m = el(`<div class="fbd-msg ${cls}">${text}</div>`)
   q(root, '.fbd-msgs').appendChild(m)
-  requestAnimationFrame(() => m.classList.add('in'))
+  void m.offsetWidth; m.classList.add('in')          // forced style flush: transition runs, no rAF needed
   return m
 }
 function caption(root, t, i) { q(root, '.fbd-caption span').textContent = t.cap[i] }
@@ -71,7 +71,7 @@ export const steps = [
     caption(root, t, 2)
     q(root, '.ch').classList.remove('hot'); q(root, '.add').classList.add('hot')
     q(root, '.install').disabled = true; q(root, '.install').textContent = t.page.installing
-    const bar = q(root, '.prog'); show(bar); requestAnimationFrame(() => { bar.querySelector('i').style.width = '100%' })
+    const bar = q(root, '.prog'); show(bar); void bar.offsetWidth; bar.querySelector('i').style.width = '100%'
     show(q(root, '.inst')); show(q(root, '.nopath'))
   } },
   { id: 'config', dwell: 3600, run({ root, t }) {
