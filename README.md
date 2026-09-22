@@ -1,6 +1,6 @@
 # Fortbrain 官网
 
-一页视差滚动站：3D 徐州地图做背景，开场提问，六个特点各特写一个方块，结尾回到全景并有极光倾泻，中英双语，手机可用。
+一页视差滚动站：3D 徐州地图做背景，开场提问，六章各特写一个方块（每章一个前端 mock 演示），结尾回到全景并有极光倾泻，中英双语，手机可用。
 纯静态，无构建步骤，GitHub Pages 部署（`CNAME` → fortbrain.ai）。Three.js 0.160 自托管在 `vendor/three/`（国内访问不依赖 CDN）。
 
 - 设计：`docs/superpowers/specs/2026-09-15-scroll-story-site-design.md`
