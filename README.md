@@ -15,7 +15,7 @@ open http://127.0.0.1:8931/
 
 直接双击 `index.html` 不行（ES module 需要 http）。每次部署前把 `js/main.js` 里的 `VERSION` 改一下，场景模块按版本号缓存。
 
-调试参数：`?lang=zh|en` 强制语言；`?nogl=1` 强制走 canvas 2D 极光降级层。`#demo=hybrid` 直接打开某个演示。控制台 `window.__fb` 有 view / story / demos / errors。
+调试参数：`?lang=zh|en` 强制语言；`?nogl=1` 强制走 canvas 2D 极光降级层。`#demo=hybrid|data|forecast|decide|agents|trust` 直接打开某个演示。控制台 `window.__fb` 有 view / story / demos / errors。
 
 ## 测试
 
