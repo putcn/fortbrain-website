@@ -17,46 +17,38 @@ export const TEXTS = {
       title: '谈笑间灰飞烟灭',
       body: '不是一个空无一物的对话框, 而是一个引导你专注力的助理, 把好钢用在刀刃上',
     },
-    p2: {
-      label: '01 · 省掉录数与做表',
-      title: '数据自己进来，报表自己写好',
-      body: 'Fortbrain成熟的事件总线机制保证数据采集的事无巨细, 过去点灯熬油的写报告变成自动推送, 连点按钮都省了. ',
-      },
-    p3: {
-      label: '02 · 省掉盯数据',
-      title: 'AI 7×24 盯着数据变化，省掉一整个监控室的成本',
-      body: 'AI 全天候盯着每一家店、每一个 SKU：缺货、偏低、在途逾期，第一时间通知需要知道的人. Fortbrain特有的鹰眼引擎, 在不放过任何重要节点的同时, 省掉大量的无效token消耗',
+    c1: {
+      label: '01 · 数据自己进来，AI 自己盯',
+      title: '不出户，知天下',
+      body: '每一笔成交、每一次采集都是一个事件，自己流进来；报表到点自己写好，推到你手上。AI 7×24 盯着每一家店、每一个 SKU，异常第一时间找到该知道的人。',
     },
-    insight: {
-      label: '03 · 省掉盘算',
-      title: '人算不如天算, 天算不如Fortbrain算',
-      body: 'Fortbrain的零售预测引擎洞察到每一个 SKU、每一家店，给出最直接、最不绕弯子的决定：调多少货、什么时候补、哪家店该盯。',
+    c2: {
+      label: '02 · 该补多少，引擎算',
+      title: '人算不如天算，天算不如 Fortbrain 算',
+      body: '预测引擎看到每一个 SKU、每一家店，给出最直接、最不绕弯子的决定：调多少货、什么时候补、补多少，每一个动作都瞄准实操层面的精准高效。',
     },
-    p4: {
-      label: '04 · 有迹可循',
-      title: '每一个动作、每一分消耗，都有迹可循',
-      body: 'AI 做过什么、为什么做、花了多少：每一次调用、每一条决定、每一笔 token 消耗都记录在案，可查、可审、可回放。授权到人，撤销即失效。这才是企业敢放心交出去的 AI。',
+    c3: {
+      label: '03 · 人只做决定',
+      title: '运筹帷幄之中，决胜千里之外',
+      body: '业务事件先分诊，助理把决定送到你面前。一句「同意」，调拨单、日历、系统写回，它自己去办。打扰有预算，助理不会变成噪音；越用越懂你。',
     },
-    p1: {
-      label: '05 · 人只做决定',
-      title: '人只做决定，剩下的助理去办',
-      body: '业务事件经过分诊，私人助理<strong>主动</strong>把决定送到你面前：一句「同意」，它就创建调拨单、记入日历、写回系统。打扰有预算，助理不会变成噪音。同时助理持续自我进化, 越用越懂你.',
+    c4: {
+      label: '04 · 助理之间自己问',
+      title: '不召而至，不谋而合',
+      body: '你的助理可以主动和其他部门的助理讨论，委托子任务，直接查另一个部门的知识库。少开一个会，少跑一趟腿。四道防风暴机制，只办正事，不聊闲篇。',
     },
-    p5: {
-      label: '06 · 省掉开会跑腿',
-      title: '跨部门的问题，助理之间自己问',
-      body: '你的助理可以去问同事的助理，直接查另一个部门的知识库，委托子任务。少开一个会，少跑一趟腿。四道防风暴机制，目标把事情做好, 而不是聊闲篇儿。',
+    c5: {
+      label: '05 · 端云同境',
+      title: '各守其界，各通其心',
+      body: '企业数据不出企业，个人数据不出你的电脑；端云同境让两个次元融合协作。从你本机找个供应商列表的 Excel，再查 Fortbrain 里他们的采购价格——没问题，一句话的事。',
     },
-    p6: {
-      label: '07 · 不换系统',
-      title: '不用推翻现有系统，第一天就开始省',
-      body: 'POS、爬虫、外部系统按统一的 Addon 协议接进来，核心代码零改动。不换系统、不停业，人效从接入那天起就开始涨。',
+    c6: {
+      label: '06 · 值得企业信赖',
+      title: '万象各归其位，来处去向皆有迹可循',
+      body: '每一次调用、每一笔 token 都记录在案，可查、可审、可回放，授权到人，撤销即失效。POS、爬虫、外部系统按 Addon 协议接入，核心零改动、不停业。出了问题它自己查文档、翻日志、自己修，不解决不罢休，IT 只需要盯真正难的事。',
     },
-    p7: {
-      label: '08 · 自我诊断，自我愈合',
-      title: '有问题？直接问。不解决，不罢休',
-      body: 'Fortbrain 自带源码级文档查询 MCP 和日志分析 MCP。使用上有疑问？直接问。哪个模块不工作？直接问。它自己查文档、自己翻日志、自己修，问题不解决到底不罢休。IT 部门从此只需要关注真正有挑战性的问题。',
-    },
+    demoBtn: '查看演示',
+    demoSoon: '演示即将上线',
     result: '现代企业到底需要什么样的智能化？',
     answer: '<em>Fortbrain</em> 就是我们的回答。',
     answerSub: '零售只是我们第一个落地的垂直行业，其他行业敬请期待。',
@@ -98,46 +90,38 @@ export const TEXTS = {
       title: 'Hard problems, settled in conversation.',
       body: 'Not an empty chat box, but an assistant that steers your attention to where it counts.',
     },
-    p2: {
-      label: '01 · No more keying and charting',
-      title: 'Data comes in by itself, reports write themselves',
-      body: 'Fortbrain’s mature event bus captures every detail as data comes in. Reports that once meant late nights now arrive on their own. You don’t even press a button.',
+    c1: {
+      label: '01 · Data comes in by itself; the AI keeps watch',
+      title: 'Know the whole world without stepping out the door',
+      body: 'Every sale and every collection run is an event that flows in on its own; reports write themselves on schedule and land in your hands. The AI watches every store and every SKU around the clock, and the moment something is off it reaches the person who needs to know.',
     },
-    p3: {
-      label: '02 · No more watching the numbers',
-      title: 'AI watches the data 24×7. Save the cost of an entire monitoring room.',
-      body: 'The AI keeps watch over every store and every SKU around the clock: stock-outs, low levels and overdue shipments reach the people who need to know, the moment they happen. Fortbrain’s own Hawkeye engine misses no important signal while sparing a great deal of wasted token spend.',
-    },
-    insight: {
-      label: '03 · No more guesswork',
+    c2: {
+      label: '02 · How much to reorder: the engine works it out',
       title: 'People guess, fate decides, Fortbrain calculates.',
-      body: 'Fortbrain’s retail forecast engine sees down to every SKU and every store and gives the most direct, no-detour decision: how much to move, when to reorder, which store needs attention.',
+      body: 'The forecast engine sees down to every SKU and every store and gives the most direct, no-detour decision: how much to move, when to reorder, how much to order. Every action aims at precision and efficiency on the shop floor.',
     },
-    p4: {
-      label: '04 · Fully traceable',
-      title: 'Every action and every cost leaves a trail',
-      body: 'What the AI did, why, and what it cost: every call, every decision and every token spent is on record, searchable, auditable, replayable. Access is granted per person and gone the moment it is revoked. That is what makes an AI a company can trust with real work.',
+    c3: {
+      label: '03 · People only decide',
+      title: 'Decide at your desk; win a thousand miles away',
+      body: 'Business events are triaged first, and the assistant brings the decision to you. Say “approve” and the transfer, the calendar entry and the system write-back get done on their own. Interruptions have a budget, so it never becomes noise, and it knows you better the more you use it.',
     },
-    p1: {
-      label: '05 · People only decide',
-      title: 'People only decide; the assistant does the rest',
-      body: 'Business events are triaged, and your assistant <strong>brings the decision to you</strong>: say “approve” and it creates the transfer, books the calendar, writes it back into the system. Interruptions have a budget, so it never becomes noise. And the assistant keeps evolving: the more you use it, the better it knows you.',
+    c4: {
+      label: '04 · Assistants ask each other',
+      title: 'They come uncalled and agree unplanned',
+      body: 'Your assistant can open a discussion with another department’s assistant, delegate a subtask, and query that department’s knowledge base directly. One meeting fewer, one errand fewer. Four storm guards keep them on real work, not idle chatter.',
     },
-    p5: {
-      label: '06 · No more meetings for answers',
-      title: 'Cross-team questions: the assistants ask each other',
-      body: 'Your assistant can ask a colleague’s assistant, query another department’s knowledge base, delegate a subtask. One meeting fewer, one errand fewer. Four storm guards keep them on getting the work done, not on idle chatter.',
+    c5: {
+      label: '05 · Hybrid Context',
+      title: 'Each keeps its bounds; each knows the other’s mind',
+      body: 'Company data never leaves the company; personal data never leaves your own computer. Hybrid Context lets the two worlds work as one. Find a supplier list in an Excel file on your machine, then look up their purchase prices inside Fortbrain: no problem, one sentence does it.',
     },
-    p6: {
-      label: '07 · Keep your systems',
-      title: 'Keep the systems you have; start saving on day one',
-      body: 'POS, crawlers and external systems attach through one Addon protocol; the core never changes. No migration, no downtime: output per person rises from the day you plug in.',
+    c6: {
+      label: '06 · Worthy of a company’s trust',
+      title: 'Everything in its place, every trail on record',
+      body: 'Every call and every token spent is on record: searchable, auditable, replayable, granted per person and gone the moment it is revoked. POS, crawlers and external systems attach through the Addon protocol with zero changes to the core and no downtime. When something breaks it reads the docs, digs through the logs and repairs itself, and doesn’t let go until it’s solved. IT only has to look at the genuinely hard problems.',
     },
-    p7: {
-      label: '08 · Self-diagnosing, self-healing',
-      title: 'Something wrong? Just ask. It doesn’t stop until it’s fixed.',
-      body: 'Fortbrain ships with its own source-level documentation MCP and log-analysis MCP. Not sure how to use something? Just ask. A module not working? Just ask. It reads the docs, digs through the logs and repairs itself, and doesn’t let go until the problem is solved. IT only has to look at the genuinely hard problems from now on.',
-    },
+    demoBtn: 'See it in action',
+    demoSoon: 'Demo coming soon',
     result: 'What kind of intelligence does a modern enterprise actually need?',
     answer: '<em>Fortbrain</em> is our answer.',
     answerSub: 'Retail is only the first industry we have gone live in. More are on the way.',

@@ -21,12 +21,12 @@ test('detectLang picks zh for zh-*, en otherwise, and honors a stored choice', (
 })
 
 test('applyLang writes data-i18n targets and html lang', () => {
-  const nodes = [{ getAttribute: () => 'q', innerHTML: '' }, { getAttribute: () => 'p1.title', innerHTML: '' }]
+  const nodes = [{ getAttribute: () => 'q', innerHTML: '' }, { getAttribute: () => 'c3.title', innerHTML: '' }]
   const root = { querySelectorAll: () => nodes, documentElement: { lang: '' } }
   const store = {}
   applyLang('en', { root, storage: { setItem: (k, v) => { store[k] = v } } })
   assert.equal(nodes[0].innerHTML, TEXTS.en.q)
-  assert.equal(nodes[1].innerHTML, TEXTS.en.p1.title)
+  assert.equal(nodes[1].innerHTML, TEXTS.en.c3.title)
   assert.equal(root.documentElement.lang, 'en')
   assert.equal(store.lang, 'en')
 })
