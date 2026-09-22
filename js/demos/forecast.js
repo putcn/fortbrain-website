@@ -2,7 +2,7 @@
  * 02 · How much to reorder: the engine works it out. Left: one SKU's 14-day sales bars, the
  * forecast growing forward, stock vs run-out. Right: the recommendation and the per-store table.
  */
-import { q, qa, caption, reveal, esc, table } from './_lib.js'
+import { q, qa, caption, reveal, esc, table } from './lib.js'
 
 const HIST = [6, 7, 5, 8, 6, 11, 12, 7, 6, 8, 7, 5, 12, 13]      // units/day, weekends higher
 const FC = [7, 8, 7, 6, 12, 13, 8]

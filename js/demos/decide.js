@@ -3,7 +3,7 @@
  * preferences. Right: the assistant brings a decision card; "approve" is clickable; three results
  * light up one after another.
  */
-import { q, qa, bubble, caption, reveal, esc, table } from './_lib.js'
+import { q, qa, bubble, caption, reveal, esc, table } from './lib.js'
 
 export function mount(root, t) {
   const p = t.page, c = t.chat

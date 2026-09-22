@@ -2,7 +2,7 @@
  * 06 · Worthy of a company's trust. Left: the audit table (revocation shows up as a refused call),
  * then the Addon connections plugging into an unchanged core. Right: the self-diagnosis chat.
  */
-import { q, qa, bubble, caption, reveal, esc, table } from './_lib.js'
+import { q, qa, bubble, caption, reveal, esc, table } from './lib.js'
 
 export function mount(root, t) {
   const p = t.page, c = t.chat

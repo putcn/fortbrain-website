@@ -2,7 +2,7 @@
  * 01 · Data comes in by itself; the AI keeps watch. Left: "Today" page with KPI tiles, the event
  * stream and the automation schedule. Right: the assistant's pushes (daily report, alert, weekly).
  */
-import { el, q, qa, bubble, caption, reveal, esc } from './_lib.js'
+import { el, q, qa, bubble, caption, reveal, esc } from './lib.js'
 
 const KPI0 = ['¥ 12,178', '210', '¥ 58.0'], KPI1 = ['¥ 12,480', '213', '¥ 58.6']
 

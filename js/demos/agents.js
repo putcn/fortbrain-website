@@ -2,7 +2,7 @@
  * 04 · Assistants ask each other. Left: the three assistants involved, the delegated subtask and
  * the storm guard. Right: one question from you, then the assistant-to-assistant exchange.
  */
-import { q, qa, bubble, caption, esc } from './_lib.js'
+import { q, qa, bubble, caption, esc } from './lib.js'
 
 export function mount(root, t) {
   const p = t.page
