@@ -10,6 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" sizes="256x256" href="assets/icon-256.png">
 <link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/demo.css">
 <script type="importmap">
 { "imports": {
   "three": "./vendor/three/three.module.min.js",
@@ -101,6 +102,7 @@
       <div class="label" data-i18n="c1.label"></div>
       <h2 data-i18n="c1.title"></h2>
       <p data-i18n="c1.body"></p>
+      <button class="demo-btn" type="button" data-demo="data" disabled data-i18n="demoSoon"></button>
     </div>
   </section>
   <section data-stage="4" class="s-chapter">
@@ -108,6 +110,7 @@
       <div class="label" data-i18n="c2.label"></div>
       <h2 data-i18n="c2.title"></h2>
       <p data-i18n="c2.body"></p>
+      <button class="demo-btn" type="button" data-demo="forecast" disabled data-i18n="demoSoon"></button>
     </div>
   </section>
   <section data-stage="5" class="s-chapter">
@@ -115,6 +118,7 @@
       <div class="label" data-i18n="c3.label"></div>
       <h2 data-i18n="c3.title"></h2>
       <p data-i18n="c3.body"></p>
+      <button class="demo-btn" type="button" data-demo="decide" disabled data-i18n="demoSoon"></button>
     </div>
   </section>
   <section data-stage="6" class="s-chapter">
@@ -122,6 +126,7 @@
       <div class="label" data-i18n="c4.label"></div>
       <h2 data-i18n="c4.title"></h2>
       <p data-i18n="c4.body"></p>
+      <button class="demo-btn" type="button" data-demo="agents" disabled data-i18n="demoSoon"></button>
     </div>
   </section>
   <section data-stage="7" class="s-chapter">
@@ -129,6 +134,7 @@
       <div class="label" data-i18n="c5.label"></div>
       <h2 data-i18n="c5.title"></h2>
       <p data-i18n="c5.body"></p>
+      <button class="demo-btn" type="button" data-demo="hybrid" data-i18n="demoBtn"></button>
     </div>
   </section>
   <section data-stage="8" class="s-chapter">
@@ -136,6 +142,7 @@
       <div class="label" data-i18n="c6.label"></div>
       <h2 data-i18n="c6.title"></h2>
       <p data-i18n="c6.body"></p>
+      <button class="demo-btn" type="button" data-demo="trust" disabled data-i18n="demoSoon"></button>
     </div>
   </section>
 
@@ -148,6 +155,18 @@
     </div>
   </section>
 </main>
+
+<div id="demo" hidden role="dialog" aria-modal="true">
+  <div class="fbd-panel">
+    <div class="fbd-top"><b class="fbd-title"></b><span class="fbd-step"></span><button class="fbd-x" type="button" aria-label="Close">×</button></div>
+    <div class="fbd-stage"></div>
+    <div class="fbd-bottom">
+      <button class="fbd-btn fbd-prev" type="button"></button>
+      <button class="fbd-btn fbd-play" type="button"></button>
+      <button class="fbd-btn pri fbd-next" type="button"></button>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="js/main.js?v=2026-09-21a"></script>
 </body>

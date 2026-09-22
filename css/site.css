@@ -84,6 +84,16 @@ h2 {
 }
 .copy p strong { color: var(--acc); font-weight: 500; }
 
+.demo-btn {
+  margin-top: 26px; align-self: flex-start;
+  font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--acc); background: rgba(166, 220, 255, .06); border: 1px solid rgba(166, 220, 255, .35); border-radius: 999px;
+  padding: 11px 18px; cursor: pointer; transition: background .3s, border-color .3s;
+}
+.demo-btn:hover { background: rgba(166, 220, 255, .14); border-color: var(--acc); }
+.demo-btn[disabled] { color: var(--dim); border-color: var(--rule); background: transparent; cursor: default; }
+body.demo-open { overflow: hidden; }
+
 .s-hero .copy { max-width: 760px; }
 .hint {
   margin-top: 56px; font-family: var(--mono); font-size: 11px; letter-spacing: .3em; text-transform: uppercase;

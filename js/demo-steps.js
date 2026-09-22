@@ -6,7 +6,7 @@
 export function createStepper({ count, onGo, onAutoChange = () => {}, dwell = () => 2600, timer = setTimeout, clear = clearTimeout }) {
   let i = -1, auto = false, handle = null
   const disarm = () => { if (handle != null) clear(handle); handle = null }
-  const arm = () => { disarm(); if (auto && i < count - 1) handle = timer(() => { handle = null; go(i + 1, 'auto') }, dwell(i)) }
+  const arm = () => { disarm(); if (auto && i >= 0 && i < count - 1) handle = timer(() => { handle = null; go(i + 1, 'auto') }, dwell(i)) }
   const setAuto = (v) => { if (v === auto) return; auto = v; onAutoChange(v) }
   function go(n, by = 'user') {
     if (by !== 'auto') setAuto(false)

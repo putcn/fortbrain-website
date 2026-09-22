@@ -41,3 +41,10 @@ test('prev/next move by one; dispose clears the pending timer', () => {
   s.go(1); s.next(); assert.equal(s.index, 2); s.prev(); assert.equal(s.index, 1)
   s.play(); assert.equal(ft.pending(), 1); s.dispose(); assert.equal(ft.pending(), 0)
 })
+
+test('play before the first go arms nothing (no step to dwell on yet)', () => {
+  const ft = fakeTimers()
+  const s = createStepper({ count: 3, onGo: () => {}, dwell: (i) => { if (i < 0) throw new Error('dwell(-1)'); return 10 }, timer: ft.timer, clear: ft.clear })
+  s.play(); assert.equal(ft.pending(), 0); assert.equal(s.auto, true)
+  s.go(0, 'auto'); assert.equal(ft.pending(), 1)
+})

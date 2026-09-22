@@ -1,6 +1,7 @@
 import { TEXTS, detectLang, applyLang } from './i18n.js'
 import { initStory } from './story.js'
 import { createLayers } from './layers.js'
+import { initDemos } from './demo.js'
 
 // Bump on each deploy: the scene module is imported with this as a query so browsers (and the
 // 10-minute GitHub Pages cache) never keep serving an old scene.js against a new page.
@@ -19,6 +20,7 @@ let view = null
 function setLang(l) {
   lang = applyLang(l)
   view?.setStoreWord?.(TEXTS[lang].ui.storeWord, TEXTS[lang].ui.storeSub)
+  window.__fb.demos?.refresh()
 }
 setLang(lang)
 document.getElementById('langBtn').addEventListener('click', () => setLang(lang === 'zh' ? 'en' : 'zh'))
@@ -59,10 +61,17 @@ async function boot() {
   const story = initStory({ onProgress: (k, u, p) => { view.setProgress(k, u, p); layers.setProgress(k, u) } })
   Object.assign(window.__fb, { view, story, layers, mobile, reduced })
   window.addEventListener('resize', () => { view.resize(); story.refresh() })
+  // the render loop pauses while a demo overlay is open (nothing of the scene is visible behind it)
+  let paused = false
   const loop = (now) => {
-    if (!document.hidden) { story.poll(); view.tick(now); layers.tick(now) }
+    if (!document.hidden && !paused) { story.poll(); view.tick(now); layers.tick(now) }
     requestAnimationFrame(loop)
   }
   requestAnimationFrame(loop)
+  const demos = initDemos({
+    root: document.getElementById('demo'), getLang: () => lang, version: VERSION,
+    onOpen: () => { paused = true }, onClose: () => { paused = false; story.refresh() },
+  })
+  window.__fb.demos = demos
 }
 boot()

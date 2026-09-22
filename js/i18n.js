@@ -49,6 +49,15 @@ export const TEXTS = {
     },
     demoBtn: '查看演示',
     demoSoon: '演示即将上线',
+    demoUi: { close: '关闭', prev: '上一步', next: '下一步', play: '自动播放', pause: '暂停', step: '第 {i} / {n} 步' },
+    demos: {
+      hybrid: {
+        title: '端云同境 · 本地桥接',
+        page: { crumb: '端云同境 → 本地桥接', channel: '通道', none: '还没有配对的电脑', install: '在你的 Mac 上跑这一条，浏览器会自动打开确认配对：', cmd: 'curl -fsSL https://demo.fortbrain.ai/hb/install.sh | sh', pair: '确认配对', device: '开发机', ver: '桥接 0.1.0', online: '在线 · 助理现在能用这台电脑上开放的工具', paused: '已暂停：助理读不到这台电脑上的任何东西', menubar: '菜单栏 · 同境', killLabel: '总闸', installed: '已装的连接器', addable: '可以添加', shellName: '本地命令', shellSum: '让助理在你指定的目录里跑受限命令、看目录、读文本文件。', danger: '中等', btnInstall: '安装', installing: '安装中', installedNot: '已安装 · 未启用', btnEnable: '启用', running: '在跑 · 4 个工具', noPath: '全程没有让你填过任何路径', cfgRoot: '授权目录', cfgAllow: '允许的命令', browse: '浏览', save: '保存配置', hintRoot: '助理只能在这个目录里面看和跑；选得越小越安全', picked: '~/Desktop', allow: 'ls, cat, head, grep, find, wc' },
+        chat: { title: '私人助理', q1: '我桌面上有什么？', tool1: 'shell.list_dir  ~/Desktop', a1: '桌面上有 3 个文件：供应商列表.xlsx、Q3 采购计划.pdf、门店照片/。', q2: '把 /etc/hosts 读出来', a2: '这台电脑只对助理开放了 ~/Desktop，/etc/hosts 不在授权目录里，我不会去读。需要的话可以在「本地桥接」页里调整授权目录。', q3: '再看看桌面', a3: '你暂停了这台电脑，现在读不到任何本地内容。恢复之后再问我。', q4: '供应商列表.xlsx 里有哪些供应商，Fortbrain 里他们的采购价是多少？', tool4a: 'shell.read_file  ~/Desktop/供应商列表.xlsx', tool4b: 'retail.purchase_prices  供应商 × 3', a4: '表里 3 家供应商，Fortbrain 里的最新采购价：', th: ['供应商', 'SKU 数', '最新采购价'], rows: [['华东日化', '12', '¥ 18.40'], ['金穗食品', '27', '¥ 6.90'], ['蓝海饮品', '9', '¥ 3.25']], local: '本机', cloud: '平台' },
+        cap: ['没配对时页面只做一件事：把桥接装到你的电脑上。', '配对完成：绿点亮起，菜单栏出现图标。', '装连接器是守护进程做的，进度推回页面。', '配置是表单，不是自由文本；路径由本机弹框选。', '助理调用本机工具，结果只在内存里过一道，服务器不留副本。', '不在授权目录里的，它如实说，而且不重试。', '总闸一拉，助理立刻读不到本地任何东西。', '本机的 Excel + 平台的采购价：两个次元，一句话。'],
+      },
+    },
     result: '现代企业到底需要什么样的智能化？',
     answer: '<em>Fortbrain</em> 就是我们的回答。',
     answerSub: '零售只是我们第一个落地的垂直行业，其他行业敬请期待。',
@@ -122,6 +131,15 @@ export const TEXTS = {
     },
     demoBtn: 'See it in action',
     demoSoon: 'Demo coming soon',
+    demoUi: { close: 'Close', prev: 'Back', next: 'Next', play: 'Auto-play', pause: 'Pause', step: 'Step {i} / {n}' },
+    demos: {
+      hybrid: {
+        title: 'Hybrid Context · Local bridge',
+        page: { crumb: 'Hybrid Context → Local bridge', channel: 'Channel', none: 'No computer paired yet', install: 'Run this on your Mac; the browser opens to confirm pairing:', cmd: 'curl -fsSL https://demo.fortbrain.ai/hb/install.sh | sh', pair: 'Confirm pairing', device: 'Dev Mac', ver: 'bridge 0.1.0', online: 'Online · the assistant can use the tools you open on this computer', paused: 'Paused: the assistant cannot read anything on this computer', menubar: 'Menu bar · Hybrid', killLabel: 'Kill switch', installed: 'Installed connectors', addable: 'Available to add', shellName: 'Local commands', shellSum: 'Lets the assistant run restricted commands, list folders and read text files inside a folder you choose.', danger: 'medium', btnInstall: 'Install', installing: 'Installing', installedNot: 'Installed · not enabled', btnEnable: 'Enable', running: 'Running · 4 tools', noPath: 'You never typed a single path', cfgRoot: 'Allowed folder', cfgAllow: 'Allowed commands', browse: 'Browse', save: 'Save config', hintRoot: 'The assistant can only look and run inside this folder; smaller is safer', picked: '~/Desktop', allow: 'ls, cat, head, grep, find, wc' },
+        chat: { title: 'Assistant', q1: 'What is on my desktop?', tool1: 'shell.list_dir  ~/Desktop', a1: '3 items on the desktop: suppliers.xlsx, Q3-purchasing-plan.pdf, store-photos/.', q2: 'Read /etc/hosts for me', a2: 'This computer only opens ~/Desktop to me. /etc/hosts is outside the allowed folder, so I will not read it. You can change the folder on the Local bridge page.', q3: 'Check the desktop again', a3: 'You paused this computer, so I cannot read any local content right now. Ask me again once it is resumed.', q4: 'Which suppliers are in suppliers.xlsx, and what are their purchase prices in Fortbrain?', tool4a: 'shell.read_file  ~/Desktop/suppliers.xlsx', tool4b: 'retail.purchase_prices  suppliers × 3', a4: '3 suppliers in the sheet; latest purchase prices in Fortbrain:', th: ['Supplier', 'SKUs', 'Latest price'], rows: [['East Coast Chem', '12', '¥ 18.40'], ['Golden Ear Foods', '27', '¥ 6.90'], ['Blue Sea Drinks', '9', '¥ 3.25']], local: 'local', cloud: 'platform' },
+        cap: ['With nothing paired, the page does one thing: get the bridge onto your computer.', 'Paired: the dot turns green and the menu-bar icon appears.', 'The daemon installs the connector; progress flows back to the page.', 'Configuration is a form, not free text; the folder is picked by a dialog on your own machine.', 'The assistant calls a local tool; the result passes through memory only, the server keeps no copy.', 'Outside the allowed folder it says so plainly, and does not retry.', 'Pull the kill switch and the assistant instantly loses all local access.', 'A local Excel file plus platform prices: two worlds, one sentence.'],
+      },
+    },
     result: 'What kind of intelligence does a modern enterprise actually need?',
     answer: '<em>Fortbrain</em> is our answer.',
     answerSub: 'Retail is only the first industry we have gone live in. More are on the way.',
