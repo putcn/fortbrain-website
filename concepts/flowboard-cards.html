@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050b18">
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<title>产品动线牌桌</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#05080f;--felt:#0a1220;--felt2:#0d1728;--ink:#e8edf4;--dim:#9fb3c8;--mute:#5d6b7d;--line:rgba(160,178,200,.14);
+  --gold:#e8cf8f;--gold2:#d9b45a;--live:#5fd3c4;--warn:#d9a441;--bad:#c76b6b;--info:#7fa6e6;
+  --card:#111a2a;--card2:#0c1422;--sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--mono:"JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+  --cw:168px;--ch:224px;color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;overflow:hidden}
+button{font:inherit}
+.app{position:relative;height:100%;min-height:680px;display:grid;grid-template-rows:auto 1fr;padding:0 24px;box-sizing:border-box}
+.top{display:flex;align-items:center;gap:18px;padding:18px 0 12px;flex-wrap:wrap;position:relative;z-index:5}
+.brand b{font-size:20px;font-weight:500;letter-spacing:.08em}
+.brand span{display:block;font-size:11px;color:var(--dim);letter-spacing:.14em;font-family:var(--mono)}
+.kpis{display:flex;gap:10px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:92px;background:rgba(11,17,28,.7)}
+.kpi .l{font-size:11px;color:var(--dim);letter-spacing:.12em}
+.kpi .v{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .v.bad{color:var(--bad)}.kpi .v.gold{color:var(--gold)}.kpi .v.live{color:var(--live)}
+.group{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.group .lbl{font-size:11px;color:var(--dim);letter-spacing:.14em;font-family:var(--mono)}
+.seg{display:flex;gap:4px;background:rgba(11,17,28,.7);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{border:0;background:transparent;color:var(--dim);font-size:13px;letter-spacing:.06em;padding:8px 14px;border-radius:999px;cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:rgba(232,207,143,.14);color:var(--gold)}
+.seg button:focus-visible,.pile:focus-visible,.card:focus-visible,.node:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.shuffle{border:1px solid rgba(232,207,143,.5);background:rgba(232,207,143,.08);color:var(--gold);border-radius:999px;padding:8px 16px;cursor:pointer;min-height:36px;letter-spacing:.06em}
+.table{position:relative;perspective:1600px;perspective-origin:50% 30%;overflow:hidden;border-radius:18px 18px 0 0}
+.felt{position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 40%,var(--felt2),var(--felt) 60%,#060a13 100%);transform:rotateX(14deg) translateY(-2%) scale(1.06);transform-origin:50% 0}
+.felt:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(160,178,200,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,178,200,.05) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 70% 70% at 50% 40%,#000 40%,transparent 100%)}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 50% 45%,transparent 55%,rgba(0,0,0,.6) 100%)}
+.deck{position:absolute;inset:0;transform-style:preserve-3d}
+.pile-lbl{position:absolute;transform:translate(-50%,0);text-align:center;pointer-events:none;transition:opacity .3s}
+.pile-lbl b{display:block;font-weight:500;font-size:14px;letter-spacing:.06em}
+.pile-lbl span{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.12em}
+.pile-lbl.bad b{color:var(--bad)}.pile-lbl.gold b{color:var(--gold)}
+.pile-hit{position:absolute;transform:translate(-50%,0);border-radius:14px;cursor:pointer;background:transparent;border:1px dashed transparent}
+.pile-hit:hover{border-color:rgba(232,207,143,.35)}
+.card{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:12px;background:linear-gradient(160deg,#152036,var(--card) 45%,var(--card2));border:1px solid rgba(160,178,200,.22);box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);box-sizing:border-box;padding:12px 12px 10px;cursor:pointer;transform-style:preserve-3d;will-change:transform;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--ink);font-family:var(--sans)}
+.card:hover{border-color:rgba(232,207,143,.5)}
+.card.bad{border-color:rgba(199,107,107,.55);box-shadow:0 10px 24px rgba(0,0,0,.55),0 0 0 1px rgba(199,107,107,.25),0 0 22px rgba(199,107,107,.25)}
+.card.warn{border-color:rgba(217,164,65,.5)}
+.card.handed{border-color:rgba(232,207,143,.55)}
+.card .stripe{height:3px;border-radius:2px;margin:-4px 0 2px}
+.card .nm{font-size:15px;font-weight:500;line-height:1.3;letter-spacing:.02em}
+.card .st{font-size:12px;color:var(--dim)}
+.card .st b{color:var(--ink);font-weight:500}
+.card .dots{display:flex;gap:3px;margin-top:2px}
+.card .dots i{flex:1;height:4px;border-radius:2px;background:rgba(160,178,200,.16)}
+.card .dots i.on{background:var(--live)}.card .dots i.cur{background:var(--gold)}.card .dots i.cur.bad{background:var(--bad)}
+.card .ft{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+.card .own{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+.card .av{width:22px;height:22px;border-radius:50%;background:rgba(160,178,200,.18);display:grid;place-items:center;font-size:11px;color:var(--ink);font-family:var(--mono)}
+.card .days{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--dim)}
+.card .days.bad{color:var(--bad)}.card .days.warn{color:var(--warn)}
+.card .tag{position:absolute;top:-9px;right:10px;font-size:10px;letter-spacing:.1em;padding:2px 8px;border-radius:999px;background:var(--bad);color:#fff;font-family:var(--mono)}
+.card .tag.warn{background:var(--warn);color:#1a1200}
+.card .back{position:absolute;inset:0;border-radius:12px;background:repeating-linear-gradient(45deg,rgba(232,207,143,.08) 0 2px,transparent 2px 9px),linear-gradient(160deg,#0f1626,#0a101c);border:1px solid rgba(232,207,143,.25);transform:rotateY(180deg);backface-visibility:hidden}
+.card .face{backface-visibility:hidden;display:contents}
+/* 详情层 */
+.detail{position:absolute;inset:0;display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:20px;padding:20px 8px 24px;box-sizing:border-box;opacity:0;pointer-events:none;transition:opacity .25s;z-index:4}
+.detail.on{opacity:1;pointer-events:auto}
+.detail .hero{position:relative}
+.detail .backbtn{position:absolute;left:0;top:-4px;border:1px solid var(--line);background:rgba(11,17,28,.8);color:var(--dim);border-radius:999px;padding:8px 14px;cursor:pointer;min-height:36px}
+.detail .big{position:absolute;left:0;top:44px;width:var(--cw);height:var(--ch);transform:scale(1.35);transform-origin:0 0}
+.detail .meta{position:absolute;left:0;top:calc(44px + var(--ch) * 1.35 + 24px);display:flex;flex-direction:column;gap:10px;width:100%}
+.panel{background:rgba(11,17,28,.78);border:1px solid var(--line);border-radius:12px;padding:12px 14px;backdrop-filter:blur(8px)}
+.panel h3{margin:0 0 8px;font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.14em;font-family:var(--mono);text-transform:uppercase}
+.panel .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;line-height:1.8;color:var(--dim)}
+.panel .row em{font-style:normal;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.timeline{position:relative;padding-top:12px}
+.timeline svg{width:100%;height:auto;display:block;overflow:visible}
+.tl-lbl{font-family:var(--sans);font-size:12px;fill:var(--dim)}
+.tl-lbl.cur{fill:var(--ink);font-weight:500}
+.tl-d{font-family:var(--mono);font-size:11px;fill:var(--mute)}
+.node{cursor:pointer}
+.stagebox{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.stagebox .panel .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.stagebox .panel .h b{font-size:15px;font-weight:500}
+.stagebox .pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+.stagebox .pill.bad{color:var(--bad);border-color:var(--bad)}.stagebox .pill.live{color:var(--live);border-color:var(--live)}.stagebox .pill.gold{color:var(--gold);border-color:var(--gold)}
+.rounds{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rounds li{display:grid;grid-template-columns:auto 1fr;gap:10px;font-size:12px;color:var(--dim);line-height:1.5}
+.rounds li b{font-family:var(--mono);color:var(--ink);font-weight:500;white-space:nowrap}
+.rounds li.rej b{color:var(--bad)}.rounds li.ok b{color:var(--live)}
+.tasks{list-style:none;margin:6px 0 0;padding:0}
+.tasks li{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--dim);line-height:1.8}
+.tasks li em{font-style:normal;font-family:var(--mono);color:var(--ink)}
+.tasks li.done{text-decoration:line-through;color:var(--mute)}
+.tasks li.late em{color:var(--bad)}
+.hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:12px;color:var(--mute);pointer-events:none;z-index:3;white-space:nowrap}
+@media (max-width:900px){:root{--cw:132px;--ch:180px}.detail{grid-template-columns:1fr;grid-template-rows:auto 1fr}.detail .big{position:relative;top:0;transform:none}.detail .meta{position:relative;top:0;margin-top:12px}.group{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.detail{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top">
+    <div class="brand"><b>产品动线</b><span>CARD TABLE · 示例数据</span></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="group">
+      <span class="lbl">分堆</span>
+      <div class="seg" id="groups">
+        <button aria-pressed="true" data-g="status">按状态</button>
+        <button aria-pressed="false" data-g="stage">按步骤</button>
+        <button aria-pressed="false" data-g="owner">按负责人</button>
+        <button aria-pressed="false" data-g="updated">按更新时间</button>
+      </div>
+      <button class="shuffle" id="shuffle">洗牌</button>
+    </div>
+  </div>
+  <div class="table" id="table">
+    <div class="felt"></div>
+    <div class="vig"></div>
+    <div class="deck" id="deck"></div>
+    <div class="hint" id="hint">点一叠展开;点一张牌看它每一步的时间线</div>
+    <div class="detail" id="detail">
+      <div class="hero">
+        <button class="backbtn" id="back">← 回到牌桌</button>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div>
+        <div class="timeline panel" id="timeline"></div>
+        <div class="stagebox" id="stagebox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const STAGES=[{k:'idea',n:'创意',d:5},{k:'sketch',n:'手绘线稿',d:7},{k:'design',n:'设计定稿',d:10},{k:'sample',n:'打样',d:14},{k:'verify',n:'验样',d:5},{k:'final',n:'定型',d:3},{k:'sku',n:'转 SKU',d:2},{k:'po',n:'采购首单',d:7}];
+const DEPTS={toy:['玩具组','#7fa6e6'],gift:['文创组','#b28ce6'],food:['食品组','#e6a87f'],apparel:['服饰组','#8fd6a8']};
+const TODAY=new Date('2026-09-30T12:00:00');
+const day=n=>new Date(TODAY.getTime()-n*864e5);
+const fmt=d=>`${d.getMonth()+1}/${d.getDate()}`;
+// [名, 部门, 当前步, 停了几天, 负责人, 上次更新距今天数, 计划完成(可空), 每步历史天数(已完成的)]
+const RAW=[
+ ['熊猫盲盒 3 代','toy',3,9,'王丹',1,'2026-10-20',[4,6,9]],['汉服书签','gift',1,2,'李孝龙',2,null,[3]],['花椒曲奇','food',7,12,'费岩岩',9,'2026-10-12',[5,6,8,12,4,2,1]],
+ ['山水帆布包','gift',4,2,'陈洁',0,null,[4,7,11,13]],['蜀绣耳饰','apparel',2,4,'王丹',3,null,[5,6]],['熊猫抱枕','toy',7,3,'李孝龙',1,'2026-10-30',[4,5,9,14,4,3,2]],
+ ['豆花冰箱贴','gift',0,1,'邓玉岩',1,null,[]],['麻辣牛肉干','food',5,1,'费岩岩',0,null,[6,7,10,15,5]],['蒲扇香囊','gift',3,16,'陈洁',11,'2026-10-08',[5,8,12]],
+ ['川剧变脸 T 恤','apparel',6,4,'王丹',5,'2026-10-15',[4,6,10,13,5,3]],['竹编灯','gift',2,11,'邓玉岩',8,null,[6,9]],['熊猫雨伞','toy',7,9,'李孝龙',7,null,[5,7,9,16,5,3,2]],
+ ['麻将糖','food',4,6,'邓玉岩',2,null,[4,6,11,14]],['羌绣围巾','apparel',1,9,'王丹',9,'2026-10-05',[5]],['盖碗茶杯','gift',5,2,'陈洁',1,null,[4,7,9,12,4]],['花生糖礼盒','food',6,1,'费岩岩',0,null,[5,6,9,13,5,3]]
+];
+const WAIT={idea:'设计总监评审',sketch:'设计师',design:'老板批准',sample:'采购确认付款',verify:'设计师验样',final:'设计师',sku:'采购建单',po:'采购下首单'};
+const P=RAW.map((r,i)=>{const p={id:i,name:r[0],dept:r[1],stage:r[2],days:r[3],owner:r[4],upd:r[5],plan:r[6],hist:r[7]};
+  // 每步进入 / 离开日期(从今天倒推)
+  let cursor=p.days;p.steps=[];for(let k=p.stage;k>=0;k--){const len=k===p.stage?p.days:p.hist[k];p.steps[k]={enter:day(cursor),leave:k===p.stage?null:day(cursor-len),len};cursor+=(k>0?p.hist[k-1]:0)}
+  p.rounds=p.stage>=1?[{n:1,t:day(p.days+2),r:'rej',by:'设计总监',why:'配色和参考图不符,主视觉再收一版'},{n:2,t:day(p.days),r:'ok',by:'设计总监',why:'通过'}]:[{n:1,t:day(1),r:'pending',by:'设计总监',why:'待评审'}];
+  p.tasks=[{t:'补第 2 版效果图',who:p.owner,due:day(-2),done:p.stage>2},{t:'找供应商报价',who:'采购',due:day(p.days-4),done:p.stage>3},{t:'样品拍照存档',who:p.owner,due:day(-5),done:false}];
+  return p});
+function health(p){const st=STAGES[p.stage];if(p.plan){const left=(new Date(p.plan)-TODAY)/864e5;if(left<0)return 'bad';if(left<3)return 'warn'}if(p.days>st.d)return 'bad';if(p.days>=st.d*0.7)return 'warn';return 'live'}
+const init=s=>s.replace(/[^一-龥A-Za-z]/g,'').slice(-1)||'?';
+
+// ── 牌桌布局 ──
+const deck=document.getElementById('deck'),table=document.getElementById('table');
+const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let grouping='status',openPile=null,current=null;const cards=new Map();const cw=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw')),ch=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch'));
+function cardEl(p){const h=health(p);const el=document.createElement('button');el.className='card '+(h==='live'?'':h)+(p.stage>=7?' handed':'');el.dataset.id=p.id;el.setAttribute('aria-label',p.name);
+  const d=DEPTS[p.dept];const st=STAGES[p.stage];
+  el.innerHTML=`<div class="face"><div class="stripe" style="background:${d[1]}"></div><div class="nm">${p.name}</div><div class="st">${d[0]} · <b>${st.n}</b></div><div class="dots">${STAGES.map((s,i)=>`<i class="${i<p.stage?'on':(i===p.stage?'cur '+(h==='bad'?'bad':''):'')}"></i>`).join('')}</div>
+  ${h!=='live'?`<div class="st" style="color:${h==='bad'?'var(--bad)':'var(--warn)'}">${h==='bad'?'等 '+WAIT[st.k]:'快到期'}</div>`:`<div class="st">更新 ${p.upd===0?'今天':p.upd+' 天前'}</div>`}
+  <div class="ft"><span class="own"><span class="av">${init(p.owner)}</span>${p.owner}</span><span class="days ${h}">${p.days}d</span></div></div><div class="back"></div>${h==='bad'?'<span class="tag">STUCK</span>':(h==='warn'?'<span class="tag warn">SOON</span>':'')}`;
+  el.addEventListener('click',e=>{e.stopPropagation();openCard(p)});return el}
+P.forEach(p=>{const el=cardEl(p);cards.set(p.id,el);deck.appendChild(el)});
+
+function groups(){const by=(key,label,order)=>{const m=new Map();P.forEach(p=>{const k=key(p);if(!m.has(k))m.set(k,[]);m.get(k).push(p)});const keys=order?order.filter(k=>m.has(k)):[...m.keys()];return keys.map(k=>({key:k,label:label(k),cards:m.get(k)}))};
+  if(grouping==='status'){const g=by(p=>health(p),k=>({live:'正常推进',warn:'快到期',bad:'卡住了'})[k],['bad','warn','live']);g.forEach(x=>{x.spread=x.key==='bad';x.cls=x.key==='bad'?'bad':''});return g}
+  if(grouping==='stage')return by(p=>p.stage,k=>STAGES[k].n,STAGES.map((s,i)=>i)).map(x=>({...x,cls:x.key>=7?'gold':''}));
+  if(grouping==='owner')return by(p=>p.owner,k=>k);
+  return by(p=>p.upd===0?'today':(p.upd<=7?'week':'older'),k=>({today:'今天更新',week:'本周更新',older:'一周没动了'})[k],['today','week','older']).map(x=>({...x,cls:x.key==='older'?'bad':''}))}
+
+function layout(animate=true){const W=table.clientWidth,H=table.clientHeight,CW=cw(),CH=ch();const gs=groups();
+  deck.querySelectorAll('.pile-lbl,.pile-hit').forEach(n=>n.remove());
+  const spreadSet=new Set(gs.filter(g=>g.spread||g.key===openPile).map(g=>g.key));
+  // 摊开的堆占上半区,叠着的堆排一行在下半区
+  const spread=gs.filter(g=>spreadSet.has(g.key)),stacked=gs.filter(g=>!spreadSet.has(g.key));
+  const targets=new Map();let y=36;
+  spread.forEach(g=>{const perRow=Math.max(1,Math.floor((W-40)/(CW+18)));const rows=Math.ceil(g.cards.length/perRow);const x0=(W-Math.min(g.cards.length,perRow)*(CW+18)+18)/2;
+    addLabel(g,x0-9+Math.min(g.cards.length,perRow)*(CW+18)/2,y-30,true);
+    g.cards.forEach((p,i)=>{const r=Math.floor(i/perRow),c=i%perRow;targets.set(p.id,{x:x0+c*(CW+18),y:y+r*(CH+34),rot:(((p.id*7)%5)-2)*0.6,z:i})});y+=rows*(CH+34)+40});
+  const n=stacked.length;if(n){const slot=Math.min(CW+70,(W-40)/n);const x0=(W-slot*n)/2+slot/2-CW/2;const py=Math.max(y,H-CH-70);
+    stacked.forEach((g,gi)=>{const x=x0+gi*slot;addLabel(g,x+CW/2,py+CH+12,false);addHit(g,x+CW/2,py-14,CW+24,CH+30);
+      g.cards.forEach((p,i)=>{const k=Math.min(i,8);targets.set(p.id,{x:x+k*1.2+(((p.id*13)%3)-1)*1.5,y:py-k*2.2,rot:(((p.id*11)%7)-3)*1.4,z:i})})})}
+  cards.forEach((el,id)=>{const t=targets.get(id);const p=P[id];const tf=`translate3d(${t.x}px,${t.y}px,${t.z*0.5}px) rotate(${t.rot}deg)`;el.style.zIndex=10+t.z;
+    if(animate&&!reduced&&el._tf&&el._tf!==tf){el.animate([{transform:el._tf},{transform:el._tf.replace('rotate','rotateX(12deg) rotate').replace('translate3d(',`translate3d(`),offset:.3},{transform:tf}],{duration:520+((id*37)%9)*35,delay:(id%8)*22,easing:'cubic-bezier(.2,.8,.2,1)'})}
+    el.style.transform=tf;el._tf=tf;el.style.opacity=1});
+  function addLabel(g,x,yy,big){const l=document.createElement('div');l.className='pile-lbl '+(g.cls||'');l.style.left=x+'px';l.style.top=yy+'px';l.innerHTML=`<b>${g.label}</b><span>${g.cards.length} 个${big?'':' · 点开'}</span>`;deck.appendChild(l)}
+  function addHit(g,x,yy,w,h){const b=document.createElement('button');b.className='pile-hit';b.style.left=x+'px';b.style.top=yy+'px';b.style.width=w+'px';b.style.height=h+'px';b.setAttribute('aria-label',`展开 ${g.label}`);b.addEventListener('click',()=>{openPile=openPile===g.key?null:g.key;layout()});deck.appendChild(b)}
+}
+function shuffle(){if(reduced){layout();return}cards.forEach((el,id)=>{const W=table.clientWidth,H=table.clientHeight;const x=W/2-cw()/2+(Math.random()-.5)*120,y=H/2-ch()/2+(Math.random()-.5)*60;const tf=`translate3d(${x}px,${y}px,0) rotate(${(Math.random()-.5)*40}deg) rotateY(180deg)`;el.animate([{transform:el._tf},{transform:tf}],{duration:380,delay:(id%6)*18,easing:'cubic-bezier(.4,0,.2,1)'});el._tf=tf});setTimeout(()=>layout(true),420)}
+function renderKpis(){const stuck=P.filter(p=>health(p)==='bad').length,warn=P.filter(p=>health(p)==='warn').length,handed=P.filter(p=>p.stage>=7).length;
+  document.getElementById('kpis').innerHTML=`<div class="kpi"><div class="l">推进中</div><div class="v gold">${P.length}</div></div><div class="kpi"><div class="l">卡住</div><div class="v bad">${stuck}</div></div><div class="kpi"><div class="l">快到期</div><div class="v" style="color:var(--warn)">${warn}</div></div><div class="kpi"><div class="l">已交采购</div><div class="v live">${handed}</div></div>`}
+
+// ── 详情:一张牌 → 时间线 → 步骤 ──
+const detail=document.getElementById('detail'),meta=document.getElementById('meta'),tl=document.getElementById('timeline'),sb=document.getElementById('stagebox');
+function openCard(p){current=p;const el=cards.get(p.id);const hero=detail.querySelector('.hero');const r=hero.getBoundingClientRect(),tr=table.getBoundingClientRect();
+  const tx=r.left-tr.left,ty=r.top-tr.top+44;const tf=`translate3d(${tx}px,${ty}px,40px) scale(1.35)`;
+  cards.forEach((o,id)=>{if(id!==p.id){o.style.opacity=0;o.style.pointerEvents='none'}});deck.querySelectorAll('.pile-lbl,.pile-hit').forEach(n=>n.style.opacity=0);document.getElementById('hint').style.opacity=0;
+  el.style.zIndex=99;if(!reduced)el.animate([{transform:el._tf},{transform:el._tf.replace(/rotate\([^)]*\)/,'rotate(0deg)')+' translateZ(90px)',offset:.4},{transform:tf}],{duration:560,easing:'cubic-bezier(.2,.8,.2,1)'});el.style.transform=tf;el._tf=tf;el.style.transformOrigin='0 0';
+  const h=health(p),st=STAGES[p.stage];
+  meta.innerHTML=`<div class="panel"><h3>这张牌</h3><div class="row"><span>部门</span><em>${DEPTS[p.dept][0]}</em></div><div class="row"><span>负责人</span><em>${p.owner}</em></div><div class="row"><span>现在在</span><em>${st.n} · ${p.days}d</em></div><div class="row"><span>上次更新</span><em>${p.upd===0?'今天':p.upd+' 天前'}</em></div>${p.plan?`<div class="row"><span>计划完成</span><em>${p.plan.slice(5)}</em></div>`:''}<div class="row"><span>状态</span><em style="color:${h==='bad'?'var(--bad)':(h==='warn'?'var(--warn)':'var(--live)')}">${h==='bad'?'卡住 · 等 '+WAIT[st.k]:(h==='warn'?'快到期':'正常推进')}</em></div></div>`;
+  renderTimeline(p,p.stage);detail.classList.add('on')}
+function renderTimeline(p,sel){const n=STAGES.length,W=760,pad=40,gap=(W-pad*2)/(n-1);const h=health(p);
+  const totalDays=p.steps.reduce((a,s)=>a+(s?s.len:0),0)||1;
+  let svg=`<h3>时间线 · 每一步停了多久</h3><svg viewBox="0 0 ${W} 150" role="img" aria-label="${p.name} 的步骤时间线">`;
+  svg+=`<line x1="${pad}" y1="70" x2="${W-pad}" y2="70" stroke="rgba(160,178,200,.18)" stroke-width="2"/>`;
+  // 已走过的段:长度按天数加粗显示
+  for(let i=0;i<p.stage;i++){const s=p.steps[i];const x1=pad+i*gap,x2=pad+(i+1)*gap;const over=s.len>STAGES[i].d;svg+=`<line x1="${x1}" y1="70" x2="${x2}" y2="70" stroke="${over?'#d9a441':'#5fd3c4'}" stroke-opacity=".8" stroke-width="${2+Math.min(8,s.len/3)}" stroke-linecap="round"/>`}
+  STAGES.forEach((s,i)=>{const x=pad+i*gap;const done=i<p.stage,cur=i===p.stage;const col=done?'#5fd3c4':(cur?(h==='bad'?'#c76b6b':'#e8cf8f'):'rgba(160,178,200,.35)');const step=p.steps[i];
+    svg+=`<g class="node" data-i="${i}" tabindex="0" role="button" aria-label="${s.n}"><circle cx="${x}" cy="70" r="${cur?11:7}" fill="${i>p.stage?'#0b1220':col}" stroke="${col}" stroke-width="2"/>${cur?`<circle cx="${x}" cy="70" r="17" fill="none" stroke="${col}" stroke-opacity=".45" stroke-width="1.5">${reduced?'':'<animate attributeName="r" values="14;20;14" dur="2.4s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values=".5;.05;.5" dur="2.4s" repeatCount="indefinite"/>'}</circle>`:''}
+    <text x="${x}" y="${i%2?118:36}" text-anchor="middle" class="tl-lbl ${cur?'cur':''}">${s.n}</text>
+    ${step?`<text x="${x}" y="${i%2?134:52}" text-anchor="middle" class="tl-d">${fmt(step.enter)}${step.leave?'–'+fmt(step.leave):'→'} · ${step.len}d</text>`:`<text x="${x}" y="${i%2?134:52}" text-anchor="middle" class="tl-d">常规 ${s.d}d</text>`}
+    ${sel===i?`<rect x="${x-14}" y="56" width="28" height="28" rx="6" fill="none" stroke="#e8cf8f" stroke-width="1.5"/>`:''}</g>`});
+  svg+=`</svg><div class="row" style="justify-content:flex-start;gap:18px;margin-top:4px"><span>已用 <em>${totalDays} 天</em></span><span>线越粗停得越久 · 琥珀 = 超过常规天数</span></div>`;
+  tl.innerHTML=svg;tl.querySelectorAll('.node').forEach(g=>{const i=+g.dataset.i;const go=()=>{renderTimeline(p,i)};g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
+  renderStage(p,sel)}
+function renderStage(p,i){const s=STAGES[i],step=p.steps[i],cur=i===p.stage,done=i<p.stage,h=health(p);
+  const pill=done?'<span class="pill live">已完成</span>':(cur?`<span class="pill ${h==='bad'?'bad':'gold'}">${h==='bad'?'卡住 · 等 '+WAIT[s.k]:'进行中'}</span>`:'<span class="pill">还没到</span>');
+  const rounds=(cur||done)?`<div class="panel"><h3>评审记录</h3><ul class="rounds">${(cur?p.rounds:[{n:1,t:step.enter,r:'ok',by:'设计总监',why:'通过'}]).map(r=>`<li class="${r.r}"><b>第 ${r.n} 轮 · ${fmt(r.t)}</b><span>${r.by}:${r.r==='rej'?'退回修改 — ':''}${r.why}</span></li>`).join('')}</ul></div>`:'';
+  const tasks=(cur||done)?`<div class="panel"><h3>这一步的任务</h3><ul class="tasks">${p.tasks.map(t=>{const late=!t.done&&t.due<TODAY;return `<li class="${t.done?'done':''} ${late?'late':''}"><span>${t.t} · ${t.who}</span><em>${t.done?'已完成':(late?'逾期 '+Math.round((TODAY-t.due)/864e5)+'d':fmt(t.due)+' 到期')}</em></li>`}).join('')}</ul></div>`:'';
+  sb.innerHTML=`<div class="panel"><div class="h"><b>${s.n}</b>${pill}</div><div class="row"><span>${step?'进入':'常规用时'}</span><em>${step?fmt(step.enter):s.d+' 天'}</em></div>${step?`<div class="row"><span>${step.leave?'离开':'已停'}</span><em>${step.leave?fmt(step.leave):step.len+' 天 / 常规 '+s.d+' 天'}</em></div>`:''}<div class="row"><span>评审人</span><em>${WAIT[s.k]}${cur&&i===2?' + 老板':''}</em></div>${cur&&p.plan?`<div class="row"><span>计划完成</span><em>${p.plan.slice(5)}</em></div>`:''}</div>${rounds}${tasks}`}
+document.getElementById('back').addEventListener('click',()=>{detail.classList.remove('on');cards.forEach(o=>{o.style.opacity=1;o.style.pointerEvents='';o.style.transformOrigin=''});document.getElementById('hint').style.opacity=1;current=null;layout(true)});
+document.querySelectorAll('#groups button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#groups button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));grouping=b.dataset.g;openPile=null;if(current)document.getElementById('back').click();else layout(true)}));
+document.getElementById('shuffle').addEventListener('click',()=>{if(current)document.getElementById('back').click();shuffle()});
+window.addEventListener('resize',()=>{if(!current)layout(false)});
+renderKpis();layout(false);
+})();
+</script>
+</body>
+</html>

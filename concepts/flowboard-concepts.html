@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050b18">
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<title>产品动线三种概念</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#05080f;--bg2:#0b111c;--ink:#e8edf4;--dim:#9fb3c8;--mute:#5d6b7d;--line:rgba(160,178,200,.14);
+  --gold:#e8cf8f;--gold2:#d9b45a;--live:#5fd3c4;--warn:#d9a441;--bad:#c76b6b;--info:#7fa6e6;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--mono:"JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;overflow:hidden}
+.app{position:relative;width:100%;height:100%;min-height:640px}
+canvas.gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 55%,transparent 55%,rgba(0,0,0,.55) 100%)}
+.hud{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:minmax(220px,300px) 1fr minmax(240px,320px);grid-template-rows:auto 1fr auto;padding:20px 24px;gap:16px;box-sizing:border-box}
+.hud>*{pointer-events:auto}
+.top{grid-column:1/4;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand b{font-size:20px;font-weight:500;letter-spacing:.08em}
+.brand span{font-size:11px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;font-family:var(--mono)}
+.tabs{display:flex;gap:4px;margin-left:auto;background:rgba(11,17,28,.7);border:1px solid var(--line);border-radius:999px;padding:4px;backdrop-filter:blur(8px)}
+.tabs button{appearance:none;border:0;background:transparent;color:var(--dim);font:inherit;font-size:13px;letter-spacing:.06em;padding:8px 16px;border-radius:999px;cursor:pointer;min-height:36px}
+.tabs button[aria-selected="true"]{background:rgba(232,207,143,.14);color:var(--gold)}
+.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{background:rgba(11,17,28,.72);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:96px;backdrop-filter:blur(8px)}
+.kpi .l{font-size:11px;color:var(--dim);letter-spacing:.12em}
+.kpi .v{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.kpi .v.bad{color:var(--bad)}.kpi .v.live{color:var(--live)}.kpi .v.gold{color:var(--gold)}
+.left{grid-row:2;align-self:start;display:flex;flex-direction:column;gap:12px}
+.panel{background:rgba(11,17,28,.72);border:1px solid var(--line);border-radius:12px;padding:12px 14px;backdrop-filter:blur(8px)}
+.panel h3{margin:0 0 8px;font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;font-family:var(--mono)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{appearance:none;border:1px solid var(--line);background:transparent;color:var(--dim);font:inherit;font-size:12px;padding:6px 10px;border-radius:999px;cursor:pointer;min-height:32px}
+.chips button[aria-pressed="true"]{border-color:rgba(232,207,143,.6);color:var(--gold);background:rgba(232,207,143,.08)}
+.chips button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.right{grid-row:2;grid-column:3;align-self:start}
+.stuck{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.stuck li{display:grid;grid-template-columns:8px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);cursor:pointer;border-radius:6px}
+.stuck li:first-child{border-top:0}
+.stuck li:hover,.stuck li.on{background:rgba(160,178,200,.06)}
+.stuck i{width:8px;height:8px;border-radius:50%;display:block;background:var(--bad);box-shadow:0 0 10px var(--bad)}
+.stuck i.warn{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.stuck .n{font-size:13px;color:var(--ink)}
+.stuck .w{font-size:11px;color:var(--dim)}
+.stuck .d{font-family:var(--mono);font-size:13px;color:var(--bad);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stuck .d.warn{color:var(--warn)}
+.bottom{grid-column:1/4;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.note{font-size:12px;color:var(--mute);max-width:520px;line-height:1.5}
+.tip{position:absolute;pointer-events:none;background:rgba(11,17,28,.9);border:1px solid rgba(232,207,143,.35);border-radius:10px;padding:10px 12px;min-width:200px;transform:translate(14px,-50%);opacity:0;transition:opacity .15s}
+.tip.on{opacity:1}
+.tip b{display:block;font-weight:500;font-size:14px;margin-bottom:6px}
+.tip .row{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim);line-height:1.7}
+.tip .row em{font-style:normal;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tip .st{display:inline-block;margin-top:6px;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.tip .st.bad{color:var(--bad);border-color:var(--bad)}.tip .st.warn{color:var(--warn);border-color:var(--warn)}.tip .st.live{color:var(--live);border-color:var(--live)}
+.stage-lbls{position:absolute;inset:0;pointer-events:none}
+.stage-lbls div{position:absolute;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--dim);white-space:nowrap;text-shadow:0 0 8px #000}
+.stage-lbls div b{display:block;font-family:var(--sans);font-size:13px;letter-spacing:.06em;color:var(--ink);font-weight:500}
+.stage-lbls div.retail{color:var(--gold2)}
+@media (max-width:900px){
+  .hud{grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto}
+  .left{grid-row:2;grid-column:1}.right{grid-row:3;grid-column:1;align-self:end}
+  .tabs{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){.tip{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <canvas class="gl" id="gl" aria-label="产品动线三维视图"></canvas>
+  <div class="vig"></div>
+  <div class="stage-lbls" id="lbls"></div>
+  <div class="tip" id="tip" role="status"></div>
+  <div class="hud">
+    <div class="top">
+      <div class="brand"><b>产品动线</b><span>Dev → Retail · 示例数据</span></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="tabs" role="tablist" aria-label="概念样式">
+        <button role="tab" aria-selected="true" data-c="line">① 装配线</button>
+        <button role="tab" aria-selected="false" data-c="ring">② 星环</button>
+        <button role="tab" aria-selected="false" data-c="city">③ 城区</button>
+      </div>
+    </div>
+    <div class="left">
+      <div class="panel">
+        <h3>着色维度</h3>
+        <div class="chips" id="dims">
+          <button aria-pressed="true" data-d="health">健康度</button>
+          <button aria-pressed="false" data-d="dept">部门</button>
+          <button aria-pressed="false" data-d="stage">阶段</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>只看</h3>
+        <div class="chips" id="filters">
+          <button aria-pressed="true" data-f="all">全部</button>
+          <button aria-pressed="false" data-f="stuck">卡住的</button>
+          <button aria-pressed="false" data-f="dev">开发中</button>
+          <button aria-pressed="false" data-f="retail">已交采购</button>
+        </div>
+      </div>
+      <div class="panel" id="concept-note"></div>
+    </div>
+    <div class="right">
+      <div class="panel">
+        <h3>卡住了 · 该谁动</h3>
+        <ul class="stuck" id="stuck"></ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="legend" id="legend"></div>
+      <div class="note">悬停一个产品看它的阶段、负责人、停了几天。三种概念共用同一份示例数据与同一套大屏配色(深空底、金色强调、青 / 琥珀 / 赤三级健康度)。</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+// ── 示例数据:阶段(开发 7 步 + 零售 3 步)、产品、部门 ──
+const STAGES=[
+  {k:'idea',n:'创意',d:5,side:'dev'},{k:'sketch',n:'手绘线稿',d:7,side:'dev'},{k:'design',n:'设计定稿',d:10,side:'dev'},
+  {k:'sample',n:'打样',d:14,side:'dev'},{k:'verify',n:'验样',d:5,side:'dev'},{k:'final',n:'定型',d:3,side:'dev'},{k:'sku',n:'转 SKU',d:2,side:'dev'},
+  {k:'po',n:'采购首单',d:7,side:'retail'},{k:'stock',n:'到货铺货',d:10,side:'retail'},{k:'sell',n:'在售',d:0,side:'retail'}
+];
+const DEPTS=[{k:'toy',n:'玩具组',c:0x7fa6e6},{k:'gift',n:'文创组',c:0xb28ce6},{k:'food',n:'食品组',c:0xe6a87f},{k:'apparel',n:'服饰组',c:0x8fd6a8}];
+const P=[
+  ['熊猫盲盒 3 代','toy',3,9,'王丹',86,'2026-10-20'],['汉服书签','gift',1,2,'李孝龙',34,null],['花椒曲奇','food',7,12,'费岩岩',58,'2026-10-12'],
+  ['山水帆布包','gift',4,2,'陈洁',62,null],['蜀绣耳饰','apparel',2,4,'王丹',41,null],['熊猫抱枕','toy',8,3,'李孝龙',73,'2026-10-30'],
+  ['豆花冰箱贴','gift',0,1,'邓玉岩',22,null],['麻辣牛肉干','food',5,1,'费岩岩',65,null],['蒲扇香囊','gift',3,16,'陈洁',48,'2026-10-08'],
+  ['川剧变脸 T 恤','apparel',6,4,'王丹',70,'2026-10-15'],['竹编灯','gift',2,11,'邓玉岩',55,null],['花生糖礼盒','food',9,0,'费岩岩',80,null],
+  ['熊猫雨伞','toy',7,9,'李孝龙',52,null],['盖碗茶杯','gift',9,0,'陈洁',77,null],['麻将糖','food',4,6,'邓玉岩',38,null],['羌绣围巾','apparel',1,9,'王丹',44,'2026-10-05']
+].map((r,i)=>({id:i,name:r[0],dept:r[1],stage:r[2],days:r[3],owner:r[4],value:r[5],plan:r[6]}));
+const TODAY=new Date('2026-09-30');
+function health(p){const st=STAGES[p.stage];if(st.k==='sell')return 'live';let limit=st.d;if(p.plan){const left=(new Date(p.plan)-TODAY)/864e5;if(left<0)return 'bad';if(left<3)return 'warn'}if(p.days>limit)return 'bad';if(p.days>=limit*0.7)return 'warn';return 'live'}
+const HC={live:0x5fd3c4,warn:0xd9a441,bad:0xc76b6b};
+const STAGE_HUE=i=>new THREE.Color().setHSL(0.55-i*0.045,0.55,0.55).getHex();
+function waiting(p){const st=STAGES[p.stage];const who={idea:'设计总监评审',sketch:p.owner,design:'老板批准',sample:'采购确认付款',verify:p.owner,final:p.owner,sku:'采购建单',po:'采购下首单',stock:'仓库收货',sell:''}[st.k];return who}
+
+// ── 渲染器与公共场景 ──
+const canvas=document.getElementById('gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=0.95;
+renderer.setClearColor(0x05080f,1);
+const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x05080f,0.012);
+const camera=new THREE.PerspectiveCamera(38,1,0.1,400);
+scene.add(new THREE.HemisphereLight(0x9fb3c8,0x05080f,0.5));
+const key=new THREE.DirectionalLight(0xffffff,1.6);key.position.set(20,60,-30);scene.add(key);
+const rim=new THREE.DirectionalLight(0x9fb3c8,0.4);rim.position.set(-40,20,40);scene.add(rim);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.MeshStandardMaterial({color:0x0b111c,roughness:0.55,metalness:0.5}));
+ground.rotation.x=-Math.PI/2;ground.position.y=-0.02;scene.add(ground);
+const grid=new THREE.GridHelper(200,80,0x1a2433,0x121a27);grid.position.y=0;scene.add(grid);
+const world=new THREE.Group();scene.add(world);
+const ray=new THREE.Raycaster();const mouse=new THREE.Vector2(-9,-9);
+let pick=[],picked=null,concept='line',dim='health',filter='all',t0=performance.now();
+const lbls=document.getElementById('lbls');
+
+function colorOf(p){if(dim==='health')return HC[health(p)];if(dim==='dept')return DEPTS.find(d=>d.k===p.dept).c;return STAGE_HUE(p.stage)}
+function visible(p){if(filter==='stuck')return health(p)==='bad';if(filter==='dev')return STAGES[p.stage].side==='dev';if(filter==='retail')return STAGES[p.stage].side==='retail';return true}
+function glassMat(hex,em){return new THREE.MeshPhysicalMaterial({color:hex,roughness:0.18,metalness:0.2,transparent:true,opacity:0.92,clearcoat:1,clearcoatRoughness:0.08,emissive:hex,emissiveIntensity:em})}
+function tag(text,cls){const d=document.createElement('div');d.className=cls||'';d.innerHTML=text;lbls.appendChild(d);return d}
+function clearWorld(){while(world.children.length)world.remove(world.children[0]);pick=[];lbls.innerHTML='';picked=null}
+const v3=new THREE.Vector3();
+function project(pos,el){v3.copy(pos).project(camera);const r=canvas.getBoundingClientRect();el.style.left=((v3.x+1)/2*r.width)+'px';el.style.top=((1-v3.y)/2*r.height)+'px';el.style.opacity=v3.z<1?1:0}
+
+// ── 概念 ①:装配线(等距站台 + 流动光点)──
+const builders={};
+builders.line={
+  note:'<h3>概念 ① 装配线</h3><div class="note">一条从「创意」到「在售」的传送带,每一站是一块发光站台。产品是玻璃方块,停在它现在所在的那一站;方块高度 = 预估价值。卡住的方块从站台上浮起并泛红光,站台间的光点流速就是这周的推进节奏。开发段冷色、零售段金色,交接口(转 SKU)是一道门。</div>',
+  build(){
+    const gap=7.2,x0=-(STAGES.length-1)*gap/2;
+    // 站台
+    STAGES.forEach((s,i)=>{
+      const retail=s.side==='retail';
+      const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.8,0.35,48),new THREE.MeshStandardMaterial({color:retail?0x2a2618:0x111a29,roughness:0.4,metalness:0.6,emissive:retail?0xd9b45a:0x5fd3c4,emissiveIntensity:0.08}));
+      pad.position.set(x0+i*gap,0.17,0);world.add(pad);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(2.75,0.05,8,64),new THREE.MeshBasicMaterial({color:retail?0xd9b45a:0x5fd3c4,transparent:true,opacity:0.55}));
+      ring.rotation.x=Math.PI/2;ring.position.set(x0+i*gap,0.36,0);world.add(ring);
+      const l=tag(`<b>${s.n}</b>${s.side==='dev'?'DEV':'RETAIL'}${s.d?' · '+s.d+'d':''}`,retail?'retail':'');l._pos=new THREE.Vector3(x0+i*gap,-1.2,3.2);
+      if(i<STAGES.length-1){const seg=new THREE.Mesh(new THREE.BoxGeometry(gap-5.6,0.08,0.6),new THREE.MeshStandardMaterial({color:0x162131,metalness:0.7,roughness:0.3,emissive:0x1f3140,emissiveIntensity:0.3}));seg.position.set(x0+i*gap+gap/2,0.3,0);world.add(seg)}
+      if(s.k==='sku'){const gate=new THREE.Mesh(new THREE.BoxGeometry(0.25,6,0.25),new THREE.MeshBasicMaterial({color:0xe8cf8f,transparent:true,opacity:0.5}));gate.position.set(x0+i*gap+gap/2,3,0);world.add(gate);const g2=gate.clone();g2.position.z=-0.001;world.add(g2)}
+    });
+    // 光点(推进节奏)
+    const dots=new THREE.Group();world.add(dots);
+    for(let i=0;i<STAGES.length-1;i++)for(let k=0;k<4;k++){const d=new THREE.Mesh(new THREE.SphereGeometry(0.09,8,8),new THREE.MeshBasicMaterial({color:STAGES[i].side==='retail'?0xe8cf8f:0x5fd3c4}));d._seg=i;d._ph=k/4;dots.add(d)}
+    // 产品方块:同站按值排布
+    const byStage={};P.forEach(p=>{(byStage[p.stage]=byStage[p.stage]||[]).push(p)});
+    Object.keys(byStage).forEach(si=>{const arr=byStage[si].sort((a,b)=>b.value-a.value);arr.forEach((p,j)=>{
+      const h=0.6+p.value/100*2.2,sz=0.9;const m=new THREE.Mesh(new THREE.BoxGeometry(sz,h,sz),glassMat(colorOf(p),0.35));
+      const n=arr.length,ang=n===1?0:(j/n)*Math.PI*2;const r=n===1?0:1.3;
+      m.position.set(x0+si*gap+Math.cos(ang)*r,0.36+h/2,Math.sin(ang)*r);m._p=p;m._h=h;m._base=m.position.y;pick.push(m);world.add(m);
+      const halo=new THREE.Mesh(new THREE.RingGeometry(0.75,1.05,32),new THREE.MeshBasicMaterial({color:0xc76b6b,transparent:true,opacity:0,side:THREE.DoubleSide}));halo.rotation.x=-Math.PI/2;halo.position.set(m.position.x,0.4,m.position.z);m._halo=halo;world.add(halo)
+    })});
+    this.dots=dots;camera.position.set(-18,22,34);camera.lookAt(6,1,0);
+  },
+  frame(t){const sp=reduced?0:0.00035;this.dots.children.forEach(d=>{const gap=7.2,x0=-(STAGES.length-1)*gap/2;const f=((t*sp)+d._ph)%1;d.position.set(x0+d._seg*gap+2.6+f*(gap-5.2),0.5+Math.sin(f*Math.PI)*0.25,0)});
+    pick.forEach(m=>{const p=m._p,h=health(p),bad=h==='bad';const lift=bad?(reduced?0.6:0.5+Math.sin(t*0.003+p.id)*0.2):0;m.position.y=m._base+lift;m._halo.material.opacity=bad?(reduced?0.5:0.35+Math.sin(t*0.004+p.id)*0.25):(h==='warn'?0.18:0);m._halo.material.color.setHex(h==='bad'?0xc76b6b:0xd9a441);m.material.emissiveIntensity=(picked===m?0.9:(bad?0.55:0.3))});
+    if(!reduced){camera.position.x=-18+Math.sin(t*0.00012)*4;camera.lookAt(6+Math.sin(t*0.00012)*2,1,0)}
+    lbls.querySelectorAll('div').forEach(el=>el._pos&&project(el._pos,el))}
+};
+
+// ── 概念 ②:星环(阶段 = 同心环,角度 = 部门,卡住 = 停转并系线)──
+builders.ring={
+  note:'<h3>概念 ② 星环</h3><div class="note">「创意」在最中心,越往外越接近「在售」;每一圈是一个阶段,角度扇区是部门。产品是缓慢公转的光点,大小 = 预估价值。正常推进的点顺着环转;卡住的点停下来、变红、拉出一根系向圆心的光线——一眼看到「哪一圈堆了人、哪个扇区在拖」。适合挂在管理层门口的竖屏或大屏一角。</div>',
+  build(){
+    const R0=3,dr=2.1;
+    STAGES.forEach((s,i)=>{const r=R0+i*dr,retail=s.side==='retail';
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(r,0.035,6,160),new THREE.MeshBasicMaterial({color:retail?0xd9b45a:0x5fd3c4,transparent:true,opacity:retail?0.55:0.35}));ring.rotation.x=Math.PI/2;world.add(ring);
+      const l=tag(`<b>${s.n}</b>${s.side==='dev'?'DEV':'RETAIL'}`,retail?'retail':'');l._pos=new THREE.Vector3(r+0.2,0.2,0)});
+    DEPTS.forEach((d,i)=>{const a=(i/DEPTS.length)*Math.PI*2;const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.cos(a)*R0*0.6,0.02,Math.sin(a)*R0*0.6),new THREE.Vector3(Math.cos(a)*24,0.02,Math.sin(a)*24)]),new THREE.LineBasicMaterial({color:d.c,transparent:true,opacity:0.35}));world.add(line);
+      const l=tag(`<b>${d.n}</b>`,'');l._pos=new THREE.Vector3(Math.cos(a+0.35)*25,0.5,Math.sin(a+0.35)*25)});
+    const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,32),glassMat(0xe8cf8f,0.6));world.add(core);this.core=core;
+    P.forEach(p=>{const di=DEPTS.findIndex(d=>d.k===p.dept);const sector=(di/DEPTS.length)*Math.PI*2;const ang=sector+0.25+((p.id*0.37)%1)*(Math.PI*2/DEPTS.length-0.5);
+      const r=R0+p.stage*dr;const s=0.28+p.value/100*0.5;const m=new THREE.Mesh(new THREE.SphereGeometry(s,24,24),glassMat(colorOf(p),0.5));m._p=p;m._ang=ang;m._r=r;m.position.set(Math.cos(ang)*r,s*0.6,Math.sin(ang)*r);pick.push(m);world.add(m);
+      const tether=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0.3,0),m.position.clone()]),new THREE.LineBasicMaterial({color:0xc76b6b,transparent:true,opacity:0}));m._tether=tether;world.add(tether)});
+    camera.position.set(0,34,30);camera.lookAt(0,0,0)},
+  frame(t){pick.forEach(m=>{const p=m._p,h=health(p);const spin=h==='bad'?0:(reduced?0:0.00004*(1+p.stage*0.15));m._ang+=spin*16;m.position.x=Math.cos(m._ang)*m._r;m.position.z=Math.sin(m._ang)*m._r;
+      const g=m._tether.geometry.attributes.position;g.setXYZ(1,m.position.x,m.position.y,m.position.z);g.needsUpdate=true;m._tether.material.opacity=h==='bad'?(reduced?0.45:0.3+Math.sin(t*0.004+p.id)*0.2):0;
+      m.material.emissiveIntensity=picked===m?1:(h==='bad'?(reduced?0.7:0.5+Math.sin(t*0.005+p.id)*0.3):0.45)});
+    this.core.material.emissiveIntensity=reduced?0.6:0.5+Math.sin(t*0.002)*0.15;
+    if(!reduced){const a=t*0.00005;camera.position.set(Math.sin(a)*8,34,30);camera.lookAt(0,0,0)}
+    lbls.querySelectorAll('div').forEach(el=>el._pos&&project(el._pos,el))}
+};
+
+// ── 概念 ③:城区(每个产品一座塔,楼层 = 阶段,亮层 = 已完成)──
+builders.city={
+  note:'<h3>概念 ③ 城区</h3><div class="note">每个产品是一座塔,按部门分成街区;塔的每一层对应一个阶段,做完的层亮起,当前层呼吸,还没到的层是暗的——塔越高越接近上市。塔的地基大小 = 预估价值;卡住的塔顶上亮红灯并冒出「等谁」的标牌。镜头绕城慢转,像销售大屏的城市模式,两块屏并排看会很协调。</div>',
+  build(){
+    const bw=11,cols=2;
+    DEPTS.forEach((d,di)=>{const bx=(di%cols-0.5)*bw*1.6,bz=(Math.floor(di/cols)-0.5)*bw*1.6;
+      const plate=new THREE.Mesh(new THREE.BoxGeometry(bw,0.2,bw),new THREE.MeshStandardMaterial({color:0x0f1826,roughness:0.5,metalness:0.6,emissive:d.c,emissiveIntensity:0.05}));plate.position.set(bx,0.1,bz);world.add(plate);
+      const edge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(bw,0.22,bw)),new THREE.LineBasicMaterial({color:d.c,transparent:true,opacity:0.5}));edge.position.copy(plate.position);world.add(edge);
+      const l=tag(`<b>${d.n}</b>街区`,'');l._pos=new THREE.Vector3(bx,0.3,bz+bw/2+1.2);
+      const ps=P.filter(p=>p.dept===d.k);const per=3;ps.forEach((p,j)=>{const cx=bx+((j%per)-1)*3.2,cz=bz+(Math.floor(j/per)-0.5)*3.4;const fp=0.9+p.value/100*0.9;const fh=0.62;
+        const tower=new THREE.Group();tower.position.set(cx,0.2,cz);tower._p=p;
+        for(let k=0;k<STAGES.length;k++){const done=k<p.stage,cur=k===p.stage;const col=done?colorOf(p):0x101827;const m=new THREE.Mesh(new THREE.BoxGeometry(fp,fh-0.06,fp),new THREE.MeshPhysicalMaterial({color:col,roughness:0.25,metalness:0.3,clearcoat:0.8,transparent:true,opacity:done||cur?0.95:0.35,emissive:done?colorOf(p):(cur?colorOf(p):0x000000),emissiveIntensity:done?0.25:(cur?0.6:0)}));m.position.y=k*fh+fh/2;m._k=k;m._p=p;pick.push(m);tower.add(m)}
+        const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.16,12,12),new THREE.MeshBasicMaterial({color:0xc76b6b,transparent:true,opacity:0}));beacon.position.y=STAGES.length*fh+0.3;tower._beacon=beacon;tower.add(beacon);
+        const tg=tag('','');tg._pos=new THREE.Vector3(cx,STAGES.length*fh+1.3,cz);tg._tower=tower;tower._tag=tg;
+        world.add(tower)})});
+    const l0=tag(`<b>楼层 = 阶段</b>${STAGES.length} 层 · 顶层在售`,'');l0._pos=new THREE.Vector3(-bw*1.2,STAGES.length*0.62+1.5,bw*0.9);
+    camera.position.set(28,24,30);camera.lookAt(0,2.5,0)},
+  frame(t){world.children.forEach(g=>{if(!g._p)return;const p=g._p,h=health(p);g.children.forEach(m=>{if(m._k===undefined)return;if(m._k===p.stage)m.material.emissiveIntensity=reduced?0.6:0.45+Math.sin(t*0.003+p.id)*0.3;if(picked===m)m.material.emissiveIntensity=1});
+      g._beacon.material.opacity=h==='bad'?(reduced?0.9:0.5+Math.sin(t*0.006+p.id)*0.5):(h==='warn'?0.6:0);g._beacon.material.color.setHex(h==='bad'?0xc76b6b:0xd9a441);
+      g._tag.innerHTML=h==='bad'?`<b style="color:#c76b6b">${p.name}</b>等 ${waiting(p)} · ${p.days}d`:(h==='warn'?`<b style="color:#d9a441">${p.name}</b>快到期`:'');});
+    if(!reduced){const a=t*0.00006;camera.position.set(Math.cos(a)*40,24,Math.sin(a)*40);camera.lookAt(0,2.5,0)}
+    lbls.querySelectorAll('div').forEach(el=>el._pos&&project(el._pos,el))}
+};
+
+// ── HUD:指标、卡住清单、图例 ──
+function renderHud(){
+  const vis=P.filter(visible);const stuck=P.filter(p=>health(p)==='bad'),warn=P.filter(p=>health(p)==='warn');const handed=P.filter(p=>STAGES[p.stage].side==='retail'&&STAGES[p.stage].k!=='sell');
+  document.getElementById('kpis').innerHTML=`<div class="kpi"><div class="l">推进中</div><div class="v gold">${P.filter(p=>STAGES[p.stage].k!=='sell').length}</div></div><div class="kpi"><div class="l">卡住</div><div class="v bad">${stuck.length}</div></div><div class="kpi"><div class="l">快到期</div><div class="v" style="color:var(--warn)">${warn.length}</div></div><div class="kpi"><div class="l">已交采购</div><div class="v live">${handed.length}</div></div>`;
+  const ul=document.getElementById('stuck');ul.innerHTML='';[...stuck,...warn].slice(0,6).forEach(p=>{const li=document.createElement('li');const bad=health(p)==='bad';li.innerHTML=`<i class="${bad?'':'warn'}"></i><div><div class="n">${p.name}</div><div class="w">${STAGES[p.stage].n} · 等 ${waiting(p)}</div></div><div class="d ${bad?'':'warn'}">${p.days}d</div>`;li.addEventListener('click',()=>{const m=pick.find(x=>x._p===p&&(x._k===undefined||x._k===p.stage));picked=m||null;ul.querySelectorAll('li').forEach(x=>x.classList.remove('on'));li.classList.add('on')});ul.appendChild(li)});
+  const lg=document.getElementById('legend');if(dim==='health')lg.innerHTML=`<span><i style="background:#5fd3c4"></i>正常推进</span><span><i style="background:#d9a441"></i>快到期 / 接近常规天数</span><span><i style="background:#c76b6b"></i>卡住(超期或计划日已过)</span>`;else if(dim==='dept')lg.innerHTML=DEPTS.map(d=>`<span><i style="background:#${d.c.toString(16).padStart(6,'0')}"></i>${d.n}</span>`).join('');else lg.innerHTML=STAGES.filter((s,i)=>i%3===0||i===STAGES.length-1).map((s,i)=>`<span><i style="background:#${STAGE_HUE(STAGES.indexOf(s)).toString(16).padStart(6,'0')}"></i>${s.n}</span>`).join('')+'<span style="color:var(--mute)">(阶段越靠后色相越暖)</span>';
+  pick.forEach(m=>{const p=m._p;const on=visible(p);m.visible=on;if(m._halo)m._halo.visible=on;if(m._tether)m._tether.visible=on;if(m._k!==undefined){if(m._k<p.stage||m._k===p.stage){m.material.color.setHex(m._k<p.stage?colorOf(p):0x101827);m.material.emissive.setHex(colorOf(p))}}else{m.material.color.setHex(colorOf(p));m.material.emissive.setHex(colorOf(p))}});
+  world.children.forEach(g=>{if(g._p&&g._tag){g.visible=visible(g._p);g._tag.style.display=visible(g._p)?'':'none'}});
+}
+function rebuild(){clearWorld();builders[concept].build();document.getElementById('concept-note').innerHTML=builders[concept].note;renderHud()}
+
+// ── 交互 ──
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));concept=b.dataset.c;rebuild()}));
+document.querySelectorAll('#dims button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#dims button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));dim=b.dataset.d;renderHud()}));
+document.querySelectorAll('#filters button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));filter=b.dataset.f;renderHud()}));
+const tip=document.getElementById('tip');
+canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;tip.style.left=(e.clientX-r.left)+'px';tip.style.top=(e.clientY-r.top)+'px'});
+canvas.addEventListener('pointerleave',()=>{mouse.set(-9,-9);tip.classList.remove('on')});
+function showTip(m){const p=m._p,h=health(p),st=STAGES[p.stage];const lim=st.d;tip.innerHTML=`<b>${p.name}</b><div class="row"><span>阶段</span><em>${st.n}</em></div><div class="row"><span>停了</span><em>${p.days} 天${lim?' / 常规 '+lim+' 天':''}</em></div><div class="row"><span>负责人</span><em>${p.owner}</em></div><div class="row"><span>部门</span><em>${DEPTS.find(d=>d.k===p.dept).n}</em></div><div class="row"><span>预估价值</span><em>${p.value}</em></div>${p.plan?`<div class="row"><span>计划完成</span><em>${p.plan}</em></div>`:''}<span class="st ${h}">${h==='bad'?'卡住 · 等 '+waiting(p):(h==='warn'?'快到期':'正常推进')}</span>`;tip.classList.add('on')}
+
+function resize(){const r=canvas.parentElement.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+window.addEventListener('resize',resize);resize();rebuild();
+function loop(){const t=performance.now()-t0;builders[concept].frame(t);
+  ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects(pick.filter(m=>m.visible),false)[0];if(hit){showTip(hit.object);canvas.style.cursor='pointer'}else{if(!tip.classList.contains('pin'))tip.classList.remove('on');canvas.style.cursor=''}
+  renderer.render(scene,camera);requestAnimationFrame(loop)}
+loop();
+})();
+</script>
+</body>
+</html>

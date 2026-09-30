@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050b18">
+<meta name="robots" content="noindex">
+<title>Fortbrain 概念稿</title>
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#050b18;--ink:#e3f1ff;--dim:#5f7f9e;--dim2:#8fa9c4;--acc:#a6dcff;--gold:#e8cf8f;--rule:rgba(120,190,255,.15);--glass:rgba(10,32,56,.55);
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--mono:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{min-height:100%;background:
+  radial-gradient(ellipse 60% 40% at 50% 0%,rgba(63,169,204,.12),transparent 60%),
+  linear-gradient(var(--rule) 1px,transparent 1px) 0 0/100% 56px,
+  linear-gradient(90deg,var(--rule) 1px,transparent 1px) 0 0/56px 100%,var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:64px 24px 96px}
+header{display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim)}
+h1{margin:0;font-weight:400;font-size:28px;letter-spacing:.12em}
+h1 span{color:var(--gold)}
+.lede{color:var(--dim2);font-size:14px;line-height:1.7;max-width:64ch;letter-spacing:.04em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;gap:14px;padding:22px 22px 20px;border:1px solid var(--rule);background:var(--glass);backdrop-filter:blur(8px);
+  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+.card:hover{border-color:var(--acc);transform:translateY(-2px)}
+.card:focus-visible{outline:1px solid var(--acc);outline-offset:3px}
+.card .k{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.card .k i{font-style:normal;padding:3px 8px;border:1px solid var(--rule)}
+.card .k i.final{color:var(--gold);border-color:rgba(232,207,143,.45)}
+.card .k i.lab{color:var(--acc);border-color:rgba(166,220,255,.4)}
+.card h2{margin:0;font-weight:400;font-size:18px;letter-spacing:.1em}
+.card p{margin:0;color:var(--dim2);font-size:13px;line-height:1.7;letter-spacing:.03em}
+.card .go{margin-top:auto;font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--acc)}
+.sect{margin:44px 0 16px;font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:14px}
+.sect::after{content:"";flex:1;height:1px;background:var(--rule)}
+footer{margin-top:64px;font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+footer a{color:var(--dim2);text-decoration:none}
+@media (max-width:640px){.wrap{padding:40px 16px 72px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Fortbrain · Concepts · 内部概念稿</div>
+    <h1>产品动线 <span>·</span> 概念稿</h1>
+    <p class="lede">给「开发套件」的产品动线看板做的几版样式概念,以及一张玻璃材质实验台。全部是 three.js 单文件、示例数据,用来定交互与质感;拖动、滚轮、点击都能操作。</p>
+  </header>
+
+  <div class="sect">定稿</div>
+  <div class="grid">
+    <a class="card" href="flowboard-3d.html">
+      <div class="k"><span>2026-09-30 · v7</span><i class="final">定稿</i></div>
+      <h2>产品动线牌桌(3D 卡牌)</h2>
+      <p>每个项目一张牌:有问题的沿弧线摊开、正常的叠成牌堆;点牌堆在空间里摊成扇面翻牌;点牌飞上时间轴看每一步;点某一步放大成步骤页,图以博物馆画框挂墙、灯一盏盏点亮。大屏可轮播。</p>
+      <div class="go">打开 →</div>
+    </a>
+  </div>
+
+  <div class="sect">材质实验</div>
+  <div class="grid">
+    <a class="card" href="glass-lab.html">
+      <div class="k"><span>2026-09-30</span><i class="lab">实验台</i></div>
+      <h2>动线玻璃实验台</h2>
+      <p>同一套动线场景里的四件玻璃:透明立方体、琥珀长方体、磨砂 3D 字母、8 mm 薄玻璃。七盏灯可单独开关,四种灯光预设(工作室 / 画廊 / 霓虹 / 晨光)看玻璃在不同光下的样子。</p>
+      <div class="go">打开 →</div>
+    </a>
+  </div>
+
+  <div class="sect">早期方案(已淘汰,留作对照)</div>
+  <div class="grid">
+    <a class="card" href="flowboard-cards.html">
+      <div class="k"><span>2026-09-30 · v1</span><i>早期</i></div>
+      <h2>产品动线牌桌(2D 卡牌)</h2>
+      <p>卡牌想法的第一版:平面牌桌、按状态 / 步骤 / 负责人 / 更新时间分堆、点开看步骤时间线。后来因为不够 3D、牌堆交互不对、风格与销售大屏不一致而重做。</p>
+      <div class="go">打开 →</div>
+    </a>
+    <a class="card" href="flowboard-concepts.html">
+      <div class="k"><span>2026-09-30 · 三选一</span><i>早期</i></div>
+      <h2>产品动线三种概念</h2>
+      <p>最早的三个方向:楼层 = 阶段的立体楼、流水线传送带、河流分叉。都从「看板」出发而不是从用户要做的事出发,被否掉;卡牌方案由此而来。</p>
+      <div class="go">打开 →</div>
+    </a>
+  </div>
+
+  <footer>Fortbrain · 概念稿只用示例数据,不连任何真实服务 · <a href="../">回到首页</a></footer>
+</div>
+</body>
+</html>
