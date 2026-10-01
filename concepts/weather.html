@@ -1,0 +1,1051 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>大屏天气镜头</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#050b18; --panel:#0a1326; --ink:#e3f1ff; --dim:#6f8aa6; --rule:rgba(120,190,255,.16);
+  --acc:#a6dcff; --gold:#e8cf8f; --up:#f3d68a; --down:#a8905c;
+  --mono:"IBM Plex Mono","SF Mono",Menlo,Consolas,monospace;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--sans);padding-inline:16px;padding-block:20px 48px;line-height:1.6}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px}
+h1{margin:0;font-size:20px;font-weight:500;letter-spacing:.08em;text-wrap:balance}
+header p{margin:0;color:var(--dim);font-size:13px;max-width:72ch}
+
+/* 舞台 16:9;三层:3D 场景 + 镜头(同一块 WebGL 画布里合成)→ HUD(字和数不沾水) */
+.stage{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;overflow:hidden;background:var(--bg);border:1px solid var(--rule);container-type:inline-size}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;z-index:3;pointer-events:none;font-family:var(--mono);color:var(--dim);letter-spacing:.2em;text-transform:uppercase;font-size:.78cqw}
+.hud .mask{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,11,24,.82) 0%,transparent 24%,transparent 70%,rgba(5,11,24,.82) 100%)}
+.hud .brand{position:absolute;left:3.1cqw;top:2.6cqw;display:flex;flex-direction:column;gap:.5cqw}
+.hud .brand b{color:var(--ink);font-weight:500;letter-spacing:.4em;font-size:.95cqw}
+.hud .nav{position:absolute;left:50%;top:2.5cqw;transform:translateX(-50%);display:flex;gap:1.3cqw;align-items:center;white-space:nowrap}
+.hud .nav span,.hud .nav button{font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--dim);background:none;border:0;padding:0;display:inline-flex;align-items:center;gap:.45cqw}
+.hud .nav span::before,.hud .nav button::before{content:"";width:.5cqw;height:.5cqw;border:1px solid currentColor;display:inline-block}
+.hud .nav .on{color:var(--ink)} .hud .nav .on::before{background:currentColor}
+.hud .nav button{pointer-events:auto;cursor:pointer} .hud .nav button:focus-visible{outline:1px solid var(--ink);outline-offset:3px}
+.hud .nav i{width:1px;height:.9cqw;background:var(--rule)}
+.hud .wx{position:absolute;left:50%;top:4.7cqw;transform:translateX(-50%);display:flex;align-items:center;gap:.9cqw;padding:.4cqw 1cqw;border:1px solid var(--rule);background:rgba(5,11,24,.55);white-space:nowrap;font-size:.74cqw;transition:opacity .4s}
+.hud .wx b{color:var(--ink);font-weight:400;font-family:var(--sans);letter-spacing:.1em}
+.hud .wx svg{width:1.2cqw;height:1.2cqw;display:block;transition:transform .3s linear}
+.hud .wx.off{opacity:.55}
+.hud .kpi{position:absolute;left:3.1cqw;top:8.5cqw;display:flex;flex-direction:column;gap:1.4cqw;width:27cqw}
+.hud .kpi .v{color:var(--ink);font-size:3cqw;font-weight:300;letter-spacing:.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.hud .kpi .v small{font-size:.8cqw;color:var(--dim);margin-left:.6cqw;letter-spacing:.2em}
+.hud .fc{border-top:1px solid var(--rule);padding-top:1cqw;display:flex;flex-direction:column;gap:.6cqw}
+.hud .fc .row{display:flex;justify-content:space-between;align-items:baseline}
+.hud .fc .row b{color:var(--gold);font-weight:300;font-size:1.7cqw;letter-spacing:.02em}
+.hud .bar{height:.4cqw;background:rgba(111,138,166,.25);position:relative}
+.hud .bar i{position:absolute;left:0;top:0;bottom:0;width:48.8%;background:var(--acc)} .hud .bar em{position:absolute;left:50%;top:-.25cqw;bottom:-.25cqw;width:2px;background:var(--gold)}
+.hud .fc .t{display:flex;justify-content:space-between;font-size:.72cqw} .hud .down{color:var(--down)}
+.hud .list{position:absolute;right:3.1cqw;top:2.6cqw;width:21cqw;display:flex;flex-direction:column;gap:.8cqw;text-align:right}
+.hud .list h2{margin:0 0 .4cqw;font-weight:400;font-size:.78cqw}
+.hud .list .r{display:flex;justify-content:flex-end;gap:1cqw;font-size:.85cqw} .hud .list .r span:first-child{color:var(--ink)} .hud .list .r .n{font-family:var(--sans);letter-spacing:.05em;text-transform:none}
+.hud .status{position:absolute;right:3.1cqw;bottom:2.8cqw;font-size:.72cqw;white-space:nowrap}
+.hud .status b{color:var(--ink);font-weight:400}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.tog{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--rule);padding:6px 12px;cursor:pointer;letter-spacing:.06em}
+.seg button[aria-pressed="true"],.tog[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:rgba(232,207,143,.08)}
+.seg button:focus-visible,.tog:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tog{display:inline-flex;gap:8px;align-items:center} .tog input{accent-color:var(--gold)}
+.readout{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.04em;flex-basis:100%;overflow-wrap:anywhere}
+.readout b{color:var(--ink);font-weight:400} .readout em{font-style:normal;color:var(--gold)}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:18px}
+.notes section{border-top:1px solid var(--rule);padding-top:12px}
+.notes h2{margin:0 0 8px;font-size:15px;font-weight:500;letter-spacing:.06em}
+.notes p,.notes li{font-size:13.5px;color:#b9cbe0;margin:0 0 6px;max-width:70ch}
+.notes ul{margin:0;padding-left:18px}
+.notes code{font-family:var(--mono);font-size:12px;color:var(--acc)}
+.notes a{color:var(--acc)}
+.tbl{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:13px;min-width:620px}
+th,td{text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--rule);vertical-align:top} th{color:var(--dim);font-weight:400}
+td:first-child{color:var(--ink);white-space:nowrap}
+.full{grid-column:1/-1}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>销售大屏 · 天气镜头(概念演示 · 第二版)</h1>
+    <p>按门店所在城市的天气实况:3D 地图里下雨、刮风、下雪、起雾、起霾;镜头上挂水珠、成股流下,大风时树叶贴上镜头晃一阵被揭走,冷天镜头四周结冰。风向跟着实况走。顶部「天气」可以关。以下是示意数据。</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="gl"></canvas>
+    <div class="hud">
+      <div class="mask"></div>
+      <div class="brand" aria-hidden="true"><b>徐州 · LIVE</b><span>徐州市门店实时销售</span></div>
+      <div class="nav">
+        <span class="on" aria-hidden="true">深空</span><span aria-hidden="true">暗调</span><span aria-hidden="true">极简</span><i></i>
+        <span class="on" aria-hidden="true">轮播</span><span aria-hidden="true">隐私</span>
+        <button type="button" id="wxToggle" class="on" aria-pressed="true" title="天气效果:开 / 关(记在这台设备上)">天气</button>
+        <span aria-hidden="true">设备</span><i></i><span aria-hidden="true">A−</span><span aria-hidden="true">A+</span>
+      </div>
+      <div class="wx" id="wxChip" aria-live="polite">
+        <span>实况 14:15</span><b id="wxName">晴</b>
+        <svg viewBox="0 0 20 20" id="wxArrow" aria-label="风往哪边吹(按当前视角)"><path d="M10 2 L15 11 L11 10 L11 18 L9 18 L9 10 L5 11 Z" fill="#e8cf8f"/></svg>
+        <span id="wxDetail">东北风 2 级 · 22℃</span>
+      </div>
+      <div class="kpi" aria-hidden="true">
+        <div><div>今日收入</div><div class="v">11,400<small>元</small></div></div>
+        <div class="fc">
+          <div class="row"><span>今日预测</span><b>23,364</b></div>
+          <div class="bar"><i></i><em></em></div>
+          <div class="t"><span>已达 48.8% · 往常此时 50%</span><span class="down">▼ 慢 1.2 个点</span></div>
+        </div>
+        <div><div>今日订单</div><div class="v">412<small>单</small></div></div>
+      </div>
+      <div class="list" aria-hidden="true">
+        <h2>门店 · 今日 · 已达全天预测</h2>
+        <div class="r"><span>3,120</span><span class="n">蟠桃山景区官方</span></div>
+        <div class="r"><span>2,410</span><span class="n">户部山店</span></div>
+        <div class="r"><span>1,980</span><span class="n">索道大厅店</span></div>
+        <div class="r"><span>1,260</span><span class="n">欢乐有礼店</span></div>
+        <div class="r"><span>890</span><span class="n">乾隆行宫店</span></div>
+      </div>
+      <div class="status" aria-hidden="true">数据截至 <b>14:20</b> · 延时 10 分钟 · 天气实况 <b>14:15</b></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="天气实况(示意)" id="presets"></div>
+    <button class="tog" id="tour" type="button" aria-pressed="false">▶ 按实况轮播</button>
+    <label class="tog"><input type="checkbox" id="fx3d" checked> 3D 世界</label>
+    <label class="tog"><input type="checkbox" id="fxLens" checked> 镜头</label>
+    <div class="readout" id="readout"></div>
+  </div>
+
+  <div class="notes">
+    <section>
+      <h2>水珠怎么做的</h2>
+      <p>照业内成熟的做法(<a href="https://tympanus.net/codrops/2015/11/04/rain-water-effect-experiments/" target="_blank" rel="noopener">Codrops · Lucas Bebber 的 RainEffect</a>、
+        <a href="https://www.shadertoy.com/view/ltffzl" target="_blank" rel="noopener">Shadertoy · BigWings 的 Heartfelt</a>):
+        下面的水珠行为是逐条照它们的源码移植的。</p>
+      <p>照 Codrops 原文和源码(<code>raindrops.js</code>、<code>water.frag</code>)移植,规律都照它:</p>
+      <ul>
+        <li><b>直接用它的</b>:水珠贴图(<code>drop-alpha.png</code>、<code>drop-color.png</code>)、生成 255 档厚度的方法、画水珠的方法、着色器的取色方式,都是 Codrops 原样的(它的许可允许整合进自己的项目)。水珠截边后略下坠、上平下圆;里面是一张倒置、缩小、很糊的场景。</li>
+        <li><b>为什么会往下掉</b>:新雨点落在旧水珠上就合并,越并越大;每一帧按「半径越大越可能」被猛拉一下(表面张力抓不住了),拉多少也随机,动量很快衰减——所以是一顿一顿地往下走,不是匀速滑。</li>
+        <li><b>扫下去</b>:往下走的水珠碰到下面比它小的就吞掉(面积相加),吞完更快、并往被吞的那颗偏一点,于是一路把下面的水珠扫下去。</li>
+        <li><b>留痕</b>:走过的路上按动量留下小水珠(被拉长一点),自己缩一点;细水雾被抹出一道;小水珠慢慢干。</li>
+        <li><b>跟风</b>:往下走时按实况风在画面上的横向分量往下风带,水股斜着流;挂着不动的水珠不受影响。</li>
+        <li><b>起雾(四周一圈、中间透明)</b>:三个参考都有——Codrops 的背景本身是糊的、raindrop-fx 有一层约 10 秒起满的雾、Heartfelt 写明「玻璃起雾、水珠划出痕」。雾面糊、水珠清(里面是一个清晰的小倒像)、划过的地方一道清痕,人眼靠这个反差认出「玻璃上的水」。这里雨天镜头慢慢蒙雾,水珠停留和滑过的地方擦清、再慢慢雾回去;只起在四周一圈、往中间渐淡,中间留透明(最浓处小雨约四成、大雨约七成),门店柱子始终看得清,字和数字不受影响;雨停后 5 秒左右散掉。</li>
+        <li><b>雪花</b>:落在镜头上的是六角对称的冰晶——星状枝晶、羊齿枝晶、六角片、扇形片,大雪时还有几片粘成的一团;每条臂长短略不齐,偶尔断一截。落上来先是清楚的晶体,然后边缘变软、细枝先化没、中间攒出一小摊冰水,最后缩成一颗水珠混进镜头上的水里;越冷挂得越久、化得越慢。</li>
+        <li><b>明暗</b>:取自另一个复刻 <a href="https://github.com/SardineFish/raindrop-fx" target="_blank" rel="noopener">raindrop-fx</a>(MIT)的合成着色器——按水珠法线加一层漫反射,背光一侧暗、迎光一侧略亮。Codrops 的水珠只做折射,靠亮背景才看得出;大屏是深色夜景,需要这一层。</li>
+        <li><b>改了的参数</b>:水珠半径从它的 20–50 改成 14–38(原版在大屏上挡视线,再小又没存在感);细碎小水珠照它的密度乘雨量;下流留下的小水珠一两秒就干;被水盖住的面积封顶(小雨约 2.5%、大雨约 7%),画面中间生成的少一半。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>树叶、风向、雷暴、开关</h2>
+      <ul>
+        <li>树叶是弯的 3D 叶片:横向微卷、沿主脉微折,程序画的高清纹理(主脉、侧脉、细网脉、斑点、叶缘锯齿、叶柄),逆光时叶脉透亮。贴在镜头上时边缘随阵风起伏,风大了先从上风一侧掀起,再整片被带走。</li>
+        <li>风向按实况:风是「从哪边来」,世界里的雨、雪、落叶、雾都往下风走;镜头转到哪个角度,贴镜头的叶子就从画面里对应的上风一侧进来。实况标签里的小箭头是「按现在的视角,风往哪边吹」。</li>
+        <li>雷暴只闪 3D 世界(远处一道闪电、全城一亮),镜头和文字不闪。</li>
+        <li>顶部「天气」按钮一键开关,记在这台设备上;关掉后 2 秒内所有效果淡出。</li>
+      </ul>
+    </section>
+    <section class="full">
+      <h2>实况 → 效果(规则)</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>实况</th><th>判定(open-meteo 字段)</th><th>3D 世界</th><th>镜头</th></tr></thead>
+        <tbody>
+          <tr><td>雨</td><td>天气码 51–67、80–82;强度 = 降水 mm/h ÷ 8</td><td>雨线(随风斜)、地面涟漪与湿反光</td><td>小水珠铺满、大水珠成股流下;强度大时股数多、流得快</td></tr>
+          <tr><td>雷阵雨</td><td>天气码 95–99</td><td>同大雨 + 远处闪电、全城一亮</td><td>不闪(只有水珠)</td></tr>
+          <tr><td>大风</td><td>阵风 ≥ 25 km/h 开始,50 km/h 封顶;方向 = <code>wind_direction_10m</code></td><td>落叶、雨雪雾随风走</td><td>叶子从上风侧飞来贴住、晃、被揭走;水股往下风斜</td></tr>
+          <tr><td>雾</td><td>天气码 45 / 48,或能见度 <code>visibility</code> &lt; 3 km</td><td>低处一层薄雾随风飘,远处发白;近处门店始终看得清</td><td>—</td></tr>
+          <tr><td>霾</td><td>空气质量接口 <code>pm2_5</code> ≥ 75(≥ 225 封顶)</td><td>远处发黄发灰</td><td>整体轻微发灰(最多降 20% 对比度)</td></tr>
+          <tr><td>雪</td><td>天气码 71–77、85–86;强度 = 降雪 cm/h ÷ 2.5</td><td>雪花飘落,地面与柱顶慢慢积白,停了慢慢化</td><td>雪花落上来化成小水珠;四周轻微结冰</td></tr>
+          <tr><td>寒潮</td><td>气温 ≤ 0℃,或 24 小时降温 ≥ 8℃</td><td>画面偏冷</td><td>四周结冰、冰下的画面发虚,越冷越往中间长,中间始终留出来</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section>
+      <h2>数据从哪来</h2>
+      <p>按大屏城市中心的坐标取:天气用库存包已经在用的 open-meteo,只多问一组 <code>current</code>(天气码、降水、降雪、风速、阵风、风向、气温、能见度);霾用同一家的空气质量接口(<code>pm2_5</code>)。POS 接入的大屏快照带 <code>weather</code> 块,15 分钟一刷;取不到就当晴天,状态栏说一句。</p>
+    </section>
+    <section>
+      <h2>还要你定的</h2>
+      <ul>
+        <li>夜里看昨天时,天气用<b>此刻的实况</b>(建议)还是昨天的?</li>
+        <li>效果的强度上限:演示里大雨时镜头上水股已经不少,在店里电视上要不要再收一档?</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict'
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches
+const stage = document.getElementById('stage'), glc = document.getElementById('gl')
+const rnd = (a = 0, b = 1) => a + Math.random() * (b - a)
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v))
+const lerp = (a, b, t) => a + (b - a) * t
+const howMany = (rate) => Math.floor(rate) + (Math.random() < rate % 1 ? 1 : 0)
+
+// ── 实况预设(open-meteo 字段的示意值)→ 同一套规则
+const PRESETS = [
+  { id: 'clear', name: '晴', code: 0, precip: 0, snowfall: 0, wind: 8, gust: 14, dir: 45, temp: 22, drop24: 0, vis: 24000, pm25: 30 },
+  { id: 'drizzle', name: '小雨', code: 61, precip: 1.4, snowfall: 0, wind: 10, gust: 18, dir: 90, temp: 18, drop24: -2, vis: 12000, pm25: 20 },
+  { id: 'rain', name: '大雨', code: 65, precip: 8.5, snowfall: 0, wind: 18, gust: 34, dir: 120, temp: 16, drop24: -4, vis: 6000, pm25: 15 },
+  { id: 'storm', name: '雷阵雨', code: 95, precip: 14, snowfall: 0, wind: 24, gust: 46, dir: 200, temp: 24, drop24: -3, vis: 5000, pm25: 15 },
+  { id: 'wind', name: '大风', code: 3, precip: 0, snowfall: 0, wind: 36, gust: 58, dir: 300, temp: 14, drop24: -5, vis: 20000, pm25: 35 },
+  { id: 'fog', name: '雾', code: 45, precip: 0, snowfall: 0, wind: 6, gust: 10, dir: 60, temp: 12, drop24: 0, vis: 700, pm25: 40 },
+  { id: 'haze', name: '霾', code: 2, precip: 0, snowfall: 0, wind: 5, gust: 9, dir: 160, temp: 10, drop24: 0, vis: 3500, pm25: 190 },
+  { id: 'snow', name: '小雪', code: 71, precip: 0.3, snowfall: 0.5, wind: 10, gust: 16, dir: 20, temp: -1, drop24: -3, vis: 8000, pm25: 40 },
+  { id: 'blizzard', name: '大雪', code: 75, precip: 2, snowfall: 2.6, wind: 22, gust: 40, dir: 330, temp: -5, drop24: -6, vis: 2500, pm25: 30 },
+  { id: 'cold', name: '寒潮', code: 1, precip: 0, snowfall: 0, wind: 30, gust: 44, dir: 340, temp: -9, drop24: -11, vis: 20000, pm25: 25 },
+]
+const RAIN_CODES = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99], SNOW_CODES = [71, 73, 75, 77, 85, 86]
+function mapWeather(p) {
+  return {
+    rain: RAIN_CODES.includes(p.code) ? clamp(p.precip / 8, 0.15, 1) : 0,
+    snow: SNOW_CODES.includes(p.code) ? clamp(p.snowfall / 2.5, 0.2, 1) : 0,
+    wind: clamp((p.gust - 25) / 25),
+    cold: Math.max(clamp(-p.temp / 10), clamp((-p.drop24 - 6) / 6)),
+    fog: Math.max([45, 48].includes(p.code) ? 0.6 : 0, clamp((3000 - p.vis) / 2600)),
+    haze: clamp((p.pm25 - 75) / 150),
+    thunder: p.code >= 95, dir: p.dir, speed: p.wind,
+  }
+}
+const beaufort = (kmh) => [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118].findIndex((x) => kmh < x)
+const DIRS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
+const dirName = (d) => DIRS[Math.round((((d % 360) + 360) % 360) / 45) % 8]
+
+const W = { rain: 0, snow: 0, wind: 0.05, cold: 0, fog: 0, haze: 0, thunder: false }
+let T = mapWeather(PRESETS[0]), windDir = PRESETS[0].dir
+let weatherOn = true, show3d = true, showLens = true
+try { weatherOn = localStorage.getItem('bs-weather') !== 'off' } catch { /* 没存储就默认开 */ }
+
+// ── 渲染器:场景先画进离屏目标,再由「镜头」着色器合成(水珠折射、结冰、霾),最后叠贴镜头的叶子
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true })
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5))
+const scene = new THREE.Scene()
+const BG = 0x050b18
+scene.background = new THREE.Color(BG)
+scene.fog = new THREE.FogExp2(BG, 0.0024)
+const camera = new THREE.PerspectiveCamera(30, 16 / 9, 1, 3000)
+const hemi = new THREE.HemisphereLight(0x9fb3c8, 0x05080f, 0.6); scene.add(hemi)
+const key = new THREE.DirectionalLight(0xffffff, 0.95); key.position.set(-40, 160, -120); scene.add(key)
+const rim = new THREE.DirectionalLight(0x9fb3c8, 0.35); rim.position.set(-110, 50, 90); scene.add(rim)
+
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x06101f, roughness: 0.6, metalness: 0.3 })
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), groundMat)
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.2; scene.add(ground)
+const districtMats = []
+function blob(cx, cz, r, seed) {
+  const pts = []
+  for (let i = 0; i < 32; i++) {
+    const a = (i / 32) * Math.PI * 2
+    const k = r * (0.72 + 0.28 * Math.sin(a * 3 + seed) * Math.cos(a * 2 - seed * 1.7) + 0.12 * Math.sin(a * 7 + seed * 3))
+    pts.push(new THREE.Vector2(cx + Math.cos(a) * k, -(cz + Math.sin(a) * k)))
+  }
+  return pts
+}
+for (const [cx, cz, r, seed, hot] of [[-20, 5, 58, 1.2, true], [48, -30, 44, 2.1, true], [-70, -46, 40, 3.3, false], [70, 42, 46, 4.4, false], [-78, 52, 36, 5.2, false], [10, 70, 34, 6.1, true]]) {
+  const pts = blob(cx, cz, r, seed)
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 0.5, bevelEnabled: false }); g.rotateX(-Math.PI / 2)
+  const m = new THREE.MeshStandardMaterial({ color: hot ? 0x0a1a33 : 0x071226, roughness: 0.5, metalness: 0.3 })
+  m.userData.base = new THREE.Color(hot ? 0x0a1a33 : 0x071226); districtMats.push(m)
+  const mesh = new THREE.Mesh(g, m); mesh.position.y = -0.5; scene.add(mesh)
+  scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts.map((p) => new THREE.Vector3(p.x, 0.05, -p.y))),
+    new THREE.LineBasicMaterial({ color: 0x173654, transparent: true, opacity: hot ? 0.7 : 0.35 })))
+}
+{
+  const pos = []
+  const add = (pts) => { const c = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0.1, z))).getPoints(80); for (let i = 0; i < c.length - 1; i++) pos.push(c[i].x, 0.1, c[i].z, c[i + 1].x, 0.1, c[i + 1].z) }
+  add([[-150, 60], [-70, 22], [-10, 8], [40, 2], [150, -30]]); add([[-120, -90], [-40, -30], [-6, -2], [14, 44], [34, 110]])
+  add([[-8, -120], [-10, -30], [-4, 8], [2, 60], [8, 120]]); add([[-150, -8], [-60, -10], [-4, -4], [60, -12], [150, -2]])
+  const ring = []; for (let k = 0; k <= 60; k++) { const a = (k / 60) * Math.PI * 2; ring.push([Math.cos(a) * 46, Math.sin(a) * 38]) } add(ring)
+  for (let i = 0; i < 26; i++) { const x = rnd(-120, 120), z = rnd(-90, 90), a = rnd(0, 3.14); add([[x, z], [x + Math.cos(a) * 30, z + Math.sin(a) * 30], [x + Math.cos(a + 0.4) * 60, z + Math.sin(a + 0.4) * 60]]) }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  scene.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x35b4d4, transparent: true, opacity: 0.2 })))
+}
+{
+  const c = new THREE.CatmullRomCurve3([[-160, 20], [-90, 34], [-30, 30], [20, 48], [80, 30], [160, 44]].map(([x, z]) => new THREE.Vector3(x, 0.06, z)))
+  const pts = c.getPoints(120), pos = [], idx = []
+  pts.forEach((p, i) => { pos.push(p.x, 0.06, p.z - 3.2, p.x, 0.06, p.z + 3.2); if (i) { const b = (i - 1) * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2) } })
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals()
+  scene.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x08243a, roughness: 0.2, metalness: 0.6 })))
+}
+// 门店方柱:实心 = 实收,虚线框 + 透明板 = 还没到的预测
+const STORES = [[-18, 2, 5400, 3120], [4, -14, 4100, 2410], [-34, -18, 3700, 1980], [20, 16, 2350, 1260], [-6, 24, 1900, 890],
+  [36, -4, 1420, 760], [-40, 18, 1180, 540], [52, -26, 980, 420], [-58, -2, 860, 510], [30, 34, 780, 300], [-24, -38, 650, 380], [60, 12, 520, 150]]
+const SQ = 4.6, H_RANGE = 4.2, maxF = Math.max(...STORES.map((s) => s[2]))
+const capMat = new THREE.MeshStandardMaterial({ color: 0xf2f6fb, roughness: 0.9, transparent: true, opacity: 0 })
+for (const [x, z, fc, act] of STORES) {
+  const H = SQ * (1 + H_RANGE * Math.pow(fc / maxF, 0.6)), hs = Math.max(0.3, H * act / fc)
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.785
+  const solid = new THREE.Mesh(new THREE.BoxGeometry(SQ, hs, SQ), new THREE.MeshStandardMaterial({ color: 0xc9a24e, emissive: 0x9a7026, emissiveIntensity: 0.75, roughness: 0.6, metalness: 0.25 }))
+  solid.position.y = hs / 2
+  const w = SQ * 1.05, box = new THREE.BoxGeometry(w, H, w)
+  const ghost = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: 0xe8cf8f, transparent: true, opacity: 0.1, depthWrite: false })); ghost.position.y = H / 2
+  const lines = new THREE.LineSegments(new THREE.EdgesGeometry(box), new THREE.LineDashedMaterial({ color: 0xe8cf8f, dashSize: 0.34, gapSize: 0.24, transparent: true, opacity: 0.85 }))
+  lines.computeLineDistances(); lines.position.y = H / 2
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(SQ * 1.02, 0.35, SQ * 1.02), capMat); cap.position.y = hs + 0.17
+  g.add(solid, ghost, lines, cap); scene.add(g)
+}
+
+// ── 雨、涟漪、雪
+const BOX = { x: 150, z: 110, y: 110 }
+const RAIN_N = REDUCED ? 0 : 7000
+const rainPos = new Float32Array(RAIN_N * 6), rainDrops = []
+for (let i = 0; i < RAIN_N; i++) rainDrops.push({ x: rnd(-BOX.x, BOX.x), y: rnd(0, BOX.y), z: rnd(-BOX.z, BOX.z), v: rnd(70, 95) })
+const rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3))
+const rainLines = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0x9fc4e8, transparent: true, opacity: 0.45 }))
+rainLines.frustumCulled = false; scene.add(rainLines)
+const rippleGeo = new THREE.RingGeometry(0.8, 1, 24), ripples = []
+for (let i = 0; i < 90; i++) {
+  const m = new THREE.Mesh(rippleGeo, new THREE.MeshBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }))
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.15; m.visible = false; scene.add(m); ripples.push({ m, t: 1 })
+}
+function canvasTex(size, draw) { const c = document.createElement('canvas'); c.width = c.height = size; draw(c.getContext('2d'), size); return new THREE.CanvasTexture(c) }
+const SNOW_N = REDUCED ? 0 : 6000
+const snowPos = new Float32Array(SNOW_N * 3), snowFl = []
+for (let i = 0; i < SNOW_N; i++) snowFl.push({ x: rnd(-BOX.x, BOX.x), y: rnd(0, BOX.y), z: rnd(-BOX.z, BOX.z), v: rnd(5, 10), ph: rnd(0, 6.28) })
+const snowGeo = new THREE.BufferGeometry(); snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3))
+const snowTex = canvasTex(64, (x) => { const g = x.createRadialGradient(32, 32, 0, 32, 32, 30); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,.7)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64) })
+const snowPts = new THREE.Points(snowGeo, new THREE.PointsMaterial({ size: 1.3, map: snowTex, transparent: true, depthWrite: false }))
+snowPts.frustumCulled = false; scene.add(snowPts)
+
+// ── 雾 / 霾:低处几层很薄的雾片,随风飘;远处由场景雾负责
+const mistTex = canvasTex(512, (x, n) => {
+  x.clearRect(0, 0, n, n)
+  for (let i = 0; i < 260; i++) {
+    const px = rnd(0, n), py = rnd(0, n), r = rnd(20, 90)
+    for (const [ox, oy] of [[0, 0], [n, 0], [-n, 0], [0, n], [0, -n]]) {
+      const g = x.createRadialGradient(px + ox, py + oy, 0, px + ox, py + oy, r)
+      g.addColorStop(0, `rgba(255,255,255,${rnd(0.05, 0.14)})`); g.addColorStop(1, 'rgba(255,255,255,0)')
+      x.fillStyle = g; x.fillRect(px + ox - r, py + oy - r, r * 2, r * 2)
+    }
+  }
+})
+mistTex.wrapS = mistTex.wrapT = THREE.RepeatWrapping
+const mists = []
+for (let i = 0; i < 4; i++) {
+  const t = mistTex.clone(); t.needsUpdate = true; t.repeat.set(1.4 + i * 0.3, 1.1 + i * 0.25); t.offset.set(rnd(), rnd())
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(420, 320), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthWrite: false, color: 0xdfe8f2, fog: false }))
+  m.rotation.x = -Math.PI / 2; m.position.y = 2.5 + i * 3.2; scene.add(m); mists.push(m)
+}
+
+// ── 闪电(只在 3D 世界)
+const boltMat = new THREE.LineBasicMaterial({ color: 0xeaf2ff, transparent: true, opacity: 0, fog: false })
+const bolt = new THREE.Line(new THREE.BufferGeometry(), boltMat); bolt.frustumCulled = false; scene.add(bolt)
+function newBolt() {
+  const a = rnd(0, Math.PI * 2), r = rnd(150, 230), x0 = Math.cos(a) * r, z0 = Math.sin(a) * r, pts = []
+  let x = x0, z = z0
+  for (let y = 150; y > 0; y -= rnd(8, 16)) { x += rnd(-7, 7); z += rnd(-7, 7); pts.push(new THREE.Vector3(x, y, z)) }
+  pts.push(new THREE.Vector3(x, 0, z)); bolt.geometry.dispose(); bolt.geometry = new THREE.BufferGeometry().setFromPoints(pts)
+}
+
+// ── 树叶纹理:程序画,1024×512,四种(梧桐黄 / 红褐 / 黄绿 / 焦褐)
+const LEAF_KINDS = [
+  { c: ['#b8892c', '#d6b04a', '#c79a36'], vein: 'rgba(250,228,160,', stem: '#6b4a1e', spot: '#6a3f16', edge: '#6e4a1a', teeth: 34 },
+  { c: ['#8e3317', '#b3502a', '#9a3d1c'], vein: 'rgba(240,170,120,', stem: '#4d2410', spot: '#3d1a0a', edge: '#4f1f0c', teeth: 26 },
+  { c: ['#7f8a2a', '#a4aa3c', '#8e9530'], vein: 'rgba(236,238,170,', stem: '#4f5418', spot: '#5a4a14', edge: '#6a5a1c', teeth: 40 },
+  { c: ['#6e4219', '#94602a', '#7d4d1e'], vein: 'rgba(230,190,130,', stem: '#3f2610', spot: '#2e1a08', edge: '#3a220c', teeth: 30 },
+]
+function leafHalfWidth(t, k) {
+  const base = Math.pow(Math.sin(Math.PI * Math.pow(clamp(t), 0.8)), 0.85)
+  const u = (t * k.teeth) % 1, tooth = u < 0.7 ? u / 0.7 : (1 - u) / 0.3
+  return base * (1 + 0.035 * tooth * (t > 0.08 && t < 0.97 ? 1 : 0))
+}
+function makeLeafTextures(k) {
+  const Wd = 1024, Hd = 512, L0 = 70, L1 = Wd - 24, cy = Hd / 2, half = Hd * 0.42
+  const map = document.createElement('canvas'); map.width = Wd; map.height = Hd
+  const bump = document.createElement('canvas'); bump.width = Wd; bump.height = Hd
+  const x = map.getContext('2d'), b = bump.getContext('2d')
+  const path = (ctx) => {
+    ctx.beginPath(); ctx.moveTo(L0, cy)
+    for (let i = 0; i <= 200; i++) { const t = i / 200; ctx.lineTo(L0 + (L1 - L0) * t, cy - half * leafHalfWidth(t, k) * (1 - 0.06 * Math.sin(t * 9))) }
+    for (let i = 200; i >= 0; i--) { const t = i / 200; ctx.lineTo(L0 + (L1 - L0) * t, cy + half * leafHalfWidth(t, k) * (1 + 0.05 * Math.sin(t * 7))) }
+    ctx.closePath()
+  }
+  const X = (t) => L0 + (L1 - L0) * t
+  const midY = (t) => cy + Math.sin(t * Math.PI) * 6
+  // 底色 + 斑驳
+  x.save(); path(x); x.clip()
+  const g = x.createLinearGradient(L0, 0, L1, 0); g.addColorStop(0, k.c[0]); g.addColorStop(0.5, k.c[1]); g.addColorStop(1, k.c[2])
+  x.fillStyle = g; x.fillRect(0, 0, Wd, Hd)
+  for (let i = 0; i < 2600; i++) {
+    const r = rnd(2, 16); x.fillStyle = `rgba(${Math.random() < 0.5 ? '255,235,180' : '40,20,5'},${rnd(0.02, 0.07)})`
+    x.beginPath(); x.ellipse(rnd(0, Wd), rnd(0, Hd), r, r * rnd(0.4, 1), rnd(0, 3), 0, Math.PI * 2); x.fill()
+  }
+  // 细网脉:很多短线,低不透明
+  x.lineWidth = 0.9
+  for (let i = 0; i < 2200; i++) {
+    const px = rnd(L0, L1), py = rnd(cy - half, cy + half), a = rnd(0, Math.PI), l = rnd(5, 14)
+    x.strokeStyle = k.vein + rnd(0.05, 0.12) + ')'; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke()
+  }
+  // 病斑 / 虫眼
+  for (let i = 0; i < 7; i++) {
+    const px = rnd(X(0.2), X(0.9)), py = cy + rnd(-half, half) * 0.6, r = rnd(4, 14)
+    const sg = x.createRadialGradient(px, py, 0, px, py, r); sg.addColorStop(0, k.spot); sg.addColorStop(0.6, k.spot + 'aa'); sg.addColorStop(1, 'rgba(0,0,0,0)')
+    x.fillStyle = sg; x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill()
+  }
+  // 叶缘发焦
+  x.lineWidth = 26; x.strokeStyle = k.edge + '66'; try { x.filter = 'blur(8px)' } catch { /* */ } path(x); x.stroke(); try { x.filter = 'none' } catch { /* */ }
+  // 叶脉:主脉 + 侧脉(两面),同时画进凹凸图
+  b.fillStyle = '#808080'; b.fillRect(0, 0, Wd, Hd)
+  const vein = (ctx, color, w0, w1, pts) => {
+    const n = pts.length - 1
+    for (let i = 0; i < n; i++) { ctx.lineWidth = lerp(w0, w1, i / n); ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[i + 1][0], pts[i + 1][1]); ctx.stroke() }
+  }
+  x.lineCap = b.lineCap = 'round'
+  const mid = []; for (let i = 0; i <= 40; i++) { const t = i / 40; mid.push([X(t), midY(t)]) }
+  vein(x, k.vein + '0.85)', 7, 1.2, mid); vein(b, '#ffffff', 8, 1.5, mid)
+  for (let i = 1; i <= 11; i++) {
+    const t0 = 0.05 + i * 0.075
+    for (const s of [-1, 1]) {
+      const pts = [], t1 = Math.min(0.99, t0 + 0.16), reach = leafHalfWidth(t0 + 0.08, k) * half * 0.92
+      for (let j = 0; j <= 16; j++) {
+        const u = j / 16, t = lerp(t0, t1, Math.pow(u, 1.25))
+        pts.push([X(t), midY(t0) + s * reach * Math.sin(u * Math.PI / 2) * (1 - 0.1 * u)])
+      }
+      vein(x, k.vein + '0.55)', 2.6, 0.7, pts); vein(b, '#dddddd', 3, 0.8, pts)
+      // 三级脉:从侧脉往外分几根
+      for (let q = 3; q < 14; q += 3) {
+        const [px, py] = pts[q], a = (s > 0 ? 1 : -1) * rnd(0.5, 1.2) + rnd(-0.2, 0.2)
+        const sub = [[px, py], [px + Math.cos(a) * 18, py + Math.sin(a) * 18 * s], [px + Math.cos(a) * 34, py + Math.sin(a) * 30 * s]]
+        vein(x, k.vein + '0.25)', 1.1, 0.5, sub); vein(b, '#b0b0b0', 1.2, 0.5, sub)
+      }
+    }
+  }
+  x.restore()
+  // 叶柄
+  x.lineCap = 'round'; x.strokeStyle = k.stem
+  for (let i = 0; i < 10; i++) { x.lineWidth = lerp(9, 6, i / 10); x.beginPath(); x.moveTo(6 + i * 6.8, cy + 3 + Math.sin(i / 3) * 3); x.lineTo(6 + (i + 1) * 6.8, cy + 3 + Math.sin((i + 1) / 3) * 3); x.stroke() }
+  const tm = new THREE.CanvasTexture(map), tb = new THREE.CanvasTexture(bump)
+  tm.anisotropy = tb.anisotropy = renderer.capabilities.getMaxAnisotropy()
+  return { map: tm, bump: tb }
+}
+const LEAF_TEX = LEAF_KINDS.map(makeLeafTextures)
+const leafMaterial = (i, emissive) => new THREE.MeshStandardMaterial({ map: LEAF_TEX[i].map, bumpMap: LEAF_TEX[i].bump, bumpScale: 0.012, alphaTest: 0.5,
+  side: THREE.DoubleSide, roughness: 0.62, metalness: 0, emissive: 0xffffff, emissiveMap: LEAF_TEX[i].map, emissiveIntensity: emissive })
+// 叶片几何:沿长 1、宽 0.5;横向微卷、沿主脉微折、纵向一点弧
+function leafGeometry(segX, segY) {
+  const g = new THREE.PlaneGeometry(1, 0.5, segX, segY), p = g.attributes.position
+  const base = new Float32Array(p.array)
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), ny = y / 0.25
+    p.setZ(i, -0.07 * ny * ny - 0.035 * Math.abs(ny) - 0.12 * x * x + 0.02 * Math.sin(x * 9) * ny)
+  }
+  g.computeVertexNormals(); g.userData.flat = base; g.userData.shaped = new Float32Array(p.array)
+  return g
+}
+
+// 3D 世界里随风飘的叶子(四种各一组实例)
+const LEAF_N = REDUCED ? 0 : 110
+const worldLeaves = LEAF_TEX.map((_, i) => {
+  const m = new THREE.InstancedMesh(leafGeometry(6, 3), leafMaterial(i, 0.25), Math.max(1, LEAF_N))
+  m.frustumCulled = false; m.count = 0; scene.add(m)
+  return { m, d: Array.from({ length: LEAF_N }, () => ({ x: rnd(-150, 150), y: rnd(0.5, 30), z: rnd(-110, 110), rx: rnd(0, 6), ry: rnd(0, 6), sp: rnd(0.6, 1.4), ph: rnd(0, 6.28) })) }
+})
+
+// ── 镜头合成:水珠(法线图折射)、结冰、霾
+const rt = new THREE.WebGLRenderTarget(16, 16)
+rt.texture.generateMipmaps = true; rt.texture.minFilter = THREE.LinearMipmapLinearFilter
+const water = document.createElement('canvas'), wx = water.getContext('2d')
+const droplets = document.createElement('canvas'), dx = droplets.getContext('2d')
+const specks = document.createElement('canvas'), sx = specks.getContext('2d')
+// 镜头起雾(照 raindrop-fx 的 mist 层):雨天镜头慢慢蒙上一层雾,水珠停留、滑过的地方被擦清,擦出的道再慢慢雾回去。半分辨率就够
+const mist = document.createElement('canvas'), mx = mist.getContext('2d')
+const waterTex = new THREE.CanvasTexture(water), speckTex = new THREE.CanvasTexture(specks), lensMistTex = new THREE.CanvasTexture(mist)
+waterTex.minFilter = speckTex.minFilter = lensMistTex.minFilter = THREE.LinearFilter; waterTex.generateMipmaps = speckTex.generateMipmaps = lensMistTex.generateMipmaps = false
+let frostTex = null
+// 水珠贴图与生成方式直接用 Codrops RainEffect(Lucas Bebber)的 drop-alpha.png / drop-color.png 与 renderDropsGfx()。
+// 许可:可整合进自己的项目免费使用(含商用),不得原样转发或售卖 —— https://tympanus.net/codrops/licensing/
+// 形状:上沿切得齐、往下缓坡 → 截边后是略下坠、上平下圆的水珠;颜色渐变 = 左右整幅倒置、上下只在下半截倒置;蓝色 = 厚度(255 档)
+const DROP_ALPHA_SRC = 'data:image/png;base64,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', DROP_COLOR_SRC = 'data:image/png;base64,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'
+const DROP_SIZE = 64
+let DROP_GFX = []
+const CLEAR_GFX = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#000'; x.beginPath(); x.arc(64, 64, 64, 0, Math.PI * 2); x.fill(); return c })()
+function loadImg(src) { return new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src }) }
+Promise.all([loadImg(DROP_ALPHA_SRC), loadImg(DROP_COLOR_SRC)]).then(([alpha, color]) => {
+  const buf = document.createElement('canvas'); buf.width = buf.height = DROP_SIZE; const bx = buf.getContext('2d')
+  DROP_GFX = Array.from({ length: 255 }, (_, i) => {
+    const drop = document.createElement('canvas'); drop.width = drop.height = DROP_SIZE; const dc = drop.getContext('2d')
+    bx.clearRect(0, 0, DROP_SIZE, DROP_SIZE)
+    bx.globalCompositeOperation = 'source-over'; bx.drawImage(color, 0, 0, DROP_SIZE, DROP_SIZE)
+    bx.globalCompositeOperation = 'screen'; bx.fillStyle = `rgba(0,0,${i},1)`; bx.fillRect(0, 0, DROP_SIZE, DROP_SIZE)   // 蓝色叠上去 = 厚度
+    dc.globalCompositeOperation = 'source-over'; dc.drawImage(alpha, 0, 0, DROP_SIZE, DROP_SIZE)
+    dc.globalCompositeOperation = 'source-in'; dc.drawImage(buf, 0, 0, DROP_SIZE, DROP_SIZE)
+    return drop
+  })
+})
+
+const lensMat = new THREE.ShaderMaterial({
+  uniforms: { tScene: { value: rt.texture }, tWater: { value: waterTex }, tSpeck: { value: speckTex }, tMist: { value: lensMistTex }, uMist: { value: 0 }, tFrost: { value: null },
+    uRes: { value: new THREE.Vector2(1, 1) }, uFrost: { value: 0 }, uCold: { value: 0 }, uHaze: { value: 0 }, uRefrMin: { value: 256 }, uRefrDelta: { value: 256 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tScene, tWater, tSpeck, tFrost, tMist; uniform vec2 uRes; uniform float uFrost, uCold, uHaze, uRefrMin, uRefrDelta, uMist;
+    varying vec2 vUv;
+    vec3 sc(vec2 uv){ return texture2D(tScene, clamp(uv, vec2(0.001), vec2(0.999))).rgb; }
+    void main(){
+      vec2 uv = vUv, px = 1.0 / uRes;
+      vec3 col = sc(uv);
+      // 镜头起雾:蒙雾的地方画面变柔、略发灰;强度封顶(大雨约五成),门店柱子仍看得清
+      vec2 mc = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+      float md = length(mc) / length(vec2(uRes.x / uRes.y, 1.0) * 0.5);   // 0 = 正中,1 = 四角
+      float fogged = texture2D(tMist, uv).a * uMist * smoothstep(0.3, 0.82, md);   // 四周一圈起雾,中间留透明
+      if (fogged > 0.0) col = mix(col, texture2D(tScene, uv, 3.8).rgb * 0.85 + vec3(0.12, 0.14, 0.165), fogged);   // 夜里起雾是一层淡亮纱:清出来的水珠、水痕反而更暗更通透
+      // 霾:轻微发黄发灰、降一点对比度(封顶约 20%)
+      float lum = dot(col, vec3(0.299, 0.587, 0.114));
+      col = mix(col, vec3(lum), uHaze * 0.22); col = mix(col, vec3(0.42, 0.40, 0.34) * 0.5 + col * 0.5, uHaze * 0.18);
+      // 结冰:四周一圈,冰下画面发虚;中间始终留出来
+      vec2 c = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+      float dd = length(c) / length(vec2(uRes.x / uRes.y, 1.0) * 0.5);
+      float inner = mix(1.05, 0.5, uFrost);
+      float fm = smoothstep(inner, inner + 0.32, dd) * step(0.001, uFrost);
+      if (fm > 0.0) {
+        vec3 bl = (sc(uv + px * vec2(4., 0.)) + sc(uv - px * vec2(4., 0.)) + sc(uv + px * vec2(0., 4.)) + sc(uv - px * vec2(0., 4.))
+                 + sc(uv + px * vec2(7., 6.)) + sc(uv - px * vec2(7., 6.)) + sc(uv + px * vec2(-6., 7.)) + sc(uv - px * vec2(-6., 7.))) / 8.0;
+        col = mix(col, bl * 0.85 + vec3(0.07, 0.1, 0.14), fm * 0.85);
+        vec4 fr = texture2D(tFrost, uv);
+        col = mix(col, vec3(0.86, 0.93, 1.0), fr.a * fm * min(1.0, uFrost * 1.3));
+        col += vec3(0.06, 0.11, 0.2) * fm * uCold * 0.6;
+      }
+      // 水珠(照 Codrops water.frag):按 A×6−3 截边;x 在 G、y 在 R(它的 y 从上往下量);在很糊的场景里往外取 256~512 像素
+      vec4 cur = texture2D(tWater, uv);
+      float a = clamp(cur.a * 6.0 - 3.0, 0.0, 1.0);
+      if (a > 0.0) {
+        vec2 refr = (vec2(cur.g, cur.r) - 0.5) * 2.0;
+        vec2 pos = uv + vec2(refr.x, -refr.y) * (uRefrMin + cur.b * uRefrDelta) / uRes;
+        vec3 fg = texture2D(tScene, clamp(pos, vec2(0.002), vec2(0.998)), 1.0).rgb * 1.1;
+        // 明暗(取自 raindrop-fx 的 compose.glsl):按水珠法线做一层漫反射,光从左上来;
+        // 背光一侧压暗、迎光一侧略亮 —— 深色夜景上水珠靠它显出立体感(Codrops 靠的是亮背景)
+        vec3 N = normalize(vec3(-refr.x, refr.y, 1.0));
+        float lam = clamp(dot(N, normalize(vec3(-1.0, 1.0, 2.0))), 0.0, 1.0);
+        fg += vec3(lam - 0.8) * 0.3;
+        col = mix(col, max(fg, vec3(0.0)), a);
+      }
+      vec4 s = texture2D(tSpeck, uv);                                    // 落在镜头上的雪花(冰晶自带颜色:白里带一点冰蓝)
+      col = mix(col, s.rgb, s.a * 0.92);
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+  depthTest: false, depthWrite: false,
+})
+const lensScene = new THREE.Scene(), lensCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
+lensScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), lensMat))
+
+// 贴镜头的叶子:单独一个小场景,玻璃在 z = -1
+const leafScene = new THREE.Scene(), leafCam = new THREE.PerspectiveCamera(50, 16 / 9, 0.05, 20)
+leafScene.add(new THREE.HemisphereLight(0xe6eeff, 0x1a2230, 0.95))
+const leafSun = new THREE.DirectionalLight(0xfff2dc, 0.7); leafSun.position.set(0.4, 1, 1); leafScene.add(leafSun)
+const lensLeaves = []
+
+function makeFrost(w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'), S = Math.min(w, h)
+  x.lineCap = 'round'
+  function branch(px, py, a, len, depth, width) {
+    const step = S * 0.005, n = Math.max(3, Math.floor(len / step)); x.lineWidth = width
+    for (let i = 0; i < n; i++) {
+      const nx = px + Math.cos(a) * step, ny = py + Math.sin(a) * step
+      x.beginPath(); x.moveTo(px, py); x.lineTo(nx, ny); x.stroke(); px = nx; py = ny; a += rnd(-0.2, 0.2)
+      if (depth < 4 && Math.random() < 0.1) branch(px, py, a + (Math.random() < 0.5 ? -1 : 1) * rnd(0.5, 1.05), len * rnd(0.3, 0.55), depth + 1, width * 0.7)
+    }
+  }
+  const seeds = Math.round(220 * (w * h) / (1920 * 1080) + 120)
+  for (let i = 0; i < seeds; i++) {
+    const side = Math.floor(Math.random() * 4); let px, py, a
+    if (side === 0) { px = rnd(0, w); py = 0; a = Math.PI / 2 } else if (side === 1) { px = w; py = rnd(0, h); a = Math.PI } else if (side === 2) { px = rnd(0, w); py = h; a = -Math.PI / 2 } else { px = 0; py = rnd(0, h); a = 0 }
+    x.strokeStyle = `rgba(255,255,255,${rnd(0.35, 0.8)})`
+    branch(px, py, a + rnd(-0.7, 0.7), S * rnd(0.1, 0.34), 0, rnd(0.7, 1.9) * S / 720)
+  }
+  for (let i = 0; i < 12000; i++) { x.fillStyle = `rgba(255,255,255,${rnd(0.1, 0.45)})`; const r = rnd(0.4, 1.5) * S / 720; x.fillRect(rnd(0, w), rnd(0, h), r, r) }
+  const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; return t
+}
+
+let WW = 1, WH = 1, Q = 1, K = 1, REF_W = 1, REF_H = 800   // 水珠画布(按 CSS 像素)、雪花用的缩放、模拟用的参考空间(高 800,和 Codrops 的窗口差不多)
+function resize() {
+  const w = stage.clientWidth, h = Math.round(w * 9 / 16)
+  renderer.setSize(w, h, false)
+  camera.aspect = w / h; camera.updateProjectionMatrix(); leafCam.aspect = w / h; leafCam.updateProjectionMatrix()
+  const dw = glc.width, dh = glc.height
+  rt.setSize(dw, dh); lensMat.uniforms.uRes.value.set(dw, dh)
+  WW = w; WH = h; Q = WH / 360; K = WH / REF_H; REF_W = WW / K
+  lensMat.uniforms.uRefrMin.value = 256 * dh / 1000; lensMat.uniforms.uRefrDelta.value = 256 * dh / 1000
+  for (const c of [water, droplets, specks]) { c.width = WW; c.height = WH }
+  mist.width = Math.round(WW / 2); mist.height = Math.round(WH / 2)
+  frostTex?.dispose(); frostTex = makeFrost(dw, dh); lensMat.uniforms.tFrost.value = frostTex
+  drops.length = 0
+}
+
+// ── 镜头上的水:大水珠逐颗模拟;小水珠只画不跟踪
+const drops = []
+// ── 移植 Codrops raindrops.js(同样的动量、碰撞、拖尾、细水雾);密度按大屏收了,另加风
+// Codrops 的雨是 minR 20 / maxR 50(大屏上挡视线);9 / 26 又没有存在感,取 14 / 38
+const OPT = { minR: 14, maxR: 38, rainLimit: 6, dropletsSize: [2, 4], trailScaleRange: [0.2, 0.35], collisionRadius: 0.45,
+  collisionRadiusIncrease: 0.0002, cleaningR: 0.28, spawnArea: [-0.1, 0.95] }
+const DELTA_R = OPT.maxR - OPT.minR
+const rndI = (a, b, f) => a + (f ? f(Math.random()) : Math.random()) * (b - a)
+const chance = (c) => Math.random() <= c
+let dropletsCounter = 0
+function drawDrop(ctx, d) {                                              // = Codrops drawDrop()
+  if (!DROP_GFX.length) return
+  let k = clamp((d.r - OPT.minR) / DELTA_R * 0.9) / (((d.spreadX + d.spreadY) * 0.5) + 1)
+  const g = DROP_GFX[Math.floor(k * (DROP_GFX.length - 1))]
+  const w = d.r * (d.spreadX + 1), h = d.r * 1.5 * (d.spreadY + 1)        // 画得比宽高 1.5 倍:挂在玻璃上往下坠
+  ctx.drawImage(g, (d.x - w) * K, (d.y - h) * K, w * 2 * K, h * 2 * K)
+}
+function drawDroplet(x, y, r) { drawDrop(dx, { x, y, r, spreadX: 0, spreadY: 0 }) }
+function clearDroplets(x, y, r) {
+  dx.globalCompositeOperation = 'destination-out'
+  dx.drawImage(CLEAR_GFX, (x - r) * K, (y - r) * K, r * 2 * K, r * 2 * K * 1.5)
+  dx.globalCompositeOperation = 'source-over'
+}
+function newDrop(o) { return Object.assign({ x: 0, y: 0, r: 0, spreadX: 0, spreadY: 0, momentum: 0, momentumX: 0, lastSpawn: 0, nextSpawn: 0, parent: null, isNew: true, killed: false, shrink: 0 }, o) }
+// 中间少生成一半:水不能挡住画面中间的门店
+const keepAt = (x, y) => { const cx = x / REF_W - 0.5, cy = y / REF_H - 0.5; return !(cx * cx / 0.09 + cy * cy / 0.1 < 1 && Math.random() < 0.5) }
+// 画面被水珠盖住的比例(按截边后的可见大小估)
+const coverage = () => { let a = 0; for (const d of drops) a += Math.PI * (0.32 * d.r) * (0.52 * d.r) * (d.spreadX + 1) * (d.spreadY + 1); return a / (REF_W * REF_H) }   // 截边后可见约 0.32r 宽、0.52r 高
+function stepWater(dt, R, windX, windK) {
+  const ts = Math.min(1.1, dt * 60)
+  const raining = R > 0.02
+  const areaMul = Math.sqrt(REF_W * REF_H / (1024 * 768))
+  const maxDrops = (60 + 340 * R) * areaMul
+  // 风:下滑时按实况风在画面上的横向分量往下风带(大风约 1 : 1 的斜度)
+  const windSlope = clamp(windX * (0.3 + windK * 1.2), -1.2, 1.2)
+  // 细水雾:画进单独一层,不跟踪;下滑的水珠会把它抹掉。Codrops 每帧 50 颗,这里按雨量、并慢慢褪,免得糊满
+  if (raining) {
+    dropletsCounter += 30 * R * ts * areaMul                               // 细碎小水珠:Codrops 每帧 50 颗,这里 30 颗乘雨量(大屏上不糊满)
+    while (dropletsCounter >= 1) { dropletsCounter--; const x = rndI(0, REF_W), y = rndI(0, REF_H); if (keepAt(x, y)) drawDroplet(x, y, rndI(OPT.dropletsSize[0], OPT.dropletsSize[1], (n) => n * n)) }
+  }
+  dx.globalCompositeOperation = 'destination-out'; dx.fillStyle = `rgba(0,0,0,${(raining ? 0.004 : 0.03) * ts})`; dx.fillRect(0, 0, WW, WH); dx.globalCompositeOperation = 'source-over'
+  // 新落下的水珠:Codrops 每帧 0.35 的几率、一帧最多 6 颗;这里乘雨量,并按覆盖率封顶(小雨约 3%、大雨约 8%)
+  let fresh = []
+  if (raining && coverage() < 0.015 + 0.055 * R) {                      // 被水盖住的面积封顶:小雨约 2.5%、大雨约 7%
+    const limit = OPT.rainLimit * ts * areaMul * R
+    let count = 0
+    while (chance(0.35 * R * ts * areaMul) && count < limit && drops.length < maxDrops) {
+      count++
+      const r = rndI(OPT.minR, OPT.maxR, (n) => n * n * n), x = rndI(0, REF_W), y = rndI(REF_H * OPT.spawnArea[0], REF_H * OPT.spawnArea[1])
+      if (!keepAt(x, y)) continue
+      fresh.push(newDrop({ x, y, r, momentum: 1 + (r - OPT.minR) * 0.1 + rndI(0, 2), spreadX: 1.5, spreadY: 1.5 }))   // 刚打上来是扁的一摊,很快收成水珠
+    }
+  }
+  let next = fresh
+  drops.sort((a, b) => (a.y * REF_W + a.x) - (b.y * REF_W + b.x))
+  for (let i = 0; i < drops.length; i++) {
+    const drop = drops[i]
+    if (drop.killed) continue
+    // 重力:越大越可能被猛拉一下(表面张力抓不住了),拉多少也随机 → 一顿一顿地往下走
+    if (chance((drop.r - OPT.minR) * (0.1 / DELTA_R) * ts)) drop.momentum += rndI(0, (drop.r / OPT.maxR) * 4)
+    // 小水珠慢慢干;不下雨了大家一起慢慢干
+    if (drop.r <= OPT.minR && chance(0.05 * ts)) drop.shrink += 0.01
+    if (!raining && chance(0.02 * ts)) drop.shrink = Math.max(drop.shrink, rndI(0.02, 0.08))
+    drop.r -= drop.shrink * ts
+    if (drop.r <= 0) drop.killed = true
+    // 拖尾:走过的路上留下小水珠(拉长一点),自己小一点
+    if (raining) {
+      drop.lastSpawn += drop.momentum * ts
+      if (drop.lastSpawn > drop.nextSpawn && drops.length + next.length < maxDrops * 1.6) {
+        next.push(newDrop({ x: drop.x + rndI(-drop.r, drop.r) * 0.1, y: drop.y - drop.r * 0.01, r: drop.r * rndI(...OPT.trailScaleRange), spreadY: drop.momentum * 0.1, parent: drop, shrink: rndI(0.02, 0.045) }))   // 拖尾一两秒就干
+        drop.r *= Math.pow(0.97, ts); drop.lastSpawn = 0
+        drop.nextSpawn = rndI(OPT.minR, OPT.maxR) - drop.momentum * 2 + (OPT.maxR - drop.r)
+      }
+    }
+    drop.spreadX *= Math.pow(0.4, ts); drop.spreadY *= Math.pow(0.7, ts)
+    const moved = drop.momentum > 0
+    if (moved && !drop.killed) {
+      drop.y += drop.momentum
+      drop.x += drop.momentumX + drop.momentum * windSlope                    // 风把往下走的水往下风带
+      if (drop.y > REF_H + drop.r || drop.x < -drop.r * 2 || drop.x > REF_W + drop.r * 2) drop.killed = true
+    }
+    // 碰撞:往下走的(或刚落下的)水珠吞掉下面比它小的——面积相加(被吞的打八折),吞完更快、往被吞的那边偏一点,
+    // 于是一路把下面的水珠扫下去
+    if ((moved || drop.isNew) && !drop.killed) {
+      for (let j = i + 1; j < Math.min(drops.length, i + 70); j++) {
+        const d2 = drops[j]
+        if (drop.r > d2.r && drop.parent !== d2 && d2.parent !== drop && !d2.killed) {
+          const ddx = d2.x - drop.x, ddy = d2.y - drop.y
+          if (Math.hypot(ddx, ddy) < (drop.r + d2.r) * (OPT.collisionRadius + drop.momentum * OPT.collisionRadiusIncrease * ts)) {
+            const targetR = Math.min(OPT.maxR * 1.25, Math.sqrt(drop.r * drop.r + d2.r * d2.r * 0.8))
+            drop.r = targetR; drop.momentumX += ddx * 0.1; drop.spreadX = 0; drop.spreadY = 0; d2.killed = true
+            drop.momentum = Math.max(d2.momentum, Math.min(40, drop.momentum + targetR * 0.05 + 1))
+          }
+        }
+      }
+    }
+    drop.isNew = false
+    // 动量衰减:慢的衰减得快 → 停得住
+    drop.momentum -= Math.max(1, OPT.minR * 0.5 - drop.momentum) * 0.1 * ts
+    if (drop.momentum < 0) drop.momentum = 0
+    drop.momentumX *= Math.pow(0.7, ts)
+    if (!drop.killed) {
+      next.push(drop)
+      if (moved) clearDroplets(drop.x, drop.y, drop.r * OPT.cleaningR)
+    }
+  }
+  drops.length = 0; for (const d of next) if (!d.killed) drops.push(d)
+  const mk = 0.5 * K
+  if (raining) { mx.globalCompositeOperation = 'source-over'; mx.fillStyle = `rgba(255,255,255,${Math.min(1, dt / (14 - 6 * R))})`; mx.fillRect(0, 0, mist.width, mist.height) }
+  else { mx.globalCompositeOperation = 'destination-out'; mx.fillStyle = `rgba(0,0,0,${Math.min(1, dt / 5)})`; mx.fillRect(0, 0, mist.width, mist.height) }
+  mx.globalCompositeOperation = 'destination-out'
+  for (const d of drops) {                                                  // 水珠压着的地方是清的;滑过的一路擦出一道
+    const w = d.r * 0.42 * (d.spreadX + 1), h = d.r * 0.62 * (d.spreadY + 1)
+    mx.drawImage(CLEAR_GFX, (d.x - w) * mk, (d.y - h) * mk, w * 2 * mk, h * 2 * mk)
+  }
+  mx.globalCompositeOperation = 'source-over'
+  lensMistTex.needsUpdate = true
+  wx.clearRect(0, 0, WW, WH); wx.drawImage(droplets, 0, 0)
+  for (const d of drops) drawDrop(wx, d)
+  waterTex.needsUpdate = true
+}
+// ── 雪花落在镜头上:六角对称的冰晶(星状枝晶 / 羊齿枝晶 / 六角片 / 扇形片 / 几片粘成一团),
+//    落上来先是清楚的晶体,然后边缘变软、细枝先化没、缩成一颗水珠混进镜头上的水里;越冷化得越慢,冷到一定程度就挂着不化
+const FLAKE_PX = 256
+function flakeArm(kind) {
+  // 一条臂:主干 + 两侧对称的分枝(60°);每片雪花的臂长短、分枝位置都随机,六条臂用同一套 → 六重对称
+  const R = FLAKE_PX * 0.43, segs = [], jitter = rnd(0.9, 1.04)
+  segs.push([0, 0, R * jitter, 0, kind === 'fern' ? 3.2 : 4.2])
+  const step = kind === 'fern' ? 0.065 : rnd(0.11, 0.15)
+  for (let t = kind === 'fern' ? 0.18 : rnd(0.22, 0.32); t < 0.92; t += step * rnd(0.85, 1.15)) {
+    const len = R * (1 - t) * (kind === 'fern' ? rnd(0.22, 0.3) : rnd(0.28, 0.45)), a = Math.PI / 3, x0 = R * t * jitter
+    const w = kind === 'fern' ? 1.6 : 2.6
+    for (const sgn of [1, -1]) {
+      const x1 = x0 + Math.cos(a) * len, y1 = sgn * Math.sin(a) * len
+      segs.push([x0, 0, x1, y1, w])
+      if (kind === 'stellar' && len > R * 0.14) for (let u = 0.35; u < 0.9; u += 0.3) {            // 大分枝上再长小分枝
+        const bx = x0 + Math.cos(a) * len * u, by = sgn * Math.sin(a) * len * u, l2 = len * (1 - u) * 0.45
+        segs.push([bx, by, bx + l2, by, 1.3], [bx, by, bx + Math.cos(a * 2) * l2, by + sgn * Math.sin(a * 2) * l2, 1.3])
+      }
+    }
+  }
+  return segs
+}
+function makeFlake(kind) {
+  const c = document.createElement('canvas'); c.width = c.height = FLAKE_PX
+  const x = c.getContext('2d'), R = FLAKE_PX * 0.43
+  x.translate(FLAKE_PX / 2, FLAKE_PX / 2); x.lineCap = 'round'; x.lineJoin = 'round'
+  x.shadowColor = 'rgba(190,220,255,0.7)'; x.shadowBlur = 5
+  const hex = (r, rot = 0) => { x.beginPath(); for (let k = 0; k < 6; k++) { const a = rot + k * Math.PI / 3; x[k ? 'lineTo' : 'moveTo'](Math.cos(a) * r, Math.sin(a) * r) } x.closePath() }
+  if (kind === 'plate') {
+    const r = R * rnd(0.55, 0.8)
+    hex(r); x.fillStyle = 'rgba(225,240,255,0.32)'; x.fill(); x.strokeStyle = 'rgba(240,248,255,0.85)'; x.lineWidth = 2.6; x.stroke()
+    hex(r * 0.55); x.strokeStyle = 'rgba(240,248,255,0.5)'; x.lineWidth = 1.4; x.stroke()
+    for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a) * r, Math.sin(a) * r); x.lineWidth = 1.2; x.stroke() }
+  } else if (kind === 'sector') {
+    const L = R * rnd(0.8, 0.95)
+    for (let k = 0; k < 6; k++) {
+      x.save(); x.rotate(k * Math.PI / 3)
+      x.beginPath(); x.moveTo(0, 0); x.lineTo(L * 0.3, -L * 0.1); x.lineTo(L, -L * 0.07); x.lineTo(L * 1.03, 0); x.lineTo(L, L * 0.07); x.lineTo(L * 0.3, L * 0.1); x.closePath()
+      x.fillStyle = 'rgba(225,240,255,0.34)'; x.fill(); x.strokeStyle = 'rgba(240,248,255,0.8)'; x.lineWidth = 1.8; x.stroke()
+      x.beginPath(); x.moveTo(0, 0); x.lineTo(L, 0); x.lineWidth = 1.2; x.stroke()
+      for (let t = 0.4; t < 0.95; t += 0.18) { x.beginPath(); x.moveTo(L * t, -L * 0.08); x.lineTo(L * t, L * 0.08); x.lineWidth = 0.9; x.stroke() }
+      x.restore()
+    }
+    hex(R * 0.14); x.fillStyle = 'rgba(235,245,255,0.6)'; x.fill()
+  } else {
+    const arm = flakeArm(kind)
+    for (let k = 0; k < 6; k++) {
+      x.save(); x.rotate(k * Math.PI / 3 + rnd(-0.02, 0.02))
+      const broken = Math.random() < 0.12 ? rnd(0.55, 0.8) : 1                 // 偶尔一条臂断了一截:真雪花没那么完美
+      for (const [x1, y1, x2, y2, w] of arm) {
+        if (Math.max(x1, x2) > R * broken) continue
+        x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.lineWidth = w; x.strokeStyle = 'rgba(242,249,255,0.9)'; x.stroke()
+      }
+      x.restore()
+    }
+    hex(R * 0.12); x.fillStyle = 'rgba(235,245,255,0.75)'; x.fill()
+  }
+  return c
+}
+const FLAKE_SPRITES = [...['stellar', 'stellar', 'stellar', 'fern', 'fern', 'plate', 'sector', 'sector'].map(makeFlake)]
+// 几片粘成一团(大雪里常见)
+for (let n = 0; n < 4; n++) {
+  const c = document.createElement('canvas'); c.width = c.height = FLAKE_PX; const x = c.getContext('2d')
+  for (let k = 0, m = Math.floor(rnd(3, 6)); k < m; k++) {
+    const sp = FLAKE_SPRITES[Math.floor(Math.random() * 8)], sz = FLAKE_PX * rnd(0.38, 0.58)
+    x.save(); x.translate(FLAKE_PX / 2 + rnd(-40, 40), FLAKE_PX / 2 + rnd(-40, 40)); x.rotate(rnd(0, 6.28)); x.globalAlpha = rnd(0.75, 1)
+    x.drawImage(sp, -sz / 2, -sz / 2, sz, sz); x.restore()
+  }
+  FLAKE_SPRITES.push(c)
+}
+const flakes = []
+function stepSpecks(dt, Sn, C) {
+  if (!REDUCED && Sn > 0.05 && flakes.length < 70) for (let n = 0, cnt = howMany(Sn * 1.6 * dt); n < cnt; n++) {
+    const clump = Math.random() < 0.3 * Sn, x = rnd(0, WW), y = rnd(0, WH)
+    const cx = x / WW - 0.5, cy = y / WH - 0.5; if (cx * cx / 0.09 + cy * cy / 0.1 < 1 && Math.random() < 0.5) continue
+    flakes.push({ x, y, size: (clump ? rnd(11, 18) : rnd(5, 11)) * Q / 2, rot: rnd(0, 6.28),
+      sprite: FLAKE_SPRITES[clump ? 8 + Math.floor(Math.random() * 4) : Math.floor(Math.random() * 8)],
+      t: 0, sit: rnd(1.5, 4) * (1 + C * 4), melt: rnd(2.5, 4), blur: rnd(0.3, 0.8) })
+  }
+  sx.clearRect(0, 0, WW, WH)
+  for (let i = flakes.length - 1; i >= 0; i--) {
+    const f = flakes[i]; f.t += dt
+    const land = Math.min(1, f.t / 0.18)
+    const m = clamp((f.t - f.sit * (1 + C * 10)) / (f.melt * (1 + C * 3)))  // 融化进度:越冷挂得越久、化得越慢
+    if (m >= 1) {                                                          // 化完:变成一颗水珠,混进镜头上的水里
+      const r = f.size * 0.3 / K
+      drawDroplet(f.x / K, f.y / K, Math.max(1.5, r * 1.6))              // 化成一颗小水珠
+      flakes.splice(i, 1); continue
+    }
+    const sc = (1.08 - 0.08 * land) * (1 - 0.5 * m * m)
+    sx.save(); sx.translate(f.x, f.y); sx.rotate(f.rot)
+    sx.globalAlpha = land * (1 - 0.75 * m)
+    try { sx.filter = `blur(${(f.blur + m * 2.2).toFixed(2)}px)` } catch { /* 没有 filter 就不虚 */ }
+    const sz = f.size * 2 * sc
+    sx.drawImage(f.sprite, -sz / 2, -sz / 2, sz, sz)
+    if (m > 0.25) {                                                        // 化到一半:中间攒出一小摊半透明的冰水
+      const g = sx.createRadialGradient(0, 0, 0, 0, 0, f.size * 0.45)
+      g.addColorStop(0, `rgba(225,238,250,${0.35 * m})`); g.addColorStop(1, 'rgba(225,238,250,0)')
+      sx.fillStyle = g; sx.beginPath(); sx.arc(0, 0, f.size * 0.45, 0, Math.PI * 2); sx.fill()
+    }
+    sx.restore()
+  }
+  try { sx.filter = 'none' } catch { /* */ }
+  speckTex.needsUpdate = true
+}
+
+// ── 贴镜头的叶子
+const GLASS_Z = -1
+const halfH = Math.tan((50 / 2) * Math.PI / 180)                          // z=-1 处半高
+// 贴的位置避开画面中间(门店都在中间):落在四周一圈
+function edgeSpot(halfW) {
+  for (let k = 0; k < 20; k++) {
+    const tx = rnd(-halfW * 0.85, halfW * 0.85), ty = rnd(-halfH * 0.75, halfH * 0.75)
+    if ((tx / halfW) ** 2 / 0.3 + (ty / halfH) ** 2 / 0.35 > 1) return { tx, ty }
+  }
+  return { tx: halfW * 0.7 * (Math.random() < 0.5 ? -1 : 1), ty: rnd(-halfH * 0.5, halfH * 0.5) }
+}
+function spawnLensLeaf(stick, screenWind) {
+  const kind = Math.floor(Math.random() * LEAF_KINDS.length)
+  const geo = leafGeometry(28, 14), mesh = new THREE.Mesh(geo, leafMaterial(kind, 0.38))
+  const halfW = halfH * leafCam.aspect, up = Math.sign(screenWind.x) || 1  // 风往右吹 → 从左边进
+  const size = stick ? rnd(0.17, 0.26) : rnd(0.35, 0.55)
+  mesh.scale.setScalar(size)
+  const l = { mesh, geo, state: stick ? 'in' : 'pass', t: 0, size, up, ph: rnd(0, 6.28), stay: rnd(4, 8), lift: 0,
+    ...edgeSpot(halfW), trot: rnd(-0.9, 0.9),
+    from: new THREE.Vector3(-up * (halfW + 0.3) * rnd(1, 1.6), rnd(-halfH, halfH), GLASS_Z - rnd(1.5, 3.5)),
+    spin: new THREE.Vector3(rnd(-4, 4), rnd(-4, 4), rnd(-3, 3)) }
+  mesh.position.copy(l.from); mesh.rotation.set(rnd(0, 6), rnd(0, 6), rnd(0, 6))
+  if (!stick) mesh.position.z = GLASS_Z - rnd(0.2, 0.9)
+  leafScene.add(mesh); lensLeaves.push(l)
+}
+function bendLeaf(l, el, gust, peel) {
+  // 贴在玻璃上:整体压平一些,叶缘随阵风一波一波起伏;揭起时上风一侧先离开玻璃
+  const p = l.geo.attributes.position, shaped = l.geo.userData.shaped
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), ny = y / 0.25
+    const edge = Math.min(1, Math.abs(ny) * 0.8 + Math.abs(x) * 0.9)
+    const wave = Math.sin(el * 9 + x * 7 * l.up + ny * 2 + l.ph) * 0.5 + 0.5
+    const upSide = clamp(0.5 - x * l.up)                                   // 上风那头
+    const z = shaped[i * 3 + 2] * 0.45 - edge * edge * (0.05 + 0.12 * gust * wave) - peel * upSide * upSide * 0.9
+    p.setZ(i, z)
+  }
+  p.needsUpdate = true; l.geo.computeVertexNormals()
+}
+function stepLensLeaves(dt, el, Wd, screenWind) {
+  for (let i = lensLeaves.length - 1; i >= 0; i--) {
+    const l = lensLeaves[i], m = l.mesh; l.t += dt
+    const gust = clamp(Wd * (0.55 + 0.45 * Math.sin(el * 1.3 + l.ph) * Math.sin(el * 0.7 + l.ph * 2)))
+    if (l.state === 'in') {                                                // 飞过来、翻着,啪地贴住
+      const e = Math.min(1, l.t / 1.1), ee = 1 - Math.pow(1 - e, 3)
+      m.position.set(lerp(l.from.x, l.tx, ee), lerp(l.from.y, l.ty, ee) + Math.sin(e * Math.PI) * 0.06, lerp(l.from.z, GLASS_Z - 0.004, ee))
+      m.rotation.x = lerp(m.rotation.x, 0, dt * 6); m.rotation.y = lerp(m.rotation.y, 0, dt * 6); m.rotation.z = lerp(m.rotation.z, l.trot, dt * 5)
+      bendLeaf(l, el, gust, 0)
+      if (e >= 1) { l.state = 'stuck'; l.t = 0; m.rotation.set(0, 0, l.trot) }
+    } else if (l.state === 'stuck') {                                      // 贴着晃
+      m.rotation.z = l.trot + Math.sin(el * 5 + l.ph) * 0.03 * gust
+      m.position.x = l.tx + Math.sin(el * 4 + l.ph) * 0.004 * gust
+      bendLeaf(l, el, gust, 0)
+      if (l.t > l.stay || Wd < 0.12) { l.state = 'peel'; l.t = 0 }
+    } else if (l.state === 'peel') {                                       // 上风一侧先掀起,再整片被带走
+      const e = l.t
+      l.lift = Math.min(1, e / 0.6)
+      bendLeaf(l, el, gust, l.lift)
+      if (e > 0.5) {
+        const k = e - 0.5
+        m.position.x += l.up * (0.9 + k * 1.5) * dt * (0.6 + Wd)            // 往下风走
+        m.position.x += screenWind.x * 0.4 * dt
+        m.position.y += (0.25 - k * 0.6) * dt
+        m.position.z -= (0.4 + k * 0.8) * dt
+        m.rotation.x += dt * 2.5; m.rotation.y += dt * 3.5 * l.up; m.rotation.z += dt * 1.5
+      }
+      if (e > 3.5) { leafScene.remove(m); l.geo.dispose(); m.material.dispose(); lensLeaves.splice(i, 1) }
+    } else {                                                               // 从镜头前飞过(很近)
+      m.position.x += l.up * (1.6 + Wd) * dt
+      m.position.y += Math.sin(l.t * 3 + l.ph) * 0.12 * dt - 0.05 * dt
+      m.rotation.x += l.spin.x * dt; m.rotation.y += l.spin.y * dt; m.rotation.z += l.spin.z * dt
+      if (l.t > 4) { leafScene.remove(m); l.geo.dispose(); m.material.dispose(); lensLeaves.splice(i, 1) }
+    }
+  }
+}
+
+// ── 控件
+const presetBox = document.getElementById('presets'), readout = document.getElementById('readout')
+const wxToggle = document.getElementById('wxToggle'), wxChip = document.getElementById('wxChip')
+let current = PRESETS[0]
+function apply(p) {
+  current = p; T = mapWeather(p)
+  for (const b of presetBox.children) b.setAttribute('aria-pressed', String(b.dataset.id === p.id))
+  document.getElementById('wxName').textContent = p.name
+  const extra = p.snowfall ? ` · 降雪 ${p.snowfall} cm/h` : p.precip ? ` · 降水 ${p.precip} mm/h` : ''
+  const vis = p.vis < 5000 ? ` · 能见度 ${(p.vis / 1000).toFixed(1)} km` : ''
+  const pm = p.pm25 >= 75 ? ` · PM2.5 ${p.pm25}` : ''
+  document.getElementById('wxDetail').textContent = `${dirName(p.dir)}风 ${beaufort(p.wind)} 级(阵风 ${beaufort(p.gust)} 级)${extra}${vis}${pm} · ${p.temp}℃`
+  readout.innerHTML = `实况(示意):天气码 <b>${p.code}</b> · 降水 <b>${p.precip}</b> mm/h · 降雪 <b>${p.snowfall}</b> cm/h · 风向 <b>${p.dir}°</b>(${dirName(p.dir)}风)· 风 <b>${p.wind}</b> / 阵风 <b>${p.gust}</b> km/h · 气温 <b>${p.temp}</b>℃ · 24 小时变温 <b>${p.drop24}</b>℃ · 能见度 <b>${p.vis}</b> m · PM2.5 <b>${p.pm25}</b>
+    → 雨 <em>${T.rain.toFixed(2)}</em>${T.thunder ? ' <em>+ 闪电(只在 3D)</em>' : ''} · 雪 <em>${T.snow.toFixed(2)}</em> · 风 <em>${T.wind.toFixed(2)}</em> · 雾 <em>${T.fog.toFixed(2)}</em> · 霾 <em>${T.haze.toFixed(2)}</em> · 冷 <em>${T.cold.toFixed(2)}</em>`
+}
+for (const p of PRESETS) {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = p.name; b.dataset.id = p.id; b.id = 'wx-' + p.id
+  b.addEventListener('click', () => { stopTour(); apply(p) }); presetBox.appendChild(b)
+}
+function setWeatherOn(on) {
+  weatherOn = on; wxToggle.classList.toggle('on', on); wxToggle.setAttribute('aria-pressed', String(on)); wxChip.classList.toggle('off', !on)
+  try { localStorage.setItem('bs-weather', on ? 'on' : 'off') } catch { /* 存不了就只管这一次 */ }
+}
+wxToggle.addEventListener('click', () => setWeatherOn(!weatherOn))
+setWeatherOn(weatherOn)
+const TOUR = ['clear', 'wind', 'drizzle', 'rain', 'storm', 'fog', 'haze', 'snow', 'blizzard', 'cold']
+let tourOn = false, tourI = 0, tourTimer = 0
+const tourBtn = document.getElementById('tour')
+function stopTour() { tourOn = false; tourBtn.setAttribute('aria-pressed', 'false'); tourBtn.textContent = '▶ 按实况轮播' }
+tourBtn.addEventListener('click', () => {
+  if (tourOn) return stopTour()
+  tourOn = true; tourI = 0; tourTimer = 0; tourBtn.setAttribute('aria-pressed', 'true'); tourBtn.textContent = '■ 停止轮播'
+  apply(PRESETS.find((p) => p.id === TOUR[0]))
+})
+document.getElementById('fx3d').addEventListener('change', (e) => { show3d = e.target.checked })
+document.getElementById('fxLens').addEventListener('change', (e) => { showLens = e.target.checked })
+apply(PRESETS.find((p) => p.id === 'rain'))
+
+// ── 每帧
+const dummy = new THREE.Object3D(), clock = new THREE.Clock()
+const camRight = new THREE.Vector3(), camFwd = new THREE.Vector3(), windV = new THREE.Vector3()
+let az = 0.4, snowCover = 0, flash = 0, nextFlash = 2.5, leafTimer = 2
+function tick() {
+  requestAnimationFrame(tick)
+  if (document.hidden) return
+  const dt = Math.min(clock.getDelta(), 0.05), el = clock.elapsedTime
+  if (tourOn) { tourTimer += dt; if (tourTimer > 12) { tourTimer = 0; tourI = (tourI + 1) % TOUR.length; apply(PRESETS.find((p) => p.id === TOUR[tourI])) } }
+  // 渐入渐出(真屏上 10 秒;演示里约 3 秒;关掉天气约 2 秒淡出)
+  const k = 1 - Math.exp(-dt / (weatherOn ? 1.1 : 0.6))
+  for (const f of ['rain', 'snow', 'wind', 'cold', 'fog', 'haze']) W[f] = lerp(W[f], weatherOn ? T[f] : 0, k)
+  W.thunder = weatherOn && T.thunder
+  let dd = ((T.dir - windDir + 540) % 360) - 180; windDir += dd * k                // 风向走最短的弧
+  const on3 = show3d ? 1 : 0, onL = showLens ? 1 : 0
+  const R3 = W.rain * on3, S3 = W.snow * on3, F3 = W.fog * on3, H3 = W.haze * on3, C3 = W.cold * on3
+  // 世界里的风:风向是「从哪来」,北 = -z、东 = +x;吹向 = 来向 + 180°
+  const toA = (windDir + 180) * Math.PI / 180, spd = 6 + W.wind * 40
+  windV.set(Math.sin(toA), 0, -Math.cos(toA))
+  const wvx = windV.x * spd, wvz = windV.z * spd
+
+  if (!REDUCED) az += dt * 0.035
+  const dist = 175, pol = 0.66
+  camera.position.set(Math.sin(az) * Math.sin(pol) * dist, Math.cos(pol) * dist, Math.cos(az) * Math.sin(pol) * dist); camera.lookAt(0, 0, 0)
+  camera.updateMatrixWorld()
+  camRight.setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize()
+  camera.getWorldDirection(camFwd); camFwd.setY(0).normalize()
+  const screenWind = { x: windV.dot(camRight), y: windV.dot(camFwd) }         // x:往右为正;y:往画面里为正
+  document.getElementById('wxArrow').style.transform = `rotate(${Math.atan2(screenWind.x, screenWind.y) * 180 / Math.PI}deg)`
+
+  // 地面:湿、积雪;场景雾:雾发白、霾发黄灰,都封顶,近处门店始终看得清
+  if (S3 > 0.05) snowCover = Math.min(1, snowCover + dt * S3 * 0.06); else snowCover = Math.max(0, snowCover - dt * 0.012)
+  const cover = snowCover * on3
+  groundMat.roughness = lerp(0.6, 0.44, R3); groundMat.color.setHex(0x06101f).lerp(new THREE.Color(0x9fb0c4), cover * 0.55)
+  for (const m of districtMats) { m.roughness = lerp(0.5, 0.4, R3); m.color.copy(m.userData.base).lerp(new THREE.Color(0xc8d6e6), cover * 0.7) }
+  capMat.opacity = cover
+  const fogC = new THREE.Color(BG).lerp(new THREE.Color(0x1a2a40), Math.max(R3 * 0.4, S3 * 0.45, C3 * 0.35))
+    .lerp(new THREE.Color(0x56657a), F3 * 0.55).lerp(new THREE.Color(0x4a4536), H3 * 0.5)
+  scene.fog.color.copy(fogC); scene.background.copy(fogC)
+  scene.fog.density = 0.0024 + R3 * 0.0016 + S3 * 0.0015 + C3 * 0.001 + F3 * 0.0026 + H3 * 0.0016
+  for (const [i, m] of mists.entries()) {
+    m.material.opacity = F3 * (0.2 - i * 0.03) + H3 * 0.07
+    m.material.color.setHex(0xdfe8f2).lerp(new THREE.Color(0xc9b98f), H3 / Math.max(0.01, F3 + H3))
+    m.material.map.offset.x += wvx * dt * 0.00028 * (1 + i * 0.25); m.material.map.offset.y -= wvz * dt * 0.00028 * (1 + i * 0.25)
+  }
+  hemi.color.setHex(0x9fb3c8).lerp(new THREE.Color(0xbcd8ff), C3)
+
+  // 雨
+  const nRain = Math.floor(RAIN_N * R3)
+  for (let i = 0; i < nRain; i++) {
+    const d = rainDrops[i]
+    d.y -= d.v * dt; d.x += wvx * dt * 0.6; d.z += wvz * dt * 0.6
+    if (d.y < 0) { d.y = BOX.y; d.x = rnd(-BOX.x, BOX.x); d.z = rnd(-BOX.z, BOX.z) }
+    if (d.x > BOX.x) d.x -= 2 * BOX.x; if (d.x < -BOX.x) d.x += 2 * BOX.x; if (d.z > BOX.z) d.z -= 2 * BOX.z; if (d.z < -BOX.z) d.z += 2 * BOX.z
+    const o = i * 6, len = 2.2 + R3 * 1.6, sl = 0.06 * len / 2
+    rainPos[o] = d.x; rainPos[o + 1] = d.y; rainPos[o + 2] = d.z
+    rainPos[o + 3] = d.x - wvx * sl * 0.1; rainPos[o + 4] = d.y + len; rainPos[o + 5] = d.z - wvz * sl * 0.1
+  }
+  rainGeo.setDrawRange(0, nRain * 2); rainGeo.attributes.position.needsUpdate = true
+  rainLines.material.opacity = 0.25 + R3 * 0.35
+  for (let n = 0, cnt = howMany(R3 * dt * 70); n < cnt; n++) {
+    const rp = ripples.find((x) => x.t >= 1); if (!rp) break
+    rp.t = 0; rp.m.visible = true; rp.m.position.x = rnd(-90, 90); rp.m.position.z = rnd(-70, 70)
+  }
+  for (const rp of ripples) { if (rp.t >= 1) continue; rp.t += dt / 0.9; const e = Math.min(1, rp.t); rp.m.scale.setScalar(0.3 + e * 1.8); rp.m.material.opacity = (1 - e) * 0.5; if (rp.t >= 1) rp.m.visible = false }
+  // 雪
+  const nSnow = Math.floor(SNOW_N * S3)
+  for (let i = 0; i < nSnow; i++) {
+    const f = snowFl[i]
+    f.y -= f.v * dt * (0.8 + S3 * 0.6); f.x += (Math.sin(el * 0.8 + f.ph) * 1.6 + wvx * 0.35) * dt; f.z += (Math.cos(el * 0.7 + f.ph) * 1.2 + wvz * 0.35) * dt
+    if (f.y < 0) { f.y = BOX.y; f.x = rnd(-BOX.x, BOX.x); f.z = rnd(-BOX.z, BOX.z) }
+    if (f.x > BOX.x) f.x -= 2 * BOX.x; if (f.x < -BOX.x) f.x += 2 * BOX.x; if (f.z > BOX.z) f.z -= 2 * BOX.z; if (f.z < -BOX.z) f.z += 2 * BOX.z
+    snowPos[i * 3] = f.x; snowPos[i * 3 + 1] = f.y; snowPos[i * 3 + 2] = f.z
+  }
+  snowGeo.setDrawRange(0, nSnow); snowGeo.attributes.position.needsUpdate = true
+  // 世界里的落叶
+  const nLeaf = Math.floor(LEAF_N * clamp((W.wind * on3 - 0.1) / 0.9))
+  for (const wl of worldLeaves) {
+    wl.m.count = nLeaf
+    for (let i = 0; i < nLeaf; i++) {
+      const l = wl.d[i]
+      l.x += wvx * dt * l.sp; l.z += wvz * dt * l.sp; l.y += Math.sin(el * 2 + l.ph) * dt * 3 - dt * 0.8
+      if (l.y < 0.3) l.y = rnd(8, 30)
+      if (Math.abs(l.x) > 150 || Math.abs(l.z) > 110) { l.x = -windV.x * 150 * rnd(0.6, 1) + rnd(-40, 40); l.z = -windV.z * 110 * rnd(0.6, 1) + rnd(-40, 40); l.y = rnd(2, 30) }
+      l.rx += dt * 4 * l.sp; l.ry += dt * 3
+      dummy.position.set(l.x, l.y, l.z); dummy.rotation.set(l.rx, l.ry, 0); dummy.scale.setScalar(1.4); dummy.updateMatrix(); wl.m.setMatrixAt(i, dummy.matrix)
+    }
+    wl.m.instanceMatrix.needsUpdate = true
+  }
+  // 闪电:只在 3D 世界
+  if (W.thunder && W.rain > 0.3 && show3d && !REDUCED) {
+    nextFlash -= dt
+    if (nextFlash < 0) { flash = 1; newBolt(); nextFlash = rnd(4, 9); setTimeout(() => { flash = Math.max(flash, 0.75) }, 150) }
+  }
+  flash = Math.max(0, flash - dt * 4.5)
+  hemi.intensity = 0.6 + flash * 2.4; key.intensity = 0.95 - R3 * 0.35 + flash * 1.5
+  boltMat.opacity = flash > 0.35 ? flash : 0
+  if (flash > 0.05) scene.background.lerp(new THREE.Color(0x3a4a66), flash * 0.6)
+
+  // 镜头
+  const RL = W.rain * onL, SL = W.snow * onL, CL = W.cold * onL, WdL = W.wind * onL
+  stepWater(dt, RL, screenWind.x, W.wind)
+  stepSpecks(dt, SL, CL)
+  lensMat.uniforms.uFrost.value = Math.max(CL * 0.95, SL * 0.45)
+  lensMat.uniforms.uCold.value = CL
+  lensMat.uniforms.uHaze.value = W.haze * onL
+  lensMat.uniforms.uMist.value = RL > 0.02 ? 0.4 + 0.35 * RL : lensMat.uniforms.uMist.value * Math.max(0, 1 - dt / 5)   // 四周最浓处:小雨约四成、大雨约七成;中间透明
+  if (!REDUCED && WdL > 0.25) {
+    leafTimer -= dt * (0.5 + WdL)
+    // 风朝镜头吹(往画面外)时叶子更容易贴上;顺着画面往里吹时很少
+    const towardLens = clamp(0.3 - screenWind.y * 0.7, 0.15, 1)
+    if (leafTimer < 0) { leafTimer = rnd(2.5, 6) / towardLens; spawnLensLeaf(lensLeaves.filter((l) => l.state === 'in' || l.state === 'stuck').length < 2, screenWind) }
+    if (Math.random() < WdL * dt * 0.2) spawnLensLeaf(false, screenWind)
+  }
+  if (!showLens || !weatherOn) for (const l of lensLeaves) if (l.state === 'stuck' || l.state === 'in') { l.state = 'peel'; l.t = 0 }
+  stepLensLeaves(dt, el, W.wind, screenWind)
+
+  renderer.setRenderTarget(rt); renderer.render(scene, camera)
+  renderer.setRenderTarget(null); renderer.render(lensScene, lensCam)
+  renderer.autoClear = false; renderer.clearDepth(); renderer.render(leafScene, leafCam); renderer.autoClear = true
+}
+
+addEventListener('resize', resize)
+resize()
+tick()
+})()
+</script>
+
+</body></html>

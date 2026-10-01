@@ -1,0 +1,255 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>发送键思考动画</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#0a0e15; --panel:#111826; --line:#20304a;
+    --ink:#e6eef7; --ink-dim:#8698ad; --ink-faint:#54657b;
+    --hud:"Chakra Petch", ui-monospace, monospace;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.55;
+    background-image:radial-gradient(1000px 560px at 82% -10%, rgba(90,120,255,.16), transparent 60%),
+      radial-gradient(820px 480px at 4% 110%, rgba(168,85,247,.10), transparent 60%); background-attachment:fixed; }
+  .wrap{ max-width:900px; margin:0 auto; padding-inline:20px; padding-block:44px 72px; }
+  .eyebrow{ font-family:var(--hud); font-size:12px; letter-spacing:.32em; text-transform:uppercase; color:#7cc7ff; display:flex; align-items:center; gap:10px; }
+  .eyebrow::before{ content:""; width:26px; height:1px; background:linear-gradient(90deg,#7cc7ff,transparent); }
+  h1{ font-family:var(--hud); font-weight:600; font-size:clamp(28px,6vw,44px); margin:.35em 0 .15em; text-wrap:balance; }
+  .lede{ color:var(--ink-dim); max-width:62ch; margin:0; } .lede b{ color:var(--ink); font-weight:600; }
+
+  .controls{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:26px 0 6px; }
+  .seg{ display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:3px; background:var(--panel); }
+  .seg button{ font-family:var(--hud); font-size:12.5px; letter-spacing:.08em; color:var(--ink-dim); background:none; border:0; padding:7px 16px; border-radius:999px; cursor:pointer; transition:.18s; }
+  .seg button[aria-pressed="true"]{ background:linear-gradient(180deg,#3f7bff,#7c3aed); color:#fff; }
+  .hint{ font-size:12.5px; color:var(--ink-faint); }
+
+  .hero{ margin:22px 0 34px; display:grid; grid-template-columns:150px 1fr; gap:26px; align-items:center;
+    background:linear-gradient(180deg,var(--panel),#0c121c); border:1px solid var(--line); border-radius:20px; padding:26px; }
+  .hero .stageBig{ width:130px; height:130px; border-radius:30px; background:#0b0f16; display:grid; place-items:center; margin:auto; box-shadow:0 8px 30px rgba(0,0,0,.5); }
+  .hero canvas{ display:block; }
+  .hero h2{ font-family:var(--hud); font-size:20px; margin:0 0 6px; }
+  .hero p{ margin:0; color:var(--ink-dim); font-size:14px; } .hero p b{ color:var(--ink); }
+  .tag{ display:inline-block; font-family:var(--hud); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#7cffd0; border:1px solid rgba(124,255,208,.4); border-radius:6px; padding:2px 8px; margin-bottom:12px; }
+
+  /* 真实尺寸 · 浅底(黑键)+ 深底(白键) */
+  .bgrow{ display:flex; gap:14px; flex-wrap:wrap; }
+  .bgcell{ flex:1 1 200px; border-radius:14px; padding:18px; display:flex; align-items:center; gap:16px; }
+  .bgcell.light{ background:#f3f5f8; } .bgcell.dark{ background:#0b0f16; border:1px solid #223; }
+  .btn{ display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.28); }
+  .btn.md{ width:48px; height:48px; border-radius:12px; } .btn.sm{ width:36px; height:36px; border-radius:50%; }
+  .light .btn{ background:#0b0f16; } .dark .btn{ background:#f3f5f8; }
+  .celllab{ font-family:var(--hud); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; margin-left:auto; }
+  .light .celllab{ color:#5a6b80; } .dark .celllab{ color:#8aa; }
+
+  .note{ margin-top:34px; border-left:2px solid #3f7bff; padding:6px 0 6px 18px; color:var(--ink-dim); font-size:13.5px; } .note b{ color:var(--ink); font-weight:600; }
+  footer{ margin-top:34px; color:var(--ink-faint); font-size:12px; font-family:var(--hud); letter-spacing:.06em; }
+  @media (max-width:560px){ .hero{ grid-template-columns:1fr; text-align:center; } }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">私人助理 · 回复指示器</div>
+  <h1>发送键思考动画</h1>
+  <p class="lede">底子是一个<b>星团</b>:中间发<b>辉光的云</b>,几道光脉冲(亮头 + 拖尾)在三维空间里各沿椭圆轨道<b>围着它 orbiting</b>。<b>待命</b>=缓慢公转;<b>思考</b>=快速公转。<b>正在输出</b>有三个概念可切,状态之间是<b>程序控的平滑过渡</b>(不是硬切):先选概念,再点「正在输出」看它怎么进、怎么回。</p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="阶段">
+      <button id="ph-idle" aria-pressed="true">待命</button>
+      <button id="ph-think" aria-pressed="false">思考中</button>
+      <button id="ph-out" aria-pressed="false">正在输出</button>
+    </div>
+    <div class="seg" role="group" aria-label="输出概念">
+      <button id="cc-1" aria-pressed="true">① 下沉·螺旋逃逸</button>
+      <button id="cc-2" aria-pressed="false">② 螺旋上升·星落</button>
+      <button id="cc-3" aria-pressed="false">③ 时空隧道</button>
+    </div>
+    <span class="hint">先选一个「输出概念」,再点「正在输出」看过渡。默认每 4 秒自动轮播阶段。</span>
+  </div>
+
+  <section class="hero">
+    <div class="stageBig"><canvas data-s="130"></canvas></div>
+    <div>
+      <span class="tag" id="tag">概念 ① · 下沉 + 螺旋逃逸</span>
+      <h2 id="cname">Descend &amp; Spiral</h2>
+      <p id="cdesc">开始输出时星团先缓缓<b>下沉</b>到偏下位置,随后光脉冲从正在环绕的脉冲上脱离,以<b>螺旋方式</b>缓缓上升、越过边界飞出(不再杂乱、慢下来了)。输出结束回到待命。</p>
+    </div>
+  </section>
+
+  <div class="bgrow">
+    <div class="bgcell light"><span class="btn md"><canvas data-s="48"></canvas></span><span class="btn sm"><canvas data-s="36"></canvas></span><span class="celllab">浅色主题 · 黑键</span></div>
+    <div class="bgcell dark"><span class="btn md"><canvas data-s="48"></canvas></span><span class="btn sm"><canvas data-s="36"></canvas></span><span class="celllab">深色主题 · 白键</span></div>
+  </div>
+
+  <p class="note"><b>三个输出概念:</b>① <b>下沉·螺旋逃逸</b>——星团下沉,脉冲以螺旋缓缓上升飞出;② <b>螺旋上升·星落</b>——全体脉冲快速螺旋上升,背景星星不断下落,用相对运动做出「在上升」的错觉;③ <b>时空隧道</b>——脉冲交织螺旋钻入屏幕(光通道向外跑,脉冲相对向内),形成时空隧道,输出结束隧道消散回到待命。三者都不是硬切,而是同一套动画里的 <b>eased 过渡</b>(公转速度、下沉量、星落 / 隧道浓度都随状态平滑插值)。纯 canvas、无第三方库;<b>prefers-reduced-motion</b> 定格。定版后接进 <b>SendPhaseButton</b>。</p>
+  <footer>Fortbrain · concept v7 — 轨道星团 · 三种输出(可程序过渡)</footer>
+</div>
+
+<script>
+(function(){
+  var reduce=false; try{ reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  var phase="idle", concept=1, userLocked=false, lastAuto=performance.now();
+  var CYCLE=["idle","think","out"];
+  function setPhase(p,byUser){ phase=p; if(byUser)userLocked=true;
+    ["idle","think","out"].forEach(function(k){ document.getElementById("ph-"+k).setAttribute("aria-pressed",p===k); }); }
+  ["idle","think","out"].forEach(function(k){ document.getElementById("ph-"+k).onclick=function(){ setPhase(k,true); }; });
+
+  var CINFO={
+    1:["概念 ① · 下沉 + 螺旋逃逸","Descend & Spiral","开始输出时星团先缓缓<b>下沉</b>,随后光脉冲从正在环绕的脉冲上脱离,以<b>螺旋方式</b>缓缓上升、越过边界飞出。结束回到待命。"],
+    2:["概念 ② · 螺旋上升 · 星落","Rising Spiral","全体光脉冲<b>快速螺旋上升</b>,背景星星不断<b>下落</b>,用相对运动让脉冲看起来一直在往上冲。结束星落停、回到待命。"],
+    3:["概念 ③ · 时空隧道","Warp Tunnel","脉冲交织<b>螺旋钻入屏幕</b>(光通道向外跑、脉冲相对向内),形成<b>时空隧道</b>。结束隧道消散、回到待命。"]
+  };
+  function setConcept(c){ concept=c; [1,2,3].forEach(function(k){ document.getElementById("cc-"+k).setAttribute("aria-pressed",k===c); });
+    var d=CINFO[c]; document.getElementById("tag").innerHTML=d[0]; document.getElementById("cname").textContent=d[1]; document.getElementById("cdesc").innerHTML=d[2]; }
+  [1,2,3].forEach(function(k){ document.getElementById("cc-"+k).onclick=function(){ setConcept(k); }; });
+
+  // 多个光脉冲在三维空间里沿各自的椭圆轨道 orbiting(椭球体做边界但不画出来),围着中间的辉光云转 = 星团
+  function rX(p,a){var c=Math.cos(a),s=Math.sin(a);return[p[0], p[1]*c-p[2]*s, p[1]*s+p[2]*c];}
+  function rZ(p,a){var c=Math.cos(a),s=Math.sin(a);return[p[0]*c-p[1]*s, p[0]*s+p[1]*c, p[2]];}
+  function rY(p,a){var c=Math.cos(a),s=Math.sin(a);return[p[0]*c+p[2]*s, p[1], -p[0]*s+p[2]*c];}
+  var ORBITS=[
+    {rx:1.00, ry:0.60, ax:0.50, az:0.35, col:"63,124,255", spd:1.00, ph:0.0},
+    {rx:0.92, ry:0.72, ax:1.25, az:-0.5, col:"34,211,238", spd:1.20, ph:1.7},
+    {rx:1.06, ry:0.50, ax:-0.6, az:0.95, col:"168,85,247", spd:0.86, ph:3.0},
+    {rx:0.82, ry:0.80, ax:0.95, az:1.7,  col:"236,72,153", spd:1.10, ph:4.5},
+    {rx:0.98, ry:0.66, ax:-1.2, az:-1.1, col:"124,255,208", spd:0.95, ph:2.3},
+  ];
+  var PAL=["63,124,255","34,211,238","168,85,247","236,72,153","124,255,208"];
+  // 一切坐标都用「占 S 的比例」表示,渲染时才乘 S —— 130/48/36 三种尺寸共用同一套模拟,过渡一致
+  var Rr=0.38, headR=0.055, SQ=0.56, TAIL=11, DTH=0.16;
+
+  // ---- 程序控状态:每帧只推进一次(simTick),draw 只读。所有量 eased,状态间平滑过渡,不硬切 ----
+  var E={ spin:0.55, rot:0, out:0, tumble:0, sq:0.56, hx:1, wscroll:0 };
+  var emits=[], stars=[], warp=[];
+  function outSpin(c){ return c===2?3.1 : c===3?1.7 : 2.35; }   // 概念1 输出时公转 = 思考速度(不再放慢)
+  function ez(cur,tgt,dt,tau){ return cur + (tgt-cur)*(1-Math.exp(-dt/tau)); }
+  // 环绕脉冲当前头部(归一化,已含压扁/拉伸与翻滚)+ 切线方向
+  function headPos(O){ var th=E.rot*O.spd + O.ph;
+    function pr(a){ var p=[O.rx*Math.cos(a)*Rr, O.ry*Math.sin(a)*Rr,0]; p=rY(rZ(rX(p,O.ax),O.az),E.tumble); return [p[0]*E.hx, p[1]*E.sq]; }
+    var h0=pr(th), h1=pr(th+0.06); return {x:h0[0], y:h0[1], tx:h1[0]-h0[0], ty:h1[1]-h0[1], col:O.col}; }
+
+  function simTick(dt){
+    var spinTgt = phase==='idle'?0.55 : phase==='think'?2.35 : outSpin(concept);
+    E.spin = ez(E.spin, spinTgt, dt, 0.5); E.rot += E.spin*dt; E.tumble += 0.28*dt;
+    E.out  = ez(E.out, phase==='out'?1:0, dt, 0.55); var m=E.out;
+    // 轨迹边界始终是「上下窄中间宽」的扁椭球(用户 2026-09-18:概念2 输出时也保持这个形状,不拉竖)
+    E.sq = ez(E.sq, 0.56, dt, 0.5); E.hx = ez(E.hx, 1, dt, 0.5);
+    // 概念1:脉冲从环绕脉冲头部脱离,绕竖直线螺旋、上升飞出,带明显尾巴;公转已回到思考速度所以整体不慢
+    if(concept===1){
+      if(phase==='out' && m>0.3 && emits.length<4 && Math.random()<dt*1.8){
+        var O=ORBITS[(Math.random()*ORBITS.length)|0], h=headPos(O);
+        emits.push({ax:0.5+h.x, y:0.5+h.y+m*0.16, x:0.5+h.x, col:O.col, age:0, ang:Math.random()*6.28, amp:0.045+Math.random()*0.03, trail:[]});
+      }
+      for(var i=emits.length-1;i>=0;i--){ var e=emits[i]; e.age+=dt;
+        e.y -= dt*0.26; e.ang += dt*2.6; e.x = e.ax + e.amp*Math.sin(e.ang);   // 上升 + 螺旋
+        e.trail.unshift({x:e.x,y:e.y}); if(e.trail.length>16) e.trail.pop();   // 更长的尾巴
+        if(e.y < -0.36) emits.splice(i,1);
+      }
+    } else if(emits.length) emits.length=0;
+    // 概念2:星星背景常驻(待命/思考不动),输出时快速下落、更亮、部分拉星轨。速度 ∝ m,所以 m=0 时静止
+    if(concept===2){
+      while(stars.length<26) stars.push({x:Math.random(), y:Math.random(), v:0.7+Math.random()*0.9, r:0.006+Math.random()*0.014, a:0.4+Math.random()*0.55, trail:Math.random()<0.4});
+      for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y += dt*s.v*m;
+        if(s.y>1.06){ s.y=-0.06; s.x=Math.random(); } }
+    } else if(stars.length) stars.length=0;
+    // 概念3:时空隧道 —— 一条向屏幕纵深延伸的管子。光斑在管壁上、随深度 d 从中心(最深处)沿螺旋往外冒,
+    // 越靠外 = 越靠近观察者(透视:半径 = Rmax·d^1.7)。星光色、带向心拖尾。同心环给出管壁的深度层。
+    if(concept===3){
+      E.wscroll = (E.wscroll + dt*(0.25+0.25*m)) % 1;
+      var tgt3=Math.round(m*40);
+      while(warp.length<tgt3) warp.push({a0:Math.random()*6.28, d:Math.random(), tw:(Math.random()<0.5?1:-1)*(1.1+Math.random()*1.1)});
+      for(var i=warp.length-1;i>=0;i--){ var wp=warp[i]; wp.d += dt*(0.22+wp.d*1.25);
+        if(wp.d>1){ if(warp.length>tgt3){ warp.splice(i,1); continue; } wp.d=Math.random()*0.04; wp.a0=Math.random()*6.28; wp.tw=(Math.random()<0.5?1:-1)*(1.1+Math.random()*1.1); } }
+    } else if(warp.length) warp.length=0;
+  }
+
+  // 画星团(中心 cxN,cyN 为比例;sc 缩放;pres 存在感;dtail:把拖尾从「沿轨道」渐变到「一律朝下」→ 看起来在快速上升)
+  function cluster(ctx,S,cxN,cyN,sc,pres,dtail){
+    dtail=dtail||0;
+    var cx=cxN*S, cy=cyN*S, R=Rr*S*sc, hR=headR*S*sc, br=0.85+0.15*Math.sin(E.tumble*3);
+    var peak=(0.45+0.14*Math.min(1,E.spin/2.35))*pres;
+    var pts=[];
+    for(var o=0;o<ORBITS.length;o++){ var O=ORBITS[o];
+      var thH=E.rot*O.spd+O.ph, ph0=rY(rZ(rX([O.rx*Math.cos(thH)*Rr,O.ry*Math.sin(thH)*Rr,0],O.ax),O.az),E.tumble);
+      var headX=cx+ph0[0]*E.hx*S*sc, headY=cy+ph0[1]*E.sq*S*sc;
+      for(var i=0;i<=TAIL;i++){ var th=thH - i*DTH;
+        var p=[O.rx*Math.cos(th)*Rr, O.ry*Math.sin(th)*Rr,0]; p=rY(rZ(rX(p,O.ax),O.az),E.tumble);
+        var f=i/TAIL, depth=(p[2]/Rr+1)/2, al=(1-f); al=al*al*al*(0.35+0.65*depth)*pres;
+        var ox=cx+p[0]*E.hx*S*sc, oy=cy+p[1]*E.sq*S*sc;                 // 沿轨道的原始拖尾点
+        var dx=headX, dy=headY + i*S*0.058*sc;                          // 朝下的拖尾点(从头部往下,拉长)
+        pts.push({x:ox*(1-dtail)+dx*dtail, y:oy*(1-dtail)+dy*dtail, z:p[2], r:hR*(1-f*0.6)*(0.65+0.35*depth), a:al, rgb:O.col, head:i===0, df:f}); } }
+    pts.sort(function(a,b){return a.z-b.z;});
+    var drew=false;
+    function cloud(){ ctx.save(); ctx.translate(cx,cy); ctx.scale(E.hx,E.sq);
+      var g=ctx.createRadialGradient(0,0,0,0,0,R*0.95);
+      g.addColorStop(0,"rgba(210,220,255,"+(peak*br)+")"); g.addColorStop(0.45,"rgba(130,150,255,"+(peak*0.5)+")"); g.addColorStop(1,"rgba(120,140,255,0)");
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,R*0.95,0,7); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,"+(0.6*br*pres)+")"; ctx.beginPath(); ctx.arc(0,0,hR,0,7); ctx.fill(); ctx.restore(); }
+    for(var k=0;k<pts.length;k++){ var pk=pts[k];
+      if(!drew && pk.z>=0){ cloud(); drew=true; }
+      ctx.save(); if(pk.df<0.25){ ctx.shadowColor="rgba("+pk.rgb+",.9)"; ctx.shadowBlur=S*0.12*sc; }
+      ctx.fillStyle = pk.head ? "rgba(255,255,255,"+((0.7+0.3*((pk.z/Rr+1)/2))*pres)+")" : "rgba("+pk.rgb+","+pk.a.toFixed(3)+")";
+      ctx.beginPath(); ctx.arc(pk.x,pk.y,pk.r,0,7); ctx.fill(); ctx.restore(); }
+    if(!drew) cloud();
+  }
+
+  function draw(ctx,S,t){
+    var cx=S/2, cy=S/2, m=E.out;
+    // 概念2:星星背景(待命/思考:常驻但不动、偏暗;输出:更亮 + 快速下落,部分拉出下落星轨)
+    if(concept===2){ ctx.save(); var sb=0.4+0.6*m; ctx.lineCap="round";
+      for(var i=0;i<stars.length;i++){ var s=stars[i], al=s.a*sb;
+        if(s.trail && m>0.05){ var len=s.v*m*0.11;              // 只有在真的下落时才拖轨
+          ctx.strokeStyle="rgba(215,230,255,"+(al*0.6).toFixed(3)+")"; ctx.lineWidth=Math.max(0.6,s.r*S*1.1);
+          ctx.beginPath(); ctx.moveTo(s.x*S,(s.y-len)*S); ctx.lineTo(s.x*S,s.y*S); ctx.stroke(); }
+        ctx.fillStyle="rgba(228,238,255,"+al.toFixed(3)+")"; ctx.beginPath(); ctx.arc(s.x*S,s.y*S,s.r*S,0,7); ctx.fill(); }
+      ctx.restore(); }
+    // 概念3:时空隧道 —— 一条朝屏幕纵深延伸的管子。透视 rad=Rmax·d^1.7:中心=最深(小)、外圈=最近(大)。
+    // 同心环 = 管壁的一层层深度(这才像隧道,不是从中间散射);星光色螺旋光斑沿管壁从深处往外冒,带向心星轨。
+    if(concept===3 && m>0.001){ var Rmax=S*0.62; ctx.save();
+      var mg=ctx.createRadialGradient(cx,cy,0,cx,cy,Rmax*0.34); mg.addColorStop(0,"rgba(120,155,235,"+(0.5*m)+")"); mg.addColorStop(1,"rgba(120,140,255,0)");
+      ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(cx,cy,Rmax*0.34,0,7); ctx.fill();
+      ctx.lineCap="round";
+      for(var k=0;k<8;k++){ var d=((k/8)+E.wscroll)%1, rad=Rmax*Math.pow(d,1.7);   // 同心环:管壁深度层
+        var al=m*0.28*Math.min(1,d/0.10)*(1-Math.max(0,(d-0.82)/0.18));
+        ctx.strokeStyle="rgba(150,180,255,"+al.toFixed(3)+")"; ctx.lineWidth=Math.max(0.4,S*0.006); ctx.beginPath(); ctx.arc(cx,cy,rad,0,7); ctx.stroke(); }
+      for(var i=0;i<warp.length;i++){ var wp=warp[i]; var d=wp.d; if(d<=0) continue;
+        var rad=Rmax*Math.pow(d,1.7), ang=wp.a0+d*wp.tw;                  // 沿螺旋
+        var d2=Math.max(0,d-(0.05+d*0.12)), rad2=Rmax*Math.pow(d2,1.7), ang2=wp.a0+d2*wp.tw;
+        var al=m*Math.min(1,d/0.10)*(1-Math.max(0,(d-0.82)/0.18)); if(al<=0) continue;
+        var x1=cx+Math.cos(ang2)*rad2, y1=cy+Math.sin(ang2)*rad2, x2=cx+Math.cos(ang)*rad, y2=cy+Math.sin(ang)*rad;
+        ctx.strokeStyle="rgba(205,224,255,"+(al*0.6).toFixed(3)+")"; ctx.lineWidth=Math.max(0.5,S*0.016*d); ctx.shadowColor="rgba(200,220,255,.6)"; ctx.shadowBlur=S*0.05*d;
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        ctx.fillStyle="rgba(240,246,255,"+al.toFixed(3)+")"; ctx.beginPath(); ctx.arc(x2,y2,Math.max(0.6,S*0.012*(0.4+d)),0,7); ctx.fill(); } ctx.restore(); }
+    // 星团本体:概念1 下沉;概念2 上移 + 缩到 2/3 + 拖尾朝下(快速上升感);概念3 被吸进隧道口(缩小淡出)
+    var cyN=0.5, sc=1, pres=1, dtail=0;
+    if(concept===1) cyN=0.5 + m*0.16;
+    if(concept===2){ cyN=0.5 - m*0.14; sc=1 - m*0.333; dtail=m; }
+    if(concept===3){ sc=1-m*0.7; pres=1-m*0.82; }
+    if(pres>0.02) cluster(ctx,S,0.5,cyN,sc,pres,dtail);
+    // 概念1:螺旋上升的逃逸脉冲(画在最前)
+    if(concept===1 && emits.length){ ctx.save(); ctx.lineCap="round";
+      for(var i=0;i<emits.length;i++){ var e=emits[i], fade=Math.min(1,e.age/0.4);
+        for(var ti=e.trail.length-1;ti>=1;ti--){ var a=(1-ti/e.trail.length)*fade;
+          ctx.strokeStyle="rgba("+e.col+","+(a*a*0.8).toFixed(3)+")"; ctx.lineWidth=Math.max(0.5,S*headR*0.7*a);
+          ctx.beginPath(); ctx.moveTo(e.trail[ti].x*S,e.trail[ti].y*S); ctx.lineTo(e.trail[ti-1].x*S,e.trail[ti-1].y*S); ctx.stroke(); }
+        ctx.shadowColor="rgba("+e.col+",.8)"; ctx.shadowBlur=S*0.06;
+        ctx.fillStyle="rgba("+e.col+","+(0.9*fade)+")"; ctx.beginPath(); ctx.arc(e.x*S,e.y*S,S*headR*0.75,0,7); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,"+(0.7*fade)+")"; ctx.beginPath(); ctx.arc(e.x*S,e.y*S,S*headR*0.32,0,7); ctx.fill(); }
+      ctx.restore(); }
+  }
+
+  var items=[]; var t0=performance.now(), tPrev=t0;
+  function attach(cv){ var dpr=Math.min(2,window.devicePixelRatio||1), px=+cv.getAttribute("data-s");
+    cv.style.width=px+"px"; cv.style.height=px+"px"; cv.width=px*dpr; cv.height=px*dpr; items.push({cv:cv,dpr:dpr}); }
+  function render(t){ for(var i=0;i<items.length;i++){ var o=items[i], ctx=o.cv.getContext("2d"); ctx.setTransform(o.dpr,0,0,o.dpr,0,0);
+    var w=o.cv.width/o.dpr,h=o.cv.height/o.dpr; ctx.clearRect(0,0,w,h); draw(ctx,Math.min(w,h),t); } }
+  function frame(now){ var dt=Math.min(0.05,(now-tPrev)/1000); tPrev=now; var t=(now-t0)/1000;
+    if(!userLocked && now-lastAuto>4000){ setPhase(CYCLE[(CYCLE.indexOf(phase)+1)%CYCLE.length]); lastAuto=now; }
+    simTick(dt); render(t); requestAnimationFrame(frame); }
+  document.querySelectorAll("canvas[data-s]").forEach(attach);
+  setConcept(1);
+  if(reduce){ for(var w=0;w<40;w++) simTick(0.05); render(1.1); }   // 定格:推进到稳态后画一帧
+  else requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>

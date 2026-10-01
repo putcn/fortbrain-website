@@ -1,0 +1,235 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>零售岗位与权限</title>
+<style>
+:root{
+  --bg:#eef0f3;--bg2:#e6e9ed;--ink:#111827;--ink2:#374151;--ink3:#6b7280;--ink4:#9ca3af;
+  --line:rgba(17,24,39,.07);--card:rgba(255,255,255,.78);--card-solid:#fff;--well:rgba(17,24,39,.035);
+  --live:#22c55e;--live-ink:#15803d;--live-bg:rgba(34,197,94,.12);
+  --warn:#f59e0b;--warn-ink:#b45309;--warn-bg:rgba(245,158,11,.13);
+  --bad:#ef4444;--bad-ink:#b91c1c;--bad-bg:rgba(239,68,68,.10);
+  --info:#3b82f6;--info-ink:#1d4ed8;--info-bg:rgba(59,130,246,.10);
+  --chip:rgba(17,24,39,.06);--btn:#111827;--btn-ink:#fff;--shadow:0 1px 2px rgba(17,24,39,.05),0 8px 24px rgba(17,24,39,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#14171c;--bg2:#0f1115;--ink:#f3f4f6;--ink2:#d1d5db;--ink3:#9ca3af;--ink4:#6b7280;
+  --line:rgba(255,255,255,.07);--card:rgba(255,255,255,.06);--card-solid:#1c1f24;--well:rgba(255,255,255,.04);
+  --live:#4ade80;--live-ink:#86efac;--live-bg:rgba(74,222,128,.12);--warn:#fbbf24;--warn-ink:#fbbf24;--warn-bg:rgba(251,191,36,.12);
+  --bad:#f87171;--bad-ink:#fca5a5;--bad-bg:rgba(248,113,113,.12);--info:#60a5fa;--info-ink:#93c5fd;--info-bg:rgba(96,165,250,.12);
+  --chip:rgba(255,255,255,.08);--btn:#f3f4f6;--btn-ink:#111827;--shadow:none;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#14171c;--bg2:#0f1115;--ink:#f3f4f6;--ink2:#d1d5db;--ink3:#9ca3af;--ink4:#6b7280;
+  --line:rgba(255,255,255,.07);--card:rgba(255,255,255,.06);--card-solid:#1c1f24;--well:rgba(255,255,255,.04);
+  --live:#4ade80;--live-ink:#86efac;--live-bg:rgba(74,222,128,.12);--warn:#fbbf24;--warn-ink:#fbbf24;--warn-bg:rgba(251,191,36,.12);
+  --bad:#f87171;--bad-ink:#fca5a5;--bad-bg:rgba(248,113,113,.12);--info:#60a5fa;--info-ink:#93c5fd;--info-bg:rgba(96,165,250,.12);
+  --chip:rgba(255,255,255,.08);--btn:#f3f4f6;--btn-ink:#111827;--shadow:none;}
+*{box-sizing:border-box}
+body{background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink2);font:14px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;padding:0 16px;min-height:100%}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 56px;display:flex;flex-direction:column;gap:18px}
+.demo{font-size:12px;color:var(--warn-ink);background:var(--warn-bg);border-radius:8px;padding:6px 10px;align-self:flex-start}
+h1{font-size:20px;color:var(--ink);margin:0;font-weight:600;text-wrap:balance}
+.sub{color:var(--ink3);font-size:13px;margin:4px 0 0}
+.card{background:var(--card);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.pad{padding:16px 18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.k{font-size:11px;color:var(--ink4);letter-spacing:.06em}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);color:var(--ink2);border-radius:999px;padding:2px 10px;font-size:12px;white-space:nowrap}
+.chip .n{color:var(--ink4);font-variant-numeric:tabular-nums}
+.chip.add{background:transparent;border:1px dashed var(--line);color:var(--ink3);cursor:pointer}
+.chip.entry{background:var(--info-bg);color:var(--info-ink)}
+.chip.mob{background:var(--live-bg);color:var(--live-ink)}
+.tag{font-size:11px;border-radius:6px;padding:1px 7px}
+.tag.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.tag.mute{background:var(--chip);color:var(--ink3)}
+.search{display:flex;gap:10px;align-items:center}
+.search input{flex:1;min-width:0;background:var(--card-solid);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;color:var(--ink)}
+.search input:focus{outline:2px solid var(--info);outline-offset:1px}
+.person{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:760px){.person{grid-template-columns:1fr}}
+.person .box{background:var(--well);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.person b{color:var(--ink)}
+.src{color:var(--ink3);font-size:12px}
+.hint{font-size:12px;color:var(--warn-ink);background:var(--warn-bg);border-radius:8px;padding:6px 10px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:880px}
+th{font-size:11px;color:var(--ink4);letter-spacing:.06em;font-weight:500;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.post b{color:var(--ink);font-size:14px;font-weight:600}
+td.post p{margin:3px 0 6px;color:var(--ink3);font-size:12.5px}
+td .cell{display:flex;flex-wrap:wrap;gap:6px}
+td.num{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.open td{background:var(--well)}
+.detail{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.detail div{background:var(--card-solid);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px}
+.detail div .k{display:block;margin-bottom:2px}
+.expand{font-size:12px;color:var(--ink3);cursor:pointer;border:0;background:none;padding:0}
+.picker{position:relative;margin-top:8px;background:var(--card-solid);border:1px solid var(--line);border-radius:10px;padding:10px 12px;max-width:360px;box-shadow:var(--shadow)}
+.picker .note{font-size:12px;color:var(--ink3);margin-bottom:6px}
+.picker ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.picker li{display:flex;justify-content:space-between;gap:10px}
+.picker li span:last-child{color:var(--ink4);font-variant-numeric:tabular-nums;font-size:12px}
+.picker li.child{padding-left:16px}
+.picker li.on span:first-child{color:var(--live-ink)}
+.legacy .item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.legacy .item:last-child{border-bottom:0}
+.btn{border:1px solid var(--line);background:var(--card-solid);color:var(--ink2);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+.btn.primary{background:var(--btn);color:var(--btn-ink);border-color:transparent}
+.btn:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;font-size:12.5px}
+.gloss b{color:var(--ink)}
+h2{font-size:14px;color:var(--ink);margin:0 0 10px;font-weight:600}
+</style>
+
+<div class="wrap">
+  <span class="demo">概念图 · 人名是示例,组织名取自 121 现有组织,数字是示例</span>
+
+  <header>
+    <h1>权限与组织</h1>
+    <p class="sub">谁是什么岗位、管哪几家店。按组织给<b>只对组织的直接成员生效</b>,不往子组织传;点名用来补个例。</p>
+  </header>
+
+  <!-- 1. 查一个人 -->
+  <section class="card pad" aria-labelledby="q">
+    <h2 id="q">查一个人</h2>
+    <div class="search"><input id="who" value="王采购(示例)" aria-label="输入名字查一个人"></div>
+    <div class="person">
+      <div class="box">
+        <div class="k">岗位与来源</div>
+        <div class="row"><span class="chip">采购</span><span class="src">来自组织「生产采购中心」</span></div>
+        <div class="row"><span class="chip">库存审批</span><span class="src">另外点名 · 系统管理员 09-20 给的</span></div>
+        <div class="hint">既发起又审批:他开的涨价采购单要别人批(系统会拦);其他单子自己批只记录。</div>
+      </div>
+      <div class="box">
+        <div class="k">能进哪些地方</div>
+        <div class="row"><span class="chip entry">采购</span><span class="chip entry">产品</span><span class="chip entry">库存审批</span></div>
+        <div class="k">管哪几家店</div>
+        <div class="src">不按门店划分(采购、库存审批看全部)</div>
+        <div class="k">登录后</div>
+        <div class="src">网页版</div>
+        <div class="k">还没归到岗位的单独授权</div>
+        <div class="src">没有</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 岗位表 -->
+  <section class="card" aria-labelledby="t">
+    <div class="pad" style="padding-bottom:0"><h2 id="t">岗位</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="width:30%">岗位</th><th style="width:28%">按组织给</th><th style="width:30%">另外点名</th><th style="text-align:right">实际人数</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="post"><b>老板</b><p>看全盘、批单子、这周的钱</p>
+              <div class="cell"><span class="chip entry">零售总览</span><span class="chip entry">门店</span><span class="chip entry">产品</span><span class="chip entry">销售大屏</span><span class="chip entry">仓储物流大屏</span><span class="chip entry">POS 账号</span></div></td>
+            <td><div class="cell"><span class="chip">总经理办公室 <span class="n">3</span></span><span class="chip add">+ 组织</span></div>
+              <div class="picker" role="dialog" aria-label="选组织">
+                <div class="note">只算组织的直接成员,子部门的人不算</div>
+                <ul>
+                  <li class="on"><span>✓ 总经理办公室</span><span>直接成员 3 人</span></li>
+                  <li class="child"><span>财务中心</span><span>3 人</span></li>
+                  <li class="child"><span>营销部</span><span>3 人</span></li>
+                  <li class="child"><span>库存物流中心</span><span>4 人</span></li>
+                  <li><span>店长</span><span>22 人</span></li>
+                </ul>
+              </div></td>
+            <td><div class="cell"><span class="chip add">+ 点名</span></div></td>
+            <td class="num">3</td>
+          </tr>
+          <tr>
+            <td class="post"><b>店长</b><p>替自己的门店要货、收货、盘点</p>
+              <div class="cell"><span class="chip mob">只用门店手机端</span></div></td>
+            <td><div class="cell"><span class="chip">店长 <span class="n">22</span></span><span class="chip add">+ 组织</span></div>
+              <p class="src" style="margin:6px 0 0">管哪几家店看他所在的门店组织(云龙山区域门店、户部山区域门店……)</p></td>
+            <td><div class="cell"><span class="chip">李店长(示例) · 徐州博物馆店</span><span class="chip add">+ 点名(要选店)</span></div></td>
+            <td class="num">23</td>
+          </tr>
+          <tr>
+            <td class="post"><b>仓管</b><p>收发货、出入库、盘点,看全部仓库</p>
+              <div class="cell"><span class="chip entry">仓库</span><span class="chip entry">仓储物流大屏</span></div></td>
+            <td><div class="cell"><span class="chip">库存物流中心 <span class="n">4</span></span><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip add">+ 点名</span></div></td>
+            <td class="num">4</td>
+          </tr>
+          <tr>
+            <td class="post"><b>采购</b><p>该买什么、申请单、采购单、供应商</p>
+              <div class="cell"><span class="chip entry">采购</span><span class="chip entry">产品</span></div></td>
+            <td><div class="cell"><span class="chip">生产采购中心 <span class="n">3</span></span><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip add">+ 点名</span></div></td>
+            <td class="num">3 <span class="tag warn">1 人既发起又审批</span></td>
+          </tr>
+          <tr>
+            <td class="post"><b>库存审批</b><p>批超阈值的调拨方案、采购单</p></td>
+            <td><div class="cell"><span class="chip">库存审批 <span class="n">2</span></span><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip">王采购(示例)</span><span class="chip add">+ 点名</span></div></td>
+            <td class="num">3</td>
+          </tr>
+          <tr>
+            <td class="post"><b>对公销售</b><p>客户、协议价、销售单</p>
+              <div class="cell"><span class="chip entry">对公销售</span></div></td>
+            <td><div class="cell"><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip">周销售(示例)</span><span class="chip add">+ 点名</span></div></td>
+            <td class="num">1</td>
+          </tr>
+          <tr>
+            <td class="post"><b>对公审批</b><p>签销售单、款到发货放行</p>
+              <div class="cell"><span class="chip entry">对公销售</span></div></td>
+            <td><div class="cell"><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip">郑经理(示例)</span><span class="chip">吴领导(示例)</span><span class="chip add">+ 点名</span></div></td>
+            <td class="num">2</td>
+          </tr>
+          <tr class="open">
+            <td class="post"><b>财务</b><p>应收应付、复核付款单和回款单</p>
+              <div class="cell"><span class="chip entry">资金总览</span></div>
+              <button class="expand" type="button" aria-expanded="true">收起具体权限 ▴</button>
+              <div class="detail">
+                <div><span class="k">零售套件</span>资金总览</div>
+                <div><span class="k">库存</span>财务(付款单复核、对账)</div>
+                <div><span class="k">对公销售</span>财务(复核回款、签低于成本的单)</div>
+              </div></td>
+            <td><div class="cell"><span class="chip">财务中心 <span class="n">3</span></span><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip add">+ 点名</span></div></td>
+            <td class="num">3</td>
+          </tr>
+          <tr>
+            <td class="post"><b>只看</b><p>看所有门店和仓库,不能改</p>
+              <div class="cell"><span class="chip entry">门店</span><span class="chip entry">产品</span><span class="chip entry">销售大屏</span><span class="chip entry">仓储物流大屏</span></div></td>
+            <td><div class="cell"><span class="chip">营销组织 <span class="n">2</span></span><span class="chip add">+ 组织</span></div></td>
+            <td><div class="cell"><span class="chip add">+ 点名</span></div></td>
+            <td class="num">2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. 迁移剩下的 -->
+  <section class="card pad legacy" aria-labelledby="l">
+    <h2 id="l">还没归到岗位的单独授权 <span class="tag mute">迁移剩下的,清空后这块不显示</span></h2>
+    <div class="item">
+      <div><b>赵会计(示例)</b> 单独有:库存 · 财务
+        <div class="src">归为「财务」会多出:资金总览、对公销售 · 财务</div></div>
+      <div class="row"><button class="btn primary" type="button">归为财务</button><button class="btn" type="button">收回</button><button class="btn" type="button">先不动</button></div>
+    </div>
+    <div class="item">
+      <div><b>孙主管(示例)</b> 单独有:零售总览、库存 · 审批
+        <div class="src">归为「老板」会多出:门店、产品、对公审批、两块大屏、POS 账号;归为「库存审批」会少掉:零售总览</div></div>
+      <div class="row"><button class="btn" type="button">归为老板</button><button class="btn" type="button">归为库存审批</button><button class="btn" type="button">先不动</button></div>
+    </div>
+  </section>
+
+  <!-- 4. 名词 -->
+  <section class="card pad" aria-labelledby="g">
+    <h2 id="g">这一页的说法</h2>
+    <div class="gloss">
+      <div><b>岗位</b> 一个人在零售里的身份,决定他能做什么、能进哪些地方</div>
+      <div><b>按组织给</b> 组织的直接成员都有这个岗位,进出组织自动跟着变</div>
+      <div><b>另外点名</b> 不在对应组织、又要这个岗位的个别人</div>
+      <div><b>管哪几家店</b> 店长看他所在的门店组织;点名的店长点名时选</div>
+      <div><b>只用门店手机端</b> 岗位全是店长时,登录后直接进手机端</div>
+      <div><b>既发起又审批</b> 允许,只提示;对公自签、涨价单自批系统会拦</div>
+    </div>
+  </section>
+</div>
+
+</body></html>
