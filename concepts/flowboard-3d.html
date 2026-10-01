@@ -120,7 +120,7 @@ const CW=2.4,CH=3.2,TW=384,TH=512;
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
 function face(p,snap){ // snap = {i,status:'done'|'cur'|'future'} → 时间快照;省略 = 当前牌面
   const cv=document.createElement('canvas');cv.width=TW;cv.height=TH;const c=cv.getContext('2d');const h=health(p);const st=snap?STAGES[snap.i]:STAGES[p.stage];
-  const g=c.createLinearGradient(0,0,TW,TH);g.addColorStop(0,'rgba(16,35,61,.72)');g.addColorStop(.5,'rgba(10,26,48,.62)');g.addColorStop(1,'rgba(7,18,36,.72)');c.fillStyle=g;roundRect(c,0,0,TW,TH,26);c.fill();
+  const g=c.createLinearGradient(0,0,TW,TH);g.addColorStop(0,'rgba(16,35,61,.9)');g.addColorStop(.5,'rgba(10,26,48,.86)');g.addColorStop(1,'rgba(7,18,36,.9)');c.fillStyle=g;roundRect(c,0,0,TW,TH,26);c.fill();
   c.strokeStyle='rgba(166,220,255,.22)';c.lineWidth=2;roundRect(c,3,3,TW-6,TH-6,24);c.stroke();
   const edge=snap?(snap.status==='done'?'#5fd3c4':(snap.status==='cur'?CSS[h]:'rgba(95,127,158,.6)')):(h==='ok'?(p.stage>=7?'#e8cf8f':'rgba(166,220,255,.5)'):CSS[h]);
   c.strokeStyle=edge;c.lineWidth=5;roundRect(c,10,10,TW-20,TH-20,20);c.stroke();
@@ -170,7 +170,7 @@ const cards=new Map();
 // 发光边:一圈带羽化的描边,叠加混合;颜色跟牌的状态走,卡住 / 快到期的呼吸
 const edgeTex=(()=>{const cv=document.createElement('canvas');cv.width=TW+96;cv.height=TH+96;const c=cv.getContext('2d');c.shadowColor='#fff';c.shadowBlur=34;c.strokeStyle='#fff';c.lineWidth=7;roundRect(c,48,48,TW,TH,26);c.stroke();c.stroke();const t=new THREE.CanvasTexture(cv);return t})();
 const EDGE={ok:0x7fc8ff,warn:0xd9a441,bad:0xc76b6b,live:0xe8cf8f};
-function makeCard(p){const tex=face(p);const front=new THREE.MeshPhysicalMaterial({map:tex,transparent:true,transmission:0.55,thickness:0.4,ior:1.4,roughness:0.42,metalness:0,clearcoat:0.6,clearcoatRoughness:0.35,envMapIntensity:0.9,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:1.0});const back=new THREE.MeshStandardMaterial({map:backTex,roughness:0.5,metalness:0.3});
+function makeCard(p){const tex=face(p);const front=new THREE.MeshPhysicalMaterial({map:tex,transparent:true,transmission:0.32,thickness:0.6,ior:1.4,roughness:0.78,metalness:0,clearcoat:0.5,clearcoatRoughness:0.45,envMapIntensity:0.7,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:1.0});const back=new THREE.MeshStandardMaterial({map:backTex,roughness:0.5,metalness:0.3});
   const m=new THREE.Mesh(cardGeo,[sideMat,sideMat,sideMat,sideMat,front,back]);m._p=p;m._front=front;
   const h0=health(p);const ec=h0==='ok'?(p.stage>=7?EDGE.live:EDGE.ok):EDGE[h0];const gm=new THREE.MeshBasicMaterial({map:edgeTex,color:ec,transparent:true,opacity:0.5,blending:THREE.AdditiveBlending,depthWrite:false});const EW=CW*(TW+96)/TW,EH=CH*(TH+96)/TH;
   const glow=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH),gm);glow.position.z=0.045;m.add(glow);const glowB=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH),gm);glowB.position.z=-0.045;glowB.rotation.y=Math.PI;m.add(glowB);m._glow=glow;
@@ -178,6 +178,7 @@ function makeCard(p){const tex=face(p);const front=new THREE.MeshPhysicalMateria
 // 给牌一个新位置:远的走弧线(起飞到各自的高度、平移、落下),近的直接插值;delay / rank 由布局按次序给,
 // 叠回牌堆时底下的先落、上面的后落,从牌堆摊开时上面的先起——两张牌不会从彼此身体里穿过去
 function setGoal(m,pos,quat,scale,opt){opt=opt||{};m._goal.pos.copy(pos);m._goal.quat.copy(quat);m._goal.scale=scale;
+  if(opt.direct){m._fl=null;return}
   if(!m._placed){m._placed=true;m._cur.copy(pos);m.position.copy(pos);m.quaternion.copy(quat);m.scale.setScalar(scale);return}
   const from=m._fl?m._fl.at.clone():m._cur.clone();const dist=from.distanceTo(pos);
   if(dist<3||reduced){m._fl=null;return}
@@ -324,10 +325,10 @@ let fanFilter='all';const FAN_FILTERS=[['all','全部'],['bad','卡住的'],['we
 function fanCards(g){return g.cards.filter(p=>fanFilter==='all'||(fanFilter==='bad'&&health(p)==='bad')||(fanFilter==='week'&&p.plan&&(new Date(p.plan)-TODAY)/864e5<=7)||(fanFilter==='review'&&p.rounds[p.rounds.length-1].r==='pending'))}
 function renderChips(g){const el=document.getElementById('chips');el.classList.add('on');const cnt=k=>{const keep=fanFilter;fanFilter=k;const n=fanCards(g).length;fanFilter=keep;return n};el.innerHTML=FAN_FILTERS.map(([k,l])=>`<button data-f="${k}" aria-pressed="${k===fanFilter}">${l} ${cnt(k)}</button>`).join('');
   el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{user();fanFilter=b.dataset.f;fanOff=0;layoutFan(openKey)}))}
-function layoutFan(key){const g0=groups().find(x=>x.key===key);if(!g0)return;mode='fan';openKey=key;current=null;const g={...g0,cards:fanCards(g0)};if(!g.cards.length){fanFilter='all';g.cards=g0.cards}fanOff=Math.max(Math.min(fanOff,g.cards.length-1),0);document.getElementById('back').classList.add('on');renderChips(g0);
+function layoutFan(key){const g0=groups().find(x=>x.key===key);if(!g0)return;const wasFan=mode==='fan'&&openKey===key;mode='fan';openKey=key;current=null;const g={...g0,cards:fanCards(g0)};if(!g.cards.length){fanFilter='all';g.cards=g0.cards}fanOff=Math.max(Math.min(fanOff,g.cards.length-1),0);document.getElementById('back').classList.add('on');renderChips(g0);
   const n=g.cards.length,R=22,step=0.17;
   g0.cards.forEach(p=>{if(!g.cards.includes(p)){const m=cards.get(p.id);setGoal(m,new THREE.Vector3((p.id%7-3)*1.2,0.3+(p.id%5)*0.08,18),Q(-Math.PI/2,0,0),0.8,{})}});
-  g.cards.forEach((p,i)=>{const m=cards.get(p.id);const a=(i-fanOff)*step;const d=Math.abs(i-fanOff);setGoal(m,new THREE.Vector3(Math.sin(a)*R,4.2-d*0.08,10-R+Math.cos(a)*R),Q(0,-a,0),d===0?1.08:0.9,{delay:(n-1-i)*0.045,rank:n-1-i})});
+  g.cards.forEach((p,i)=>{const m=cards.get(p.id);const a=(i-fanOff)*step;const d=Math.abs(i-fanOff);setGoal(m,new THREE.Vector3(Math.sin(a)*R,4.2-d*0.08,10-R+Math.cos(a)*R),Q(0,-a,0),d===0?1.08:0.9,wasFan?{direct:true}:{delay:(n-1-i)*0.045,rank:n-1-i})});
   // 其他堆留在原位,沉下去一点
   cards.forEach(m=>{if(m._in!==key){m._goal.scale=0.85}});
   labels.forEach(l=>l._op=0.35);
@@ -387,18 +388,20 @@ document.querySelectorAll('.bs-nav button').forEach(b=>b.addEventListener('click
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){user();document.getElementById('back').click()}if(mode==='fan'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){user();const g=groups().find(x=>x.key===openKey);fanOff=Math.max(0,Math.min(g.cards.length-1,fanOff+(e.key==='ArrowRight'?1:-1)));layoutFan(openKey)}});
 
 // ───────── 轮播 ─────────
-let tourOn=!reduced,tourT=0,tourStep=0,tourPaused=false;const TOUR=[
-  {ms:9000,run(){grouping='status';syncNav();openKey=null;layoutTable();renderFocus(null)}},
-  {ms:9000,run(){const g=groups().find(x=>x.key==='warn')||groups()[1];fanOff=0;layoutFan(g.key)}},
-  {ms:4000,run(){const g=groups().find(x=>x.key===openKey);fanOff=Math.min(1,g.cards.length-1);layoutFan(openKey)}},
-  {ms:8000,run(){const st=P.filter(p=>health(p)==='bad').sort((a,b)=>b.days-a.days)[0];layoutDetail(st)}},
-  {ms:9000,run(){if(current)focusStage(current.stage)}},
-  {ms:7000,run(){if(current)focusStage(Math.max(0,current.stage-1))}},
-  {ms:9000,run(){grouping='stage';syncNav();openKey=null;layoutTable();renderFocus(null)}},
-  {ms:9000,run(){const g=groups().find(x=>x.key==='3')||groups()[0];fanOff=0;layoutFan(g.key)}},
-  {ms:12000,run(){const g=groups().find(x=>x.key===openKey);layoutDetail(g.cards[Math.min(fanOff,g.cards.length-1)])}},
-  {ms:9000,run(){grouping='owner';syncNav();openKey=null;layoutTable();renderFocus(null)}},
-  {ms:9000,run(){grouping='updated';syncNav();openKey=null;layoutTable();const g=groups().find(x=>x.key==='older');if(g){fanOff=0;setTimeout(()=>{if(tourOn&&!tourPaused)layoutFan(g.key)},2600)}}}];
+let tourOn=!reduced,tourT=0,tourStep=0,tourPaused=false;
+// 轮播顺序(每轮约 50 秒):① 牌桌:有几件卡住 → ② 卡住的那堆翻三张:各卡在哪、等谁 → ③ 最久那件的时间轴 → ④ 它当前这一步的内容
+// → ⑤ 按负责人:谁手里压着 → ⑥ 按步骤:流水线哪里堆 → ⑦ 明细:全盘扫一遍 → 回到 ①
+const stuckSorted=()=>P.filter(p=>health(p)==='bad').sort((a,b)=>b.days-a.days);
+const TOUR=[
+  {ms:6000,run(){grouping='status';syncNav();openKey=null;fanFilter='all';layoutTable();renderFocus(null)}},
+  {ms:3500,run(){const g=groups().find(x=>x.key==='bad')||groups()[0];fanOff=0;layoutFan(g.key)}},
+  {ms:3000,run(){const g=groups().find(x=>x.key===openKey);if(g){fanOff=Math.min(1,g.cards.length-1);layoutFan(openKey)}}},
+  {ms:3000,run(){const g=groups().find(x=>x.key===openKey);if(g){fanOff=Math.min(2,g.cards.length-1);layoutFan(openKey)}}},
+  {ms:6000,run(){const st=stuckSorted()[0]||P[0];layoutDetail(st)}},
+  {ms:7000,run(){if(current)focusStage(current.stage)}},
+  {ms:5500,run(){grouping='owner';syncNav();openKey=null;layoutTable();renderFocus(null)}},
+  {ms:5500,run(){grouping='stage';syncNav();openKey=null;layoutTable();renderFocus(null)}},
+  {ms:8000,run(){grouping='dense';syncNav();openKey=null;layoutTable();renderFocus(null)}}]
 function syncNav(){document.querySelectorAll('.bs-nav button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.g===grouping?'true':'false'))}
 function tourPause(v){tourPaused=v;document.getElementById('status').classList.toggle('paused',v||!tourOn);document.getElementById('tour').textContent=(!tourOn||v)?'继续轮播':'暂停轮播';document.getElementById('stline').textContent=v?'已暂停 · 45 秒无操作后继续':document.getElementById('stline').textContent}
 document.getElementById('tour').addEventListener('click',()=>{if(!tourOn){tourOn=true;tourPaused=false;tourT=0;tourPause(false);TOUR[tourStep].run();return}lastUser=tourPaused?0:performance.now();tourPause(!tourPaused);if(!tourPaused){tourT=0;TOUR[tourStep].run()}});
