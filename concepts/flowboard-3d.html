@@ -32,6 +32,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font
 .bs-tot .v{color:var(--ink);font-size:calc(38px * var(--fs));font-weight:300;letter-spacing:.02em;line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums;font-family:var(--sans)}
 .bs-tot .v .u{font-size:calc(10px * var(--fs));color:var(--dim);margin-left:8px;letter-spacing:.22em}
 .bs-tot .v.bad{color:var(--bad)}.bs-tot .v.live{color:var(--live)}
+.bs-tot{flex-direction:row;flex-wrap:wrap;gap:14px 26px}.bs-tot>div{min-width:96px}
+.bs-chips{bottom:64px;left:50%;transform:translateX(-50%);display:none;gap:0;border:1px solid var(--rule);background:color-mix(in srgb,var(--bg) 55%,transparent);pointer-events:auto}.bs-chips.on{display:flex}.bs-chips button{appearance:none;background:none;border:0;border-right:1px solid var(--rule);color:var(--dim);font:inherit;letter-spacing:.18em;padding:7px 14px;cursor:pointer;min-height:32px}.bs-chips button:last-child{border-right:0}.bs-chips button[aria-pressed="true"]{color:var(--live)}
+.bs-feed{border-top:1px solid var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:7px;text-transform:none;letter-spacing:.04em}
+.bs-feed .h{font-family:var(--mono);font-size:calc(10px * var(--fs));letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+.bs-feed div.i{display:grid;grid-template-columns:44px 1fr;gap:8px;font-size:calc(11.5px * var(--fs));color:var(--dim2)}.bs-feed div.i b{font-weight:400;color:var(--ink)}.bs-feed div.i em{font-style:normal;font-family:var(--mono);color:var(--dim);font-size:calc(10px * var(--fs))}.bs-feed div.i.bad b{color:var(--bad)}.bs-feed div.i.live b{color:var(--live)}
 .bs-right{right:40px;top:calc(112px * var(--fs));width:min(30vw,440px);display:flex;flex-direction:column;gap:14px;pointer-events:none}
 .bs-panel{border:1px solid var(--rule);background:color-mix(in srgb,var(--bg) 62%,transparent);padding:14px 16px;text-transform:none;letter-spacing:.04em;backdrop-filter:blur(6px);transition:opacity .35s}
 .bs-panel.off{opacity:0}
@@ -77,17 +82,19 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font
   <div class="bs-hud bs-brand"><span class="t">产品动线</span><span class="s">PIPELINE · DEV → RETAIL · 示例数据</span></div>
   <div class="bs-hud bs-center">
     <div class="bs-nav" role="group" aria-label="分堆方式">
-      <button aria-pressed="true" data-g="status">按状态</button><button aria-pressed="false" data-g="stage">按步骤</button><button aria-pressed="false" data-g="owner">按负责人</button><button aria-pressed="false" data-g="updated">按更新</button>
+      <button aria-pressed="true" data-g="status">按状态</button><button aria-pressed="false" data-g="stage">按步骤</button><button aria-pressed="false" data-g="owner">按负责人</button><button aria-pressed="false" data-g="updated">按更新</button><button aria-pressed="false" data-g="dense">明细</button>
     </div>
   </div>
   <div class="bs-hud bs-left">
     <div class="bs-tot" id="tot"></div>
+    <div class="bs-feed" id="feed"></div>
   </div>
   <div class="bs-hud bs-right">
     <div class="bs-panel" id="focus"></div>
     
   </div>
   <button class="bs-hud bs-back" id="back">← 回到牌桌</button>
+  <div class="bs-hud bs-chips" id="chips"></div>
   <div class="bs-hud bs-hint" id="hint">点一叠牌在空间里摊开 · 滚轮或拖动翻牌 · 点牌看它的时间维度</div>
   <div class="bs-hud bs-status" id="status"><div class="line"><i></i><span id="stline">轮播中 · 牌桌</span></div><div class="bar"><i id="bar"></i></div><button id="tour">暂停轮播</button></div>
 </div>
@@ -113,8 +120,8 @@ const CW=2.4,CH=3.2,TW=384,TH=512;
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
 function face(p,snap){ // snap = {i,status:'done'|'cur'|'future'} → 时间快照;省略 = 当前牌面
   const cv=document.createElement('canvas');cv.width=TW;cv.height=TH;const c=cv.getContext('2d');const h=health(p);const st=snap?STAGES[snap.i]:STAGES[p.stage];
-  const g=c.createLinearGradient(0,0,TW,TH);g.addColorStop(0,'#10233d');g.addColorStop(.5,'#0a1a30');g.addColorStop(1,'#071224');c.fillStyle=g;roundRect(c,0,0,TW,TH,26);c.fill();
-  c.strokeStyle='rgba(166,220,255,.28)';c.lineWidth=2;roundRect(c,3,3,TW-6,TH-6,24);c.stroke();
+  const g=c.createLinearGradient(0,0,TW,TH);g.addColorStop(0,'rgba(16,35,61,.72)');g.addColorStop(.5,'rgba(10,26,48,.62)');g.addColorStop(1,'rgba(7,18,36,.72)');c.fillStyle=g;roundRect(c,0,0,TW,TH,26);c.fill();
+  c.strokeStyle='rgba(166,220,255,.22)';c.lineWidth=2;roundRect(c,3,3,TW-6,TH-6,24);c.stroke();
   const edge=snap?(snap.status==='done'?'#5fd3c4':(snap.status==='cur'?CSS[h]:'rgba(95,127,158,.6)')):(h==='ok'?(p.stage>=7?'#e8cf8f':'rgba(166,220,255,.5)'):CSS[h]);
   c.strokeStyle=edge;c.lineWidth=5;roundRect(c,10,10,TW-20,TH-20,20);c.stroke();
   c.fillStyle=DEPTS[p.dept][1];c.fillRect(28,34,120,4);
@@ -122,13 +129,20 @@ function face(p,snap){ // snap = {i,status:'done'|'cur'|'future'} → 时间快�
   c.fillStyle='#8fa9c4';c.font='400 20px "Noto Sans SC",sans-serif';c.fillText(DEPTS[p.dept][0],28,124);
   // 进度格
   const gw=(TW-56-7*6)/8;STAGES.forEach((s,i)=>{const cur=snap?i===snap.i:i===p.stage;const done=snap?i<snap.i:i<p.stage;c.fillStyle=done?'#5fd3c4':(cur?(snap?(snap.status==='done'?'#5fd3c4':edge):CSS[h]==='#5fd3c4'?'#e8cf8f':CSS[h]):'rgba(143,169,196,.18)');c.fillRect(28+i*(gw+6),150,gw,7)});
-  c.fillStyle='#e3f1ff';c.font='400 44px "Noto Sans SC",sans-serif';c.fillText(st.n,28,232);
+  c.fillStyle='#e3f1ff';c.font='400 40px "Noto Sans SC",sans-serif';c.fillText(st.n,28,226);
   c.font='500 22px "SF Mono",Menlo,monospace';c.fillStyle='#8fa9c4';
   if(snap){const s=p.steps[snap.i];if(s){c.fillText(`${fmt(s.enter)} ${s.leave?'→ '+fmt(s.leave):'→ 今天'}`,28,270);c.fillStyle=s.len>st.d?'#d9a441':'#5fd3c4';c.font='600 56px "SF Mono",Menlo,monospace';c.fillText(`${s.len}`,28,350);c.fillStyle='#8fa9c4';c.font='400 20px "Noto Sans SC",sans-serif';c.fillText(`天 · 常规 ${st.d} 天`,120,350)}else{c.fillText('还没到这一步',28,270);c.fillStyle='rgba(143,169,196,.7)';c.font='400 20px "Noto Sans SC",sans-serif';c.fillText(`常规 ${st.d} 天 · ${WAIT[st.k]}`,28,310)}}
-  else{c.fillText(`停了 ${p.days} 天 · 常规 ${st.d} 天`,28,270);c.fillStyle=h==='ok'?'#8fa9c4':CSS[h];c.font='400 24px "Noto Sans SC",sans-serif';c.fillText(h==='bad'?`等 ${WAIT[st.k]}`:(h==='warn'?'快到期':`更新 ${p.upd===0?'今天':p.upd+' 天前'}`),28,312)}
+  else{c.fillText(`停了 ${p.days} 天 · 常规 ${st.d} 天`,28,262);c.fillStyle=h==='ok'?'#8fa9c4':CSS[h];c.font='400 23px "Noto Sans SC",sans-serif';c.fillText(h==='bad'?`等 ${WAIT[st.k]}`:(h==='warn'?'快到期':`更新 ${p.upd===0?'今天':p.upd+' 天前'}`),28,300)}
+  if(!snap){ // 最近一次动作 / 任务进度 / 计划日期——牌面是看得最多的地方,信息密度要最高
+    const last=p.rounds[p.rounds.length-1];c.fillStyle='#5f7f9e';c.font='400 17px "SF Mono",Menlo,monospace';c.fillText('LAST',28,348);
+    c.fillStyle='#c9d8e8';c.font='400 19px "Noto Sans SC",sans-serif';const lt=`${fmt(last.t)} ${last.by}${last.r==='rej'?'退回:':(last.r==='ok'?'通过':'待评审')}${last.r==='rej'?last.why.slice(0,9)+'…':''}`;c.fillText(lt,88,348);
+    const done=p.tasks.filter(t=>t.done).length,late=p.tasks.filter(t=>!t.done&&t.due<TODAY).length;c.fillStyle='#5f7f9e';c.font='400 17px "SF Mono",Menlo,monospace';c.fillText('TASKS',28,384);
+    c.fillStyle='rgba(143,169,196,.2)';c.fillRect(100,375,180,8);c.fillStyle=late?'#c76b6b':'#5fd3c4';c.fillRect(100,375,180*done/p.tasks.length,8);c.fillStyle='#c9d8e8';c.font='400 18px "Noto Sans SC",sans-serif';c.fillText(`${done}/${p.tasks.length}${late?' · 逾期 '+late:''}`,292,384);
+    c.fillStyle='#5f7f9e';c.font='400 17px "SF Mono",Menlo,monospace';c.fillText('PLAN',28,416);c.fillStyle=p.plan?(new Date(p.plan)<TODAY?'#c76b6b':'#c9d8e8'):'#5f7f9e';c.font='400 19px "Noto Sans SC",sans-serif';
+    c.fillText(p.plan?`${p.plan.slice(5).replace('-','/')} · ${new Date(p.plan)<TODAY?'超 '+Math.round((TODAY-new Date(p.plan))/864e5)+' 天':'还有 '+Math.round((new Date(p.plan)-TODAY)/864e5)+' 天'}`:'没填计划日期',88,416)}
   // 负责人
-  c.fillStyle='rgba(143,169,196,.22)';c.beginPath();c.arc(48,452,22,0,Math.PI*2);c.fill();c.fillStyle='#e3f1ff';c.font='500 22px "SF Mono",Menlo,monospace';c.textAlign='center';c.fillText(p.owner.slice(-1),48,460);c.textAlign='left';
-  c.fillStyle='#8fa9c4';c.font='400 22px "Noto Sans SC",sans-serif';c.fillText(p.owner,84,460);
+  c.fillStyle='rgba(143,169,196,.22)';c.beginPath();c.arc(48,470,22,0,Math.PI*2);c.fill();c.fillStyle='#e3f1ff';c.font='500 22px "SF Mono",Menlo,monospace';c.textAlign='center';c.fillText(p.owner.slice(-1),48,478);c.textAlign='left';
+  c.fillStyle='#8fa9c4';c.font='400 22px "Noto Sans SC",sans-serif';c.fillText(p.owner,84,478);
   if(!snap&&h!=='ok'){c.fillStyle=CSS[h];c.font='600 18px "SF Mono",Menlo,monospace';c.textAlign='right';c.fillText(h==='bad'?'STUCK':'SOON',TW-30,50);c.textAlign='left'}
   const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;return tex}
 
@@ -136,6 +150,10 @@ function face(p,snap){ // snap = {i,status:'done'|'cur'|'future'} → 时间快�
 const canvas=document.getElementById('gl');const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=0.95;renderer.setClearColor(0x050b18,1);
 const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x050b18,0.022);
+scene.environment=(()=>{const env=new THREE.Scene();env.add(new THREE.Mesh(new THREE.BoxGeometry(60,30,60),new THREE.MeshBasicMaterial({color:new THREE.Color(0.04,0.09,0.17),side:THREE.BackSide})));
+  const panel=(w,h,color,x,y,z,rx,ry)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(...color),side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,0);env.add(m)};
+  panel(34,10,[2.6,2.4,2.0],0,14.5,0,Math.PI/2,0);panel(5,26,[1.2,2.2,3.0],-29,4,0,0,Math.PI/2);panel(5,26,[2.6,2.2,1.2],29,4,0,0,-Math.PI/2);
+  const pm=new THREE.PMREMGenerator(renderer);const t=pm.fromScene(env,0.06).texture;pm.dispose();return t})();
 const camera=new THREE.PerspectiveCamera(36,1,0.1,300);
 scene.add(new THREE.HemisphereLight(0x9fb3c8,0x050b18,0.55));const key=new THREE.DirectionalLight(0xffffff,1.7);key.position.set(0,60,-40);scene.add(key);const rim=new THREE.DirectionalLight(0x9fb3c8,0.35);rim.position.set(-40,20,40);scene.add(rim);
 const camLight=new THREE.PointLight(0xdfeeff,110,140,1.5);scene.add(camLight);   // 跟着镜头走,照亮正对观众的牌面
@@ -149,10 +167,24 @@ function look(pos,tgt){view.pos.set(...pos);view.tgt.set(...tgt)}
 const cardGeo=new THREE.BoxGeometry(CW,CH,0.07);const sideMat=new THREE.MeshStandardMaterial({color:0x0a2038,roughness:0.3,metalness:0.4});
 const backTex=(()=>{const cv=document.createElement('canvas');cv.width=TW;cv.height=TH;const c=cv.getContext('2d');c.fillStyle='#08152a';roundRect(c,0,0,TW,TH,26);c.fill();c.strokeStyle='rgba(232,207,143,.35)';c.lineWidth=3;roundRect(c,10,10,TW-20,TH-20,20);c.stroke();c.strokeStyle='rgba(232,207,143,.12)';c.lineWidth=2;for(let i=-TH;i<TW+TH;i+=18){c.beginPath();c.moveTo(i,0);c.lineTo(i+TH,TH);c.stroke()}const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t})();
 const cards=new Map();
-function makeCard(p){const tex=face(p);const front=new THREE.MeshPhysicalMaterial({map:tex,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:1.0,roughness:0.55,metalness:0.05,clearcoat:0.5,clearcoatRoughness:0.6});const back=new THREE.MeshStandardMaterial({map:backTex,roughness:0.5,metalness:0.3});
+// 发光边:一圈带羽化的描边,叠加混合;颜色跟牌的状态走,卡住 / 快到期的呼吸
+const edgeTex=(()=>{const cv=document.createElement('canvas');cv.width=TW+96;cv.height=TH+96;const c=cv.getContext('2d');c.shadowColor='#fff';c.shadowBlur=34;c.strokeStyle='#fff';c.lineWidth=7;roundRect(c,48,48,TW,TH,26);c.stroke();c.stroke();const t=new THREE.CanvasTexture(cv);return t})();
+const EDGE={ok:0x7fc8ff,warn:0xd9a441,bad:0xc76b6b,live:0xe8cf8f};
+function makeCard(p){const tex=face(p);const front=new THREE.MeshPhysicalMaterial({map:tex,transparent:true,transmission:0.55,thickness:0.4,ior:1.4,roughness:0.42,metalness:0,clearcoat:0.6,clearcoatRoughness:0.35,envMapIntensity:0.9,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:1.0});const back=new THREE.MeshStandardMaterial({map:backTex,roughness:0.5,metalness:0.3});
   const m=new THREE.Mesh(cardGeo,[sideMat,sideMat,sideMat,sideMat,front,back]);m._p=p;m._front=front;
-  const glow=new THREE.Mesh(new THREE.PlaneGeometry(CW+0.5,CH+0.5),new THREE.MeshBasicMaterial({color:HC[health(p)],transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));glow.position.z=-0.06;m.add(glow);m._glow=glow;
-  m._goal={pos:new THREE.Vector3(),quat:new THREE.Quaternion(),scale:1};m._cur=new THREE.Vector3();m._hov=0;m._hovT=0;m.userData.kind='card';world.add(m);cards.set(p.id,m);return m}
+  const h0=health(p);const ec=h0==='ok'?(p.stage>=7?EDGE.live:EDGE.ok):EDGE[h0];const gm=new THREE.MeshBasicMaterial({map:edgeTex,color:ec,transparent:true,opacity:0.5,blending:THREE.AdditiveBlending,depthWrite:false});const EW=CW*(TW+96)/TW,EH=CH*(TH+96)/TH;
+  const glow=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH),gm);glow.position.z=0.045;m.add(glow);const glowB=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH),gm);glowB.position.z=-0.045;glowB.rotation.y=Math.PI;m.add(glowB);m._glow=glow;
+  m._goal={pos:new THREE.Vector3(),quat:new THREE.Quaternion(),scale:1};m._cur=new THREE.Vector3();m._hov=0;m._hovT=0;m._placed=false;m.userData.kind='card';world.add(m);cards.set(p.id,m);return m}
+// 给牌一个新位置:远的走弧线(起飞到各自的高度、平移、落下),近的直接插值;delay / rank 由布局按次序给,
+// 叠回牌堆时底下的先落、上面的后落,从牌堆摊开时上面的先起——两张牌不会从彼此身体里穿过去
+function setGoal(m,pos,quat,scale,opt){opt=opt||{};m._goal.pos.copy(pos);m._goal.quat.copy(quat);m._goal.scale=scale;
+  if(!m._placed){m._placed=true;m._cur.copy(pos);m.position.copy(pos);m.quaternion.copy(quat);m.scale.setScalar(scale);return}
+  const from=m._fl?m._fl.at.clone():m._cur.clone();const dist=from.distanceTo(pos);
+  if(dist<3||reduced){m._fl=null;return}
+  const alt=Math.max(from.y,pos.y)+3.2+(opt.rank||0)*0.32;
+  m._fl={from,to:pos.clone(),c1:new THREE.Vector3(from.x,alt,from.z),c2:new THREE.Vector3(pos.x,alt,pos.z),q0:m.quaternion.clone(),q1:quat.clone(),s0:m.scale.x,s1:scale,t0:performance.now()+(opt.delay||0)*1000,dur:(1.3+Math.min(dist,30)*0.025)*1000,at:from.clone()}}
+const _bz=new THREE.Vector3();function bezier(o,f){const t=f,u=1-t;_bz.set(0,0,0).addScaledVector(o.from,u*u*u).addScaledVector(o.c1,3*u*u*t).addScaledVector(o.c2,3*u*t*t).addScaledVector(o.to,t*t*t);return _bz}
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
 P.forEach(makeCard);
 const hits=[];const pads=[];const snaps=[];const snapHits=[];
 const ALT=16;   // 时间轴所在的高度:牌飞上去,牌桌留在下面画面外
@@ -245,7 +277,7 @@ function focusStage(i){const p=current;mode='stage';stageIdx=i;clearStageProps()
       setTimeout(()=>{if(mode==='stage'&&stageIdx===i&&token===stageSeq)g._litT=1},300+j*420)})},520);
   look([0,5.5+ALT,24],[0,5.0+ALT,10.5]);setHint(`${STAGES[i].n} · 点空白 / Esc 回到时间轴`);document.getElementById('stline').textContent=`轮播中 · ${p.name} · ${STAGES[i].n}`}
 let stageSeq=0;
-function unfocusStage(){const p=current;mode='detail';stageIdx=-1;clearStageProps();labels.forEach(l=>l._op=1);snaps.forEach(s=>{s._goal=s._base.clone();s._goalRot=-0.42;s._goalScale=1;s._goalOp=s.userData.i>p.stage?0.3:0.95});const m=cards.get(p.id);m._goal.pos.set(-7.2,ALT+4.9,1.5);look([-2,9+ALT,27],[1.5,4.2+ALT,-5]);setHint('这是同一张牌在时间维度上的快照 · 点某一步看它的内容');document.getElementById('stline').textContent=`轮播中 · ${p.name}`}
+function unfocusStage(){const p=current;mode='detail';stageIdx=-1;clearStageProps();labels.forEach(l=>l._op=1);snaps.forEach(s=>{s._goal=s._base.clone();s._goalRot=-0.42;s._goalScale=1;s._goalOp=s.userData.i>p.stage?0.3:0.95});const m=cards.get(p.id);setGoal(m,new THREE.Vector3(-7.2,ALT+4.9,1.5),Q(0,0.28,0),1.25,{});look([-2,9+ALT,27],[1.5,4.2+ALT,-5]);setHint('这是同一张牌在时间维度上的快照 · 点某一步看它的内容');document.getElementById('stline').textContent=`轮播中 · ${p.name}`}
 
 
 // ───────── 状态与分堆 ─────────
@@ -256,7 +288,7 @@ function groups(){const by=(key,label,order)=>{const m=new Map();P.forEach(p=>{c
   if(grouping==='owner')return by(p=>p.owner,k=>k);
   return by(p=>p.upd===0?'today':(p.upd<=7?'week':'older'),k=>({today:'今天更新',week:'本周更新',older:'一周没动'})[k],['today','week','older']).map(x=>({...x,cls:x.key==='older'?'bad':''}))}
 const q=new THREE.Quaternion(),e=new THREE.Euler();const Q=(x,y,z)=>q.setFromEuler(e.set(x,y,z)).clone();
-function clearAux(){clearStageProps();stageIdx=-1;hits.forEach(h=>world.remove(h));hits.length=0;pads.forEach(h=>world.remove(h));pads.length=0;snaps.forEach(s=>{world.remove(s);s.material.map&&s.material.map.dispose()});snaps.length=0;snapHits.forEach(h=>world.remove(h));snapHits.length=0;labels.forEach(l=>{world.remove(l);l.material.map.dispose()});labels.length=0}
+function clearAux(){document.getElementById('chips').classList.remove('on');clearStageProps();stageIdx=-1;hits.forEach(h=>world.remove(h));hits.length=0;pads.forEach(h=>world.remove(h));pads.length=0;snaps.forEach(s=>{world.remove(s);s.material.map&&s.material.map.dispose()});snaps.length=0;snapHits.forEach(h=>world.remove(h));snapHits.length=0;labels.forEach(l=>{world.remove(l);l.material.map.dispose()});labels.length=0}
 const labels=[];
 function tag(html,cls,pos){const m=/<b>(.*?)<\/b>(.*)$/.exec(html)||[0,'',html];const title=m[1],sub=m[2].replace(/<[^>]+>/g,'');const sm=/\bsm\b/.test(cls||'');
   const cv=document.createElement('canvas');cv.width=640;cv.height=180;const c=cv.getContext('2d');c.textAlign='center';
@@ -264,48 +296,72 @@ function tag(html,cls,pos){const m=/<b>(.*?)<\/b>(.*)$/.exec(html)||[0,'',html];
   c.fillStyle='#7f9fbe';c.font='400 26px "SF Mono",Menlo,monospace';c.fillText(sub.toUpperCase(),320,130);
   const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:true,depthWrite:false}));
   const w=sm?3.0:4.0;sp.scale.set(w,w*180/640,1);sp.position.copy(pos);sp.position.y+=sp.scale.y/2+0.06;sp._op=1;sp.material.opacity=0;world.add(sp);labels.push(sp);return sp}
+// 牌堆底座的一句统计:按步骤分堆时给「中位 / 常规」,其它给「最老 / 平均」
+function pileStat(g){const ds=g.cards.map(p=>p.days);const med=ds.slice().sort((a,b)=>a-b)[Math.floor(ds.length/2)]||0;const avg=Math.round(ds.reduce((a,b)=>a+b,0)/Math.max(ds.length,1));const old=Math.max(...ds,0);
+  if(grouping==='stage')return `中位 ${med} 天 / 常规 ${STAGES[+g.key].d} 天`;if(grouping==='owner'){const st=g.cards.filter(p=>health(p)==='bad').length;return `${st} 件卡住 · 最久 ${old} 天`}return `最久 ${old} 天 · 平均 ${avg} 天`}
 function layoutTable(){clearAux();mode='table';current=null;document.getElementById('back').classList.remove('on');
+  if(grouping==='dense'){ // 明细:全部牌按步骤排成密网格、正对镜头,信息密度最高,仍是牌不是表
+    const per=6;const sorted=[...P].sort((a,b)=>b.stage-a.stage||b.days-a.days);const rows=Math.ceil(sorted.length/per);
+    sorted.forEach((p,i)=>{const r=Math.floor(i/per),c=i%per;const m=cards.get(p.id);setGoal(m,new THREE.Vector3((c-(per-1)/2)*(CW+0.5),CH/2*Math.cos(0.3)+0.15+r*0.02,(r-(rows-1)/2)*(CH+0.9)),Q(-0.3,0,0),1,{delay:i*0.03,rank:i});m._in='dense'});
+    tag(`<b>明细</b>${P.length} 件 · 按步骤从后到前、再按停留天数排`,'',new THREE.Vector3(0,0.1,(rows/2+0.2)*(CH+0.9)));
+    look([0,15,22],[0,1.2,-1]);setHint('明细:全部牌正对镜头,按步骤与停留天数排;点牌看它的时间维度');return}
   const gs=groups();const spread=gs.filter(g=>g.spread),stacked=gs.filter(g=>!g.spread);
   // 摊开的堆:前排平铺,微微仰起
   // 荷官铺牌:有问题的牌站在桌上、略向后仰,一行一行沿向上凸的弧线摊开;牌底贴桌面,不穿模
   const TILT=0.42,LIFT=CH/2*Math.cos(TILT)+0.12;let zRow=-7;
-  spread.forEach(g=>{const per=Math.min(g.cards.length,8);const rows=Math.ceil(g.cards.length/per);tag(`<b>${g.label}</b>${g.cards.length} 个`,g.cls,new THREE.Vector3(0,0.15,zRow+(rows-1)*2.9+CH*0.35+2.4));
+  spread.forEach(g=>{const per=Math.min(g.cards.length,8);const rows=Math.ceil(g.cards.length/per);tag(`<b>${g.label}</b>${g.cards.length} 个 · ${pileStat(g)}`,g.cls,new THREE.Vector3(0,0.15,zRow+(rows-1)*2.9+CH*0.35+2.4));
     g.cards.forEach((p,i)=>{const r=Math.floor(i/per),c=i%per,n=Math.min(per,g.cards.length-r*per);const t=n===1?0:(c/(n-1))*2-1;const x=t*(n-1)*(CW+0.35)/2;const arc=(1-t*t)*0.9;const m=cards.get(p.id);
-      m._goal.pos.set(x*1.08,LIFT*1.1+r*0.02,zRow+r*3.1-arc);m._goal.quat.copy(Q(-TILT,t*0.12,-t*0.05));m._goal.scale=1.1;m._in=g.key});zRow+=rows*2.9+1.2});
+      setGoal(m,new THREE.Vector3(x*1.08,LIFT*1.1+r*0.02,zRow+r*3.1-arc),Q(-TILT,t*0.12,-t*0.05),1.1,{delay:i*0.05,rank:i});m._in=g.key});zRow+=rows*2.9+1.2});
   // 叠着的堆:后排一排底座
   const n=stacked.length;const span=Math.min(5.4,26/Math.max(n,1));const x0=-(n-1)*span/2;const z=spread.length?Math.max(zRow+2.2,3.2):-3;
   stacked.forEach((g,gi)=>{const x=x0+gi*span;const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.35,0.28,48),new THREE.MeshStandardMaterial({color:0x0a2038,roughness:0.35,metalness:0.6,emissive:g.cls==='bad'?0xc76b6b:(g.cls==='live'?0xe8cf8f:0x3fa9cc),emissiveIntensity:0.08}));pad.position.set(x,0.14,z);world.add(pad);pads.push(pad);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(2.3,0.03,6,64),new THREE.MeshBasicMaterial({color:g.cls==='bad'?0xc76b6b:(g.cls==='live'?0xe8cf8f:0x3fa9cc),transparent:true,opacity:0.5}));ring.rotation.x=Math.PI/2;ring.position.set(x,0.3,z);world.add(ring);pads.push(ring);
     const hit=new THREE.Mesh(new THREE.BoxGeometry(4.6,2.6,4.6),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(x,1.3,z);hit.userData={kind:'pile',key:g.key,label:g.label};world.add(hit);hits.push(hit);
-    tag(`<b>${g.label}</b>${g.cards.length} 个 · 点开`,g.cls,new THREE.Vector3(x,0.02,z+3.5));
-    g.cards.forEach((p,i)=>{const m=cards.get(p.id);m._goal.pos.set(x+(((p.id*13)%3)-1)*0.08,0.32+i*0.075,z+(((p.id*7)%3)-1)*0.08);m._goal.quat.copy(Q(-Math.PI/2,0,(((p.id*11)%7)-3)*0.05+((i%2)?Math.PI:0)));m._goal.scale=1;m._in=g.key})});
+    tag(`<b>${g.label}</b>${g.cards.length} 个 · ${pileStat(g)} · 点开`,g.cls,new THREE.Vector3(x,0.02,z+3.5));
+    g.cards.forEach((p,i)=>{const m=cards.get(p.id);setGoal(m,new THREE.Vector3(x+(((p.id*13)%3)-1)*0.08,0.32+i*0.075,z+(((p.id*7)%3)-1)*0.08),Q(-Math.PI/2,0,(((p.id*11)%7)-3)*0.05+((i%2)?Math.PI:0)),1,{delay:i*0.07,rank:i});m._in=g.key})});
   look([0,13,23],[0,1.4,-2.6]);setHint('点一叠牌在空间里摊开 · 滚轮或拖动翻牌 · 点牌看它的时间维度')}
-function layoutFan(key){const g=groups().find(x=>x.key===key);if(!g)return;mode='fan';openKey=key;current=null;fanOff=Math.max(Math.min(fanOff,g.cards.length-1),0);document.getElementById('back').classList.add('on');
+let fanFilter='all';const FAN_FILTERS=[['all','全部'],['bad','卡住的'],['week','本周到期'],['review','等评审']];
+function fanCards(g){return g.cards.filter(p=>fanFilter==='all'||(fanFilter==='bad'&&health(p)==='bad')||(fanFilter==='week'&&p.plan&&(new Date(p.plan)-TODAY)/864e5<=7)||(fanFilter==='review'&&p.rounds[p.rounds.length-1].r==='pending'))}
+function renderChips(g){const el=document.getElementById('chips');el.classList.add('on');const cnt=k=>{const keep=fanFilter;fanFilter=k;const n=fanCards(g).length;fanFilter=keep;return n};el.innerHTML=FAN_FILTERS.map(([k,l])=>`<button data-f="${k}" aria-pressed="${k===fanFilter}">${l} ${cnt(k)}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{user();fanFilter=b.dataset.f;fanOff=0;layoutFan(openKey)}))}
+function layoutFan(key){const g0=groups().find(x=>x.key===key);if(!g0)return;mode='fan';openKey=key;current=null;const g={...g0,cards:fanCards(g0)};if(!g.cards.length){fanFilter='all';g.cards=g0.cards}fanOff=Math.max(Math.min(fanOff,g.cards.length-1),0);document.getElementById('back').classList.add('on');renderChips(g0);
   const n=g.cards.length,R=22,step=0.17;
-  g.cards.forEach((p,i)=>{const m=cards.get(p.id);const a=(i-fanOff)*step;const d=Math.abs(i-fanOff);m._goal.pos.set(Math.sin(a)*R,4.2-d*0.08,10-R+Math.cos(a)*R);m._goal.quat.copy(Q(0,-a,0));m._goal.scale=d===0?1.08:0.9});
+  g0.cards.forEach(p=>{if(!g.cards.includes(p)){const m=cards.get(p.id);setGoal(m,new THREE.Vector3((p.id%7-3)*1.2,0.3+(p.id%5)*0.08,18),Q(-Math.PI/2,0,0),0.8,{})}});
+  g.cards.forEach((p,i)=>{const m=cards.get(p.id);const a=(i-fanOff)*step;const d=Math.abs(i-fanOff);setGoal(m,new THREE.Vector3(Math.sin(a)*R,4.2-d*0.08,10-R+Math.cos(a)*R),Q(0,-a,0),d===0?1.08:0.9,{delay:(n-1-i)*0.045,rank:n-1-i})});
   // 其他堆留在原位,沉下去一点
   cards.forEach(m=>{if(m._in!==key){m._goal.scale=0.85}});
   labels.forEach(l=>l._op=0.35);
-  look([0,7.5,31],[0,4,-4]);setHint(`${g.label} · ${n} 张 · 滚轮 / 拖动翻牌,点中间那张看时间维度`);document.getElementById('stline').textContent=`轮播中 · ${g.label}`}
+  const cur=g.cards[fanOff];const why=cur?(health(cur)==='bad'?` · ${cur.name}:停在「${STAGES[cur.stage].n}」${cur.days} 天,等 ${WAIT[STAGES[cur.stage].k]}`:(health(cur)==='warn'?` · ${cur.name}:计划 ${cur.plan.slice(5)} 快到了`:'')):'';look([0,7.5,31],[0,4,-4]);setHint(`${g.label} · ${n} 张 · 滚轮 / 拖动翻牌,点中间那张看时间维度${why}`);document.getElementById('stline').textContent=`轮播中 · ${g.label}`}
 function layoutDetail(p){mode='detail';current=p;hoverSnap=null;document.getElementById('back').classList.add('on');
   // 牌先往上飞到时间轴的高度(停在「当前这一步」那张快照的背后),镜头跟着抬,牌桌自然落到画面外
-  const m=cards.get(p.id);m._goal.pos.set(-7.2,ALT+4.9,1.5);m._goal.quat.copy(Q(0,0.28,0));m._goal.scale=1.25;
+  const m=cards.get(p.id);setGoal(m,new THREE.Vector3(-7.2,ALT+4.9,1.5),Q(0,0.28,0),1.25,{});
   labels.forEach(l=>l._op=0);
   look([-2,9+ALT,27],[1.5,4.2+ALT,-5]);setHint('这是同一张牌在时间维度上的快照 · 点某一步看它的内容');renderFocus(null);document.getElementById('stline').textContent=`轮播中 · ${p.name}`;
   const token=++detailSeq;setTimeout(()=>{if(mode!=='detail'||current!==p||token!==detailSeq)return;buildTimeline(p)},650)}
 let detailSeq=0;
 function snapPos(i){return new THREE.Vector3(-2.4+i*2.6,ALT+4.9+0.08*i,0.5-i*2.3)}
+// 时长条:灰条 = 常规天数,彩条 = 实际天数(超了变琥珀 / 红),红点 = 被退回的次数
+function durBar(actual,normal,rejects,pos){const cv=document.createElement('canvas');cv.width=320;cv.height=48;const c=cv.getContext('2d');const W=280,scale=W/Math.max(normal*1.6,actual,1);
+  c.fillStyle='rgba(143,169,196,.28)';c.fillRect(20,18,normal*scale,10);c.fillStyle=actual>normal*1.3?'#c76b6b':(actual>normal?'#d9a441':'#5fd3c4');c.fillRect(20,18,Math.min(actual,normal*1.6)*scale,10);
+  for(let r=0;r<rejects;r++){c.fillStyle='#c76b6b';c.beginPath();c.arc(30+r*18,40,5,0,Math.PI*2);c.fill()}
+  const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:true,depthWrite:false}));sp.scale.set(2.2,2.2*48/320,1);sp.position.copy(pos);sp._op=1;sp.material.opacity=0;world.add(sp);labels.push(sp);return sp}
 // 时间维度:牌沿着「时间轴」向纵深展开成一列快照,每一步一张;从下面升上来
 function buildTimeline(p){clearAux();
   STAGES.forEach((s,i)=>{const status=i<p.stage?'done':(i===p.stage?'cur':'future');const sm=new THREE.Mesh(new THREE.PlaneGeometry(CW,CH),(()=>{const t=face(p,{i,status});return new THREE.MeshPhysicalMaterial({map:t,emissive:0xffffff,emissiveMap:t,transparent:true,opacity:0,roughness:0.25,metalness:0.1,clearcoat:0.8,side:THREE.DoubleSide,emissiveIntensity:status==='cur'?0.7:(status==='done'?0.5:0.25)})})());
     const base=snapPos(i);sm.position.copy(base).add(new THREE.Vector3(0,-2.5,0));sm.rotation.y=-0.42;sm.userData={kind:'snap',i,p};sm._base=base.clone();sm._goal=base.clone();sm._goalRot=-0.42;sm._goalScale=1;sm._goalOp=status==='future'?0.3:0.95;world.add(sm);snaps.push(sm);sm._cur=sm.position.clone();sm._hov=0;const sh=new THREE.Mesh(new THREE.PlaneGeometry(CW,CH),new THREE.MeshBasicMaterial({visible:false}));sh._snap=sm;world.add(sh);snapHits.push(sh);
-    const st=p.steps[i];tag(`<b>${s.n}</b>${st?fmt(st.enter)+(st.leave?' → '+fmt(st.leave):' → 今天')+' · '+st.len+'d':'常规 '+s.d+'d'}`,(status==='future'?'sm':'')+(i===p.stage?' '+(health(p)==='bad'?'bad':'live'):''),new THREE.Vector3(base.x,base.y-CH*0.5-0.7,base.z))});
+    const st=p.steps[i];tag(`<b>${s.n}</b>${st?fmt(st.enter)+(st.leave?' → '+fmt(st.leave):' → 今天')+' · '+st.len+'d':'常规 '+s.d+'d'}`,(status==='future'?'sm':'')+(i===p.stage?' '+(health(p)==='bad'?'bad':'live'):''),new THREE.Vector3(base.x,base.y-CH*0.5-0.7,base.z));
+    if(st)durBar(st.len,s.d,i===p.stage?p.rounds.filter(r=>r.r==='rej').length:0,new THREE.Vector3(base.x,base.y-CH*0.5-1.55,base.z+0.02))});
   const pts=STAGES.map((s,i)=>snapPos(i).add(new THREE.Vector3(0,-CH*0.5-0.35,0)));const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x3fa9cc,transparent:true,opacity:0.5}));world.add(line);pads.push(line)}
 function setHint(t){document.getElementById('hint').textContent=t}
 
 // ───────── HUD ─────────
 function renderTot(){const stuck=P.filter(p=>health(p)==='bad'),warn=P.filter(p=>health(p)==='warn'),handed=P.filter(p=>p.stage>=7);
-  document.getElementById('tot').innerHTML=`<div><div class="k">推进中的产品</div><div class="v">${P.length}<span class="u">PROJECTS</span></div></div><div><div class="k">卡住了</div><div class="v bad">${stuck.length}<span class="u">STUCK</span></div></div><div><div class="k">快到期</div><div class="v" style="color:var(--warn)">${warn.length}<span class="u">SOON</span></div></div><div><div class="k">已交采购</div><div class="v live">${handed.length}<span class="u">HANDED</span></div></div>`}
+  document.getElementById('tot').innerHTML=`<div><div class="k">推进中的产品</div><div class="v">${P.length}<span class="u">PROJECTS</span></div></div><div><div class="k">卡住了</div><div class="v bad">${stuck.length}<span class="u">STUCK</span></div></div><div><div class="k">快到期</div><div class="v" style="color:var(--warn)">${warn.length}<span class="u">SOON</span></div></div><div><div class="k">已交采购</div><div class="v live">${handed.length}<span class="u">HANDED</span></div></div><div><div class="k">本周到期</div><div class="v">${P.filter(p=>p.plan&&(new Date(p.plan)-TODAY)/864e5<=7&&new Date(p.plan)>=TODAY).length}<span class="u">THIS WEEK</span></div></div><div><div class="k">平均周期</div><div class="v">${Math.round(P.reduce((a,p)=>a+p.hist.reduce((x,y)=>x+y,0)+p.days,0)/P.length)}<span class="u">天 / 件</span></div></div>`;
+  // 今日动态:从数据里推——今天更新过的、刚被退回的、刚交采购的
+  const feed=[];P.filter(p=>p.upd===0).forEach(p=>feed.push({t:'今天',c:'',h:p.name,s:`${STAGES[p.stage].n}有更新 · ${p.owner}`}));
+  P.filter(p=>p.rounds.some(r=>r.r==='rej'&&(TODAY-r.t)/864e5<=2)).forEach(p=>feed.push({t:'昨天',c:'bad',h:p.name,s:'设计总监退回:'+p.rounds.find(r=>r.r==='rej').why.slice(0,12)}));
+  P.filter(p=>p.stage>=7&&p.days<=3).forEach(p=>feed.push({t:fmt(day(p.days)),c:'live',h:p.name,s:'转 SKU,交给采购下首单'}));
+  document.getElementById('feed').innerHTML='<div class="h">今日动态</div>'+feed.slice(0,6).map(f=>`<div class="i ${f.c}"><em>${f.t}</em><span><b>${f.h}</b> · ${f.s}</span></div>`).join('')}
 function renderFocus(p,i){const el=document.getElementById('focus');if(!p){el.classList.add('off');return}el.classList.remove('off');const s=STAGES[i],st=p.steps[i],h=health(p),cur=i===p.stage,done=i<p.stage;
   const pill=done?'<span class="st ok">已完成</span>':(cur?`<span class="st ${h}">${h==='bad'?'卡住 · 等 '+WAIT[s.k]:(h==='warn'?'快到期':'进行中')}</span>`:'<span class="st">还没到</span>');
   let html=`<div class="h"><span class="nm">${p.name} · ${s.n}</span>${pill}</div><div class="row"><span>负责人</span><em>${p.owner}</em></div><div class="row"><span>${st?'进入':'常规用时'}</span><em>${st?fmt(st.enter):s.d+' 天'}</em></div>${st?`<div class="row"><span>${st.leave?'离开':'已停'}</span><em>${st.leave?fmt(st.leave):st.len+' 天 / 常规 '+s.d+' 天'}</em></div>`:''}<div class="row"><span>评审人</span><em>${WAIT[s.k]}${i===2?' + 老板':''}</em></div>${cur&&p.plan?`<div class="row"><span>计划完成</span><em>${p.plan.slice(5)}</em></div>`:''}`;
@@ -320,7 +376,7 @@ canvas.addEventListener('pointerdown',e=>{user();downOnCanvas=true;if(mode==='fa
 window.addEventListener('pointerup',e=>{const was=dragging,mine=downOnCanvas;downOnCanvas=false;dragging=false;canvas.classList.remove('drag');if(!mine)return;if(was&&Math.abs(dragAcc)>6)return;pickClick()});
 canvas.addEventListener('wheel',e=>{if(mode!=='fan')return;e.preventDefault();user();const g=groups().find(x=>x.key===openKey);fanOff=Math.max(0,Math.min(g.cards.length-1,fanOff+Math.sign(e.deltaY+e.deltaX)));layoutFan(openKey)},{passive:false});
 function pickClick(){ray.setFromCamera(mouse,camera);
-  if(mode==='table'){const h=ray.intersectObjects(hits,false)[0];if(h){fanOff=0;layoutFan(h.object.userData.key);return}const c=ray.intersectObjects([...cards.values()].filter(m=>m._in&&groups().find(g=>g.key===m._in&&g.spread)),false)[0];if(c)layoutDetail(c.object._p)}   // 牌桌上点空白:已经是最外层,不动
+  if(mode==='table'){const h=ray.intersectObjects(hits,false)[0];if(h){fanOff=0;fanFilter='all';layoutFan(h.object.userData.key);return}const c=ray.intersectObjects([...cards.values()].filter(m=>m._in==='dense'||(m._in&&groups().find(g=>g.key===m._in&&g.spread))),false)[0];if(c)layoutDetail(c.object._p)}   // 牌桌上点空白:已经是最外层,不动
   else if(mode==='fan'){const c=ray.intersectObjects([...cards.values()].filter(m=>m._in===openKey),false)[0];if(c){const g=groups().find(x=>x.key===openKey);const idx=g.cards.indexOf(c.object._p);if(idx===fanOff)layoutDetail(c.object._p);else{fanOff=idx;layoutFan(openKey)}}else goBack()}
   else if(mode==='detail'){const s=ray.intersectObjects(snapHits,false)[0];if(s)focusStage(s.object._snap.userData.i);else goBack()}
   else if(mode==='stage'){const onSheet=ray.intersectObjects(stageProps,true)[0];if(!onSheet)goBack()}}
@@ -354,12 +410,12 @@ function resize(){const r=canvas.parentElement.getBoundingClientRect();renderer.
 let last=performance.now();const tmpQ=new THREE.Quaternion();
 function loop(now){const dt=Math.min(50,now-last);last=now;const k=reduced?1:1-Math.pow(0.001,dt/1000);
   camNow.pos.lerp(view.pos,k*0.9);camNow.tgt.lerp(view.tgt,k*0.9);camera.position.copy(camNow.pos);camera.lookAt(camNow.tgt);camLight.position.copy(camNow.pos).lerp(camNow.tgt,0.3);camLight.position.y+=4;
-  cards.forEach(m=>{const p=m._p,h=health(p);m._cur.lerp(m._goal.pos,k);m._hov=THREE.MathUtils.lerp(m._hov,m._hovT,k*1.5);m.position.copy(m._cur);m.position.y+=m._hov;m._hovT=0;m.quaternion.slerp(m._goal.quat,k);const s=THREE.MathUtils.lerp(m.scale.x,m._goal.scale,k);m.scale.setScalar(s);
-    m._glow.material.opacity=h==='bad'?(reduced?0.28:0.16+Math.sin(now*0.004+p.id)*0.12):(h==='warn'?0.08:0);m._front.emissiveIntensity=1.25});
+  cards.forEach(m=>{const p=m._p,h=health(p);const f=m._fl;if(f){const t=Math.min(1,Math.max(0,(now-f.t0)/f.dur));const e=ease(t);m._cur.copy(bezier(f,e));f.at.copy(m._cur);m.quaternion.copy(f.q0).slerp(f.q1,e);m.scale.setScalar(f.s0+(f.s1-f.s0)*e);if(t>=1){m._cur.copy(f.to);m._fl=null}}else{m._cur.lerp(m._goal.pos,k);m.quaternion.slerp(m._goal.quat,k);m.scale.setScalar(THREE.MathUtils.lerp(m.scale.x,m._goal.scale,k))}m._hov=THREE.MathUtils.lerp(m._hov,m._hovT,k*1.5);m.position.copy(m._cur);m.position.y+=m._hov;m._hovT=0;
+    m._glow.material.opacity=h==='bad'?(reduced?0.6:0.45+Math.sin(now*0.0035+p.id)*0.3):(h==='warn'?(reduced?0.5:0.4+Math.sin(now*0.0022+p.id)*0.2):0.42);m._front.emissiveIntensity=1.15});
   // 悬停:桌面上摊开的牌 / 扇面 / 快照
   ray.setFromCamera(mouse,camera);let hov=null;if(mode==='detail'||mode==='stage'){hov=mode==='detail'?ray.intersectObjects(snapHits,false)[0]:null;const hs=hov?hov.object._snap:null;snaps.forEach(s=>{const on=hs===s;s._cur.lerp(s._goal,k);s._hov=THREE.MathUtils.lerp(s._hov,on?0.35:0,k*1.5);s.position.copy(s._cur);s.position.y+=s._hov;s.rotation.y=THREE.MathUtils.lerp(s.rotation.y,s._goalRot,k);const sc=THREE.MathUtils.lerp(s.scale.x,s._goalScale,k);s.scale.setScalar(sc);s.material.opacity=THREE.MathUtils.lerp(s.material.opacity,s._goalOp,k);s.material.emissiveIntensity=on?0.95:(s.userData.i===current.stage?0.7:(s.userData.i<current.stage?0.5:0.25));const h=snapHits[s.userData.i];if(h){h.position.copy(s._cur);h.rotation.copy(s.rotation);h.scale.copy(s.scale)}});stageProps.forEach(o=>{o.position.lerp(o._goal,k);o.scale.lerp(o._gs,k);if(o._grot!==undefined)o.rotation.y=THREE.MathUtils.lerp(o.rotation.y,o._grot,k);
     if(o._pic){o._lit=THREE.MathUtils.lerp(o._lit,o._litT,k*0.55);const L=o._lit;o._pic.material.emissiveIntensity=L*0.95;o._pic.material.color.setScalar(0.06+0.94*L);o._strip.material.emissiveIntensity=L*2.4;o._wash.material.opacity=L;o._plate.material.emissiveIntensity=L*0.25;o.rotation.y=THREE.MathUtils.lerp(o.rotation.y,-mouse.x*0.2,k)}if(o._mat&&o._gop!==undefined)o._mat.opacity=THREE.MathUtils.lerp(o._mat.opacity,o._gop,k)})}
-  else{const list=mode==='table'?[...hits,...[...cards.values()].filter(m=>m._in&&groups().find(g=>g.key===m._in&&g.spread))]:[...cards.values()].filter(m=>m._in===openKey);hov=ray.intersectObjects(list,false)[0];if(hov&&hov.object.userData.kind==='card')hov.object._hovT=0.22;pads.forEach(pd=>{if(pd.material.emissiveIntensity!==undefined)pd.material.emissiveIntensity=(hov&&hov.object.userData.kind==='pile'&&Math.abs(pd.position.x-hov.object.position.x)<0.01)?0.35:0.08})}
+  else{const list=mode==='table'?[...hits,...[...cards.values()].filter(m=>m._in==='dense'||(m._in&&groups().find(g=>g.key===m._in&&g.spread)))]:[...cards.values()].filter(m=>m._in===openKey);hov=ray.intersectObjects(list,false)[0];if(hov&&hov.object.userData.kind==='card')hov.object._hovT=0.22;pads.forEach(pd=>{if(pd.material.emissiveIntensity!==undefined)pd.material.emissiveIntensity=(hov&&hov.object.userData.kind==='pile'&&Math.abs(pd.position.x-hov.object.position.x)<0.01)?0.35:0.08})}
   canvas.style.cursor=hov?'pointer':(mode==='fan'?'grab':'');
   labels.forEach(l=>{l.material.opacity=THREE.MathUtils.lerp(l.material.opacity,l._op,k)});
   tourTick(dt,now);renderer.render(scene,camera);requestAnimationFrame(loop)}
