@@ -425,5 +425,6 @@ function loop(now){const dt=Math.min(50,now-last);last=now;const k=reduced?1:1-M
 resize();renderTot();layoutTable();renderFocus(null);document.getElementById('status').classList.toggle('paused',!tourOn);if(!tourOn)document.getElementById('tour').textContent='继续轮播';requestAnimationFrame(loop);
 })();
 </script>
+<script src="preview.js"></script>
 </body>
 </html>
