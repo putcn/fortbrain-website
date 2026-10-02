@@ -51,7 +51,7 @@ export function blend(k, u) {
  * scroll events keeps the scene and the page in step even after the tab was hidden for a while.
  * Also toggles `.on` on each <section> as it enters the viewport (copy fade-in).
  */
-export function initStory({ onProgress, sections = document.querySelectorAll('main > section') }) {
+export function initStory({ onProgress, sections = document.querySelectorAll('main > section[data-stage]') }) {
   let last = -1
   const copies = [...sections].map((s) => [s, s.querySelector('.copy') || s])
   // Copy fade-in is computed here rather than with IntersectionObserver: the copy blocks are

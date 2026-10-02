@@ -46,6 +46,13 @@ python3 scripts/build-geo.py     # 读 ~/Fortbrain/packs/mxipos/app/geo/320300.j
 | `js/scene.js` | Three.js 场景：底图、方块、七个特写状态、极光、滚动驱动的镜头 |
 | `js/demo.js` / `js/demo-steps.js` / `js/demos/*.js` | 演示浮层壳、步骤机（纯逻辑，有测试）、每章一个前端 mock 演示；`#demo=hybrid` 直达 |
 | `css/demo.css` | 演示浮层与产品暗色令牌（`fbd-` 前缀） |
+| `js/tail.js` | 首页尾部「最新」面板（最新一篇 Blog + 最新一个 UX 实验，读两个 JSON）和右上角一滚动就隐藏的 Blog 链接 |
+| `scripts/build-site.py` | Blog 与 UX Sandbox 索引的生成器（Markdown → 静态页，双语） |
+| `css/sub.css` / `js/sub.js` | 子站共用样式与语言切换 |
+| `js/preview-loader.js` / `concepts/preview.js` | 缩略实时演示：索引页按视口懒加载 iframe（桌面最多 3 个），概念页 `?preview=1` 隐藏操作面板 |
+| `blogs/` | `posts/<slug>/{zh,en}.md` 是源；其余是生成产物 |
+| `concepts/concepts.json` | UX Sandbox 概念表；`concepts/index.html` 由它生成 |
+| `sf-tour.html` | 跳转页 → `concepts/sf-tour.html`（旧链接保留） |
 | `js/layers.js` | 界面拆解段的 CSS 3D 飞入 / 停留 / 飞出 |
 | `js/story.js` | 滚动进度 → 段号与段内进度；段落淡入 |
 | `js/i18n.js` | 中英文案表 |

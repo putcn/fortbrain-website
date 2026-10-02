@@ -2,10 +2,11 @@ import { TEXTS, detectLang, applyLang } from './i18n.js'
 import { initStory } from './story.js'
 import { createLayers } from './layers.js'
 import { initDemos } from './demo.js'
+import { initTail } from './tail.js'
 
 // Bump on each deploy: the scene module is imported with this as a query so browsers (and the
 // 10-minute GitHub Pages cache) never keep serving an old scene.js against a new page.
-const VERSION = '2026-09-21d'
+const VERSION = '2026-10-02a'
 const params = new URLSearchParams(location.search)
 const errors = []
 window.addEventListener('error', (e) => errors.push(String(e.message || e)))
@@ -21,6 +22,7 @@ function setLang(l) {
   lang = applyLang(l)
   view?.setStoreWord?.(TEXTS[lang].ui.storeWord, TEXTS[lang].ui.storeSub)
   window.__fb.demos?.refresh()
+  window.__fb.tail?.refresh()
 }
 setLang(lang)
 document.getElementById('langBtn').addEventListener('click', () => setLang(lang === 'zh' ? 'en' : 'zh'))
@@ -73,5 +75,6 @@ async function boot() {
     onOpen: () => { paused = true }, onClose: () => { paused = false; story.refresh() },
   })
   window.__fb.demos = demos
+  window.__fb.tail = initTail({ getLang: () => lang })
 }
 boot()

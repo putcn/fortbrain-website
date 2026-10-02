@@ -50,6 +50,7 @@ export const TEXTS = {
     demoBtn: '查看演示',
     demoSoon: '演示即将上线',
     demoUi: { close: '关闭', prev: '上一步', next: '下一步', play: '自动播放', pause: '暂停', step: '第 {i} / {n} 步' },
+    tail: { latest: '最新', blog: 'Blog', sandbox: 'UX Sandbox', allPosts: '全部文章 →', allConcepts: '全部实验 →', none: '—', zhOnly: '' },
     demos: {
       hybrid: {
         title: '端云同境 · 本地桥接',
@@ -161,6 +162,7 @@ export const TEXTS = {
     demoBtn: 'See it in action',
     demoSoon: 'Demo coming soon',
     demoUi: { close: 'Close', prev: 'Back', next: 'Next', play: 'Auto-play', pause: 'Pause', step: 'Step {i} / {n}' },
+    tail: { latest: 'Latest', blog: 'Blog', sandbox: 'UX Sandbox', allPosts: 'All posts →', allConcepts: 'All experiments →', none: '—', zhOnly: 'Chinese only' },
     demos: {
       hybrid: {
         title: 'Hybrid Context · Local bridge',

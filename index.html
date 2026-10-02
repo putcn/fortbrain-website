@@ -18,7 +18,7 @@
 } }
 </script>
 </head>
-<body>
+<body class="home">
 
 <canvas id="gl" aria-hidden="true"></canvas>
 <canvas id="aurora2d" aria-hidden="true" hidden></canvas>
@@ -71,6 +71,7 @@
 </div>
 
 <button id="langBtn" type="button" aria-label="Switch language" data-i18n="lang"></button>
+<a id="blogLink" href="blogs/" target="_blank" rel="noopener">Blog</a>
 <div class="brand" aria-hidden="true">Fortbrain</div>
 
 <main>
@@ -154,6 +155,30 @@
       <p class="contact"><span data-i18n="contactPre"></span> <a id="mail" href="#"></a></p>
     </div>
   </section>
+
+  <section class="s-tail" aria-label="Latest">
+    <div class="tail-panel">
+      <div class="tail-head"><span class="label" data-i18n="tail.latest"></span></div>
+      <div class="tiles">
+        <a class="tile tile-blog" href="blogs/" target="_blank" rel="noopener">
+          <div class="tile-text">
+            <div class="eyebrow" data-i18n="tail.blog"></div>
+            <div class="meta"><span class="chip"></span><time></time></div>
+            <h3></h3><p></p>
+            <div class="go" data-i18n="tail.allPosts"></div>
+          </div>
+        </a>
+        <a class="tile tile-sandbox" href="concepts/" target="_blank" rel="noopener">
+          <div class="pv" data-letter=""></div>
+          <div class="tile-text">
+            <div class="eyebrow" data-i18n="tail.sandbox"></div>
+            <h3></h3><p></p>
+            <div class="go" data-i18n="tail.allConcepts"></div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
 </main>
 
 <div id="demo" hidden role="dialog" aria-modal="true">
@@ -168,6 +193,6 @@
   </div>
 </div>
 
-<script type="module" src="js/main.js?v=2026-09-21d"></script>
+<script type="module" src="js/main.js?v=2026-10-02a"></script>
 </body>
 </html>
