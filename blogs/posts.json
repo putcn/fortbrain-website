@@ -1,5 +1,22 @@
 [
   {
+    "slug": "sales-forecast-research",
+    "date": "2026-10-02",
+    "tags": [
+      "tech"
+    ],
+    "title": {
+      "zh": "销量预测：在真实门店数据上，我们试了什么、准到什么程度",
+      "en": "Sales forecasting: what we tried on real store data, and how accurate it got"
+    },
+    "summary": {
+      "zh": "用 Chronos-2 基础模型在一家 21 店连锁 16 个月的真实销售数据上做滚动回测：三种口径、两个模型、校准、节假日、天气。哪些过了关、哪些没过，偏差到底有多大，都写在这里。",
+      "en": "Rolling backtests of the Chronos-2 foundation model on 16 months of real sales from a 21-store chain: three targets, two models, calibration, holidays, weather. What passed, what failed, and how large the errors really are."
+    },
+    "url": "/blogs/sales-forecast-research/",
+    "hasEn": true
+  },
+  {
     "slug": "hybrid-context",
     "date": "2026-10-02",
     "tags": [

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="用 Chronos-2 基础模型在一家 21 店连锁 16 个月的真实销售数据上做滚动回测：三种口径、两个模型、校准、节假日、天气。哪些过了关、哪些没过，偏差到底有多大，都写在这里。">
+<meta property="og:title" content="销量预测：在真实门店数据上，我们试了什么、准到什么程度 · Fortbrain Blog">
+<meta property="og:description" content="用 Chronos-2 基础模型在一家 21 店连锁 16 个月的真实销售数据上做滚动回测：三种口径、两个模型、校准、节假日、天气。哪些过了关、哪些没过，偏差到底有多大，都写在这里。">
+<meta name="theme-color" content="#050b18">
+<link rel="canonical" href="https://fortbrain.ai/blogs/sales-forecast-research/">
+<title>销量预测：在真实门店数据上，我们试了什么、准到什么程度 · Fortbrain Blog</title>
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/css/sub.css">
+</head>
+<body class="sub sub-blog">
+<header class="topbar">
+  <a class="brand" href="/">Fortbrain</a>
+  <span class="site"><span lang="zh-CN">Blog</span><span lang="en">Blog</span></span>
+  <nav class="links">
+    <a href="/blogs/">Blog</a>
+    <a href="/concepts/">UX Sandbox</a>
+    <button id="langBtn" type="button" aria-label="Switch language"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+  </nav>
+</header>
+<main class="wrap">
+<a class="back" href="/blogs/"><span lang="zh-CN">← 全部文章</span><span lang="en">← All posts</span></a>
+<article class="article">
+  <header>
+    <div class="meta"><time datetime="2026-10-02">2026-10-02</time><span class="chip chip-tech"><span lang="zh-CN">技术</span><span lang="en">Tech</span></span></div>
+    <h1><span lang="zh-CN">销量预测：在真实门店数据上，我们试了什么、准到什么程度</span><span lang="en">Sales forecasting: what we tried on real store data, and how accurate it got</span></h1>
+    <p class="lede"><span lang="zh-CN">用 Chronos-2 基础模型在一家 21 店连锁 16 个月的真实销售数据上做滚动回测：三种口径、两个模型、校准、节假日、天气。哪些过了关、哪些没过，偏差到底有多大，都写在这里。</span><span lang="en">Rolling backtests of the Chronos-2 foundation model on 16 months of real sales from a 21-store chain: three targets, two models, calibration, holidays, weather. What passed, what failed, and how large the errors really are.</span></p>
+  </header>
+  <div class="body" lang="zh-CN">
+<p>Fortbrain 的预测引擎给门店算三件事：<strong>明天到后两周每天能收多少钱</strong>（收入）、<strong>这个商品在这家店未来 45 天能卖多少件</strong>（采购）、<strong>未来两周卖多少件</strong>（备货）。2026 年 9 月，现役模型在暑期结束的急跌里滞后了一到两周，周 WAPE 一度到 1.04，连「上周照搬」都没赢。我们停下来做了一轮系统的实验。这篇讲做了什么、结论是什么、还差什么。</p>
+<h2 id="_1">先定规矩，再看结果</h2>
+<ul>
+<li><strong>不偷看</strong>：每个回测区间只用起点以前的数据，模型调优也只用这些数据。</li>
+<li><strong>判据事先定</strong>：每个实验先写下「过关要好多少」，再跑；看了结果才想到的改法，不能在同一份数据上验。</li>
+<li><strong>两个随机种子</strong>：LoRA 调优有随机性，差别小于种子波动的不下结论。</li>
+<li><strong>赢不了现役模型和「上周照搬」的东西不上线</strong>。</li>
+</ul>
+<p>数据：一家本地连锁，21 家店、1,314 个商品、2,864 条「店 × 商品」序列，2025-06 到 2026-09 共 480 天。按「店 × 商品 × 天」看，<strong>八成格子是 0</strong>。</p>
+<h2 id="_2">三种口径，两个模型</h2>
+<table>
+<thead>
+<tr>
+<th>口径</th>
+<th>预测什么</th>
+<th>模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>收入</td>
+<td>每家店每天的收入，未来 14 天</td>
+<td>门店 × 天收入序列（21 条，不稀疏）</td>
+</tr>
+<tr>
+<td>采购</td>
+<td>每家店每个商品未来 45 天的件数</td>
+<td>店 × 商品 × 7 天块的件数（2,864 条）</td>
+</tr>
+<tr>
+<td>备货</td>
+<td>每家店每个商品未来 14 天的件数</td>
+<td>同上，只看前两块</td>
+</tr>
+</tbody>
+</table>
+<p>基础模型是 Chronos-2，用本地数据做 LoRA 调优，每 28 天重调一次；两个模型都带日历协变量（节假日、暑假、周末、星期几）和「去年同期」。收入<strong>不从单品加总</strong>：门店日收入是合计序列，稳得多。</p>
+<p>我们也试过给备货单独调一个「只预测两周」的模型。结果反而差 1.3–2.2 个百分点：按更长视界调优时，模型被迫学会跨几周的走势，这对近期同样有用。<strong>不拆，保持两个模型。</strong></p>
+<h2 id="_3">能准到什么程度</h2>
+<p>最终方案在 2026 年 6 月以后的切点上滚动回测（偏差 = 预测 ÷ 实际 − 1，负 = 报少）：</p>
+<table>
+<thead>
+<tr>
+<th>口径</th>
+<th>总偏差</th>
+<th>WAPE</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>收入（门店 × 天，14 天）</td>
+<td><strong>−4.7%</strong></td>
+<td>40.8%</td>
+<td>全连锁单日有 49.5% 落在 ±20% 内，门店单日只有 25%</td>
+</tr>
+<tr>
+<td>采购（店 × 商品，45 天）</td>
+<td>−17.1%</td>
+<td>42.6%</td>
+<td>只有 5 个切点，样本小</td>
+</tr>
+<tr>
+<td>备货（店 × 商品，14 天）</td>
+<td>−7.3%</td>
+<td>45.0%</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>三条规律：<strong>越往上汇总越准</strong>；<strong>单个商品的偏差中位数是负的</strong>（多数商品报少、少数报多很多），所以采购和备货如果要保不缺货，应另按服务水平取高分位；<strong>季节转换月偏差最大</strong>（暑期起量的 7 月采购 −29.5%，暑期结束的 9 月收入 +21.5%）。能提前告诉模型「要转了」的去年同期，21 家店里只有约 4 家有——数据满一年后会自然变好。</p>
+<h2 id="_4">校准：哪种有效，哪种过头</h2>
+<p>中位数最小化 WAPE，却<strong>系统性偏少</strong>。我们比了十种校准：</p>
+<ul>
+<li><strong>回测选分位</strong>最合理：每次预测前，在最近两个历史折上挑总量最接近实际的分位（60%–80%）。每周合计误差从 0.390 降到 0.268（<strong>少三成</strong>），WAPE 不变，没有任何人手写的数。</li>
+<li><strong>滚动校准全部矫枉过正</strong>：用前几次的偏差修下一次，偏少被改成偏多 6%–24%。偏差随季节来回摆，这种修法永远慢一拍。</li>
+<li><strong>自上而下</strong>（先预测合计再按份额分）没用：合计序列本身也跟不上涨势。</li>
+</ul>
+<h2 id="_5">节假日：必须喂，而且要配合调优</h2>
+<ul>
+<li>只把节假日信息喂给不调优的模型，有好有坏；<strong>配合调优后 5 个区间全部改善</strong>——模型要从我们自己的数据里学到「假日天数」和销量的关系。</li>
+<li>按商品每天的模型加日历后，节假日那几周的 WAPE 从 78% 降到 66%，报少从 −53% 收到 −34%；代价是推理时间约 4 倍。</li>
+<li><strong>调休上班日</strong>原来被当成周末，模型报多 47%–61%；按工作日喂进去后，补班日 WAPE 从 106% 降到 70%。</li>
+<li><strong>连休最后一天</strong>：我们自己的数据里，模型在假期最后一天系统性报多（中秋那天报多九成）。这是看了结果才想到的，不能在同一份数据上验，于是拿一份独立的公开数据——九寨沟八年的每日进沟人数——做正式检验：加上「连休最后一天」一列后，最后一天的 WAPE 从 43% 降到 22%，偏差从 +41% 收到 +8%，其他日子不受影响。春节例外（春节最后一天人还很多），上线时排除。这一列已经进了生产模型。</li>
+</ul>
+<h2 id="_6">天气：现象是真的，但没过关</h2>
+<ul>
+<li>把降水、气温当协变量喂进收入模型：雨天确实被纠过来了（模型在雨天报多 15%，加了降水后到 −2%），但非雨天的误差大了 1 个百分点，雨天只占两成，一正一负抵掉，整体 WAPE 反而略差。<strong>不进生产。</strong></li>
+<li>更窄的做法：预报未来 1–3 天有 ≥ 10 mm 的雨时，对那几天乘一个从历史学到的系数（约 0.83）。两个种子都过了判据——被触发日 WAPE 好 3.8 个百分点、偏差从 +21% 到 −5%。但一年只触发 13 天，分量有限。</li>
+<li>把冷、热、雨、风、雪合成「舒适 / 较差 / 恶劣」三档：<strong>不过</strong>，打分分不开好坏天气。单项里只有「气温骤降 ≥ 8 ℃」很明显（实收只有预测的 63%），但只有 16 天，还要新数据验。</li>
+</ul>
+<h2 id="_7">接下来</h2>
+<ol>
+<li>2026 年国庆是一次真正的「预测后验证」：9 月底存下预测，11 月拿实际对。比任何回测都可信。</li>
+<li>数据满一年，所有店都有去年同期，季节转换月的偏差应该明显收窄。</li>
+<li>带日历的单品模型推理时间翻了 4 倍，上线前要先解决：代算交给本地显卡，或者把每晚的推理量砍掉大半。</li>
+</ol>
+<p>所有实验脚本、判据和结果都留在仓库里，每一条结论都能复现。做预测这件事，准不准由数据说了算。</p>
+  </div>
+  <div class="body" lang="en">
+<p>Fortbrain's forecast engine answers three questions for a store: <strong>how much revenue each day for the next two weeks</strong> (revenue), <strong>how many units of this product this store will sell in the next 45 days</strong> (purchasing), and <strong>how many in the next two weeks</strong> (replenishment). In September 2026 the production model lagged one to two weeks behind the post-summer drop; weekly WAPE reached 1.04, worse than simply repeating last week. We stopped and ran a systematic set of experiments. This is what we did, what we concluded, and what is still missing.</p>
+<h2 id="rules-first-results-second">Rules first, results second</h2>
+<ul>
+<li><strong>No peeking</strong>: every backtest window uses only data before its start, including for fine-tuning.</li>
+<li><strong>Pass criteria written down in advance</strong>: each experiment states how much better it must be before it runs. An idea that came from looking at results cannot be validated on the same data.</li>
+<li><strong>Two random seeds</strong>: LoRA fine-tuning is stochastic; differences smaller than the seed spread are not conclusions.</li>
+<li><strong>Nothing ships unless it beats the production model and "repeat last week".</strong></li>
+</ul>
+<p>Data: a local chain, 21 stores, 1,314 products, 2,864 store × product series, 480 days from June 2025 to September 2026. At store × product × day granularity, <strong>eight cells in ten are zero</strong>.</p>
+<h2 id="three-targets-two-models">Three targets, two models</h2>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>What is forecast</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revenue</td>
+<td>Each store's daily revenue, next 14 days</td>
+<td>Store × day revenue series (21 series, dense)</td>
+</tr>
+<tr>
+<td>Purchasing</td>
+<td>Units per store × product over the next 45 days</td>
+<td>Store × product × 7-day blocks (2,864 series)</td>
+</tr>
+<tr>
+<td>Replenishment</td>
+<td>Units per store × product over the next 14 days</td>
+<td>Same model, first two blocks</td>
+</tr>
+</tbody>
+</table>
+<p>The base model is Chronos-2, fine-tuned with LoRA on local data and re-tuned every 28 days; both models take calendar covariates (holidays, summer break, weekends, weekday) and "same period last year". Revenue is <strong>not summed from products</strong>: a store's daily revenue is an aggregate series and far more stable.</p>
+<p>We also tried a dedicated replenishment model tuned to predict only two weeks. It was worse by 1.3–2.2 points: tuning on a longer horizon forces the model to learn multi-week movements, and that helps the near term too. <strong>Two models, not three.</strong></p>
+<h2 id="how-accurate">How accurate</h2>
+<p>The final scheme, rolling backtests on cut-offs from June 2026 (bias = forecast ÷ actual − 1, negative = under-forecast):</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Total bias</th>
+<th>WAPE</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revenue (store × day, 14 d)</td>
+<td><strong>−4.7%</strong></td>
+<td>40.8%</td>
+<td>49.5% of chain-wide days within ±20%; only 25% of single store-days</td>
+</tr>
+<tr>
+<td>Purchasing (store × product, 45 d)</td>
+<td>−17.1%</td>
+<td>42.6%</td>
+<td>only 5 cut-offs, small sample</td>
+</tr>
+<tr>
+<td>Replenishment (store × product, 14 d)</td>
+<td>−7.3%</td>
+<td>45.0%</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Three patterns. <strong>Aggregates are more accurate than parts.</strong> <strong>The median per-product bias is negative</strong> (most products under, a few far over), so purchasing and replenishment that must avoid stock-outs should take a high quantile by service level instead. <strong>Seasonal transitions carry the largest errors</strong> (purchasing −29.5% in July as summer ramps up, revenue +21.5% in September as it ends). Only about 4 of the 21 stores have last-year data that could warn the model of the turn; after a full year of data this improves by itself.</p>
+<h2 id="calibration-what-works-what-overshoots">Calibration: what works, what overshoots</h2>
+<p>The median minimises WAPE but is <strong>systematically low</strong>. We compared ten calibrations:</p>
+<ul>
+<li><strong>Quantile selected by backtest</strong> is the sound one: before each forecast, pick the quantile (60%–80%) whose total was closest to actual on the last two historical folds. Weekly total error fell from 0.390 to 0.268 (<strong>a third less</strong>), WAPE unchanged, no hand-written numbers anywhere.</li>
+<li><strong>Rolling calibration overshoots every time</strong>: correcting the next forecast by the last few errors turned under-forecasts into +6% to +24% over. Bias swings with the season; this correction is always one step behind.</li>
+<li><strong>Top-down</strong> (forecast the total, split by share) does not help: the aggregate cannot keep up with a ramp either.</li>
+</ul>
+<h2 id="holidays-feed-them-and-fine-tune-with-them">Holidays: feed them, and fine-tune with them</h2>
+<ul>
+<li>Holiday covariates fed to an un-tuned model help sometimes and hurt sometimes; <strong>with fine-tuning they improve all five windows</strong>. The model has to learn from our own data how holiday days map to sales.</li>
+<li>Adding the calendar to the per-product daily model cut holiday-week WAPE from 78% to 66% and under-forecasting from −53% to −34%, at roughly 4× inference time.</li>
+<li><strong>Make-up workdays</strong> (weekend days worked to extend a holiday) were treated as weekends and over-forecast by 47%–61%; fed as workdays, their WAPE dropped from 106% to 70%.</li>
+<li><strong>Last day of a holiday block</strong>: in our data the model systematically over-forecasts the last day (90% over on Mid-Autumn day). That idea came from looking at results, so it could not be validated on the same data. We tested it on an independent public dataset, eight years of daily visitor counts at the Jiuzhaigou national park: a single "last day of the block" column cut last-day WAPE from 43% to 22% and bias from +41% to +8%, with other days unaffected. Spring Festival is the exception (its last day stays busy) and is excluded. The column is in production now.</li>
+</ul>
+<h2 id="weather-the-effect-is-real-the-gate-was-not-passed">Weather: the effect is real, the gate was not passed</h2>
+<ul>
+<li>Precipitation and temperature as covariates in the revenue model: rainy days were corrected (from +15% over to −2%), but non-rainy days got 1 point worse, rain is only a fifth of days, and the two cancelled out; overall WAPE slightly worse. <strong>Not shipped.</strong></li>
+<li>A narrower rule: when the forecast says ≥ 10 mm of rain in the next 1–3 days, multiply those days by a factor learned from history (about 0.83). Both seeds passed: triggered days improved by 3.8 WAPE points, bias from +21% to −5%. Only 13 days a year trigger, so the weight is modest.</li>
+<li>Folding cold, heat, rain, wind and snow into a three-level "comfort" score: <strong>failed</strong>; the score does not separate good days from bad. The only clear single factor is a <strong>temperature drop of ≥ 8 °C</strong> (actual revenue 63% of forecast), on 16 days only, pending new data.</li>
+</ul>
+<h2 id="next">Next</h2>
+<ol>
+<li>National Day 2026 is a true out-of-sample test: forecasts stored at the end of September, compared with actuals in November. More credible than any backtest.</li>
+<li>With a full year of data, every store gets a last-year reference and transition-month errors should narrow.</li>
+<li>The calendar-aware product model is 4× slower at inference; before it ships, either offload to a local GPU or cut nightly inference volume by most of it.</li>
+</ol>
+<p>Every script, criterion and result stays in the repository, and every conclusion can be reproduced. Whether a forecast is good is decided by the data.</p>
+  </div>
+</article>
+<nav class="pn"><span></span><a class="next" href="/blogs/hybrid-context/"><small><span lang="zh-CN">下一篇</span><span lang="en">Next</span></small><span lang="zh-CN">端云同境：本地的留在本地，助理照样干活</span><span lang="en">Hybrid Context: local stays local, the assistant still does the work</span></a></nav>
+</main>
+<footer class="foot"><span lang="zh-CN">Fortbrain · 概念稿只用示例数据，不连任何真实服务</span><span lang="en">Fortbrain · Concepts use sample data only and talk to no real service</span> · <a href="/">fortbrain.ai</a></footer>
+<script type="module" src="/js/sub.js"></script>
+</body>
+</html>
