@@ -2,17 +2,17 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { STAGES, HOLD, progressToStage, blend, LAYERS_STAGE } from '../js/story.js'
 
-test('there are 10 stages: hero 1 screen, thesis 2, layers 3, six chapters 1.5 each, finale 2', () => {
+test('there are 10 stages: hero 1 screen, thesis 2, layers 3, six chapters 1.5 each, finale 3', () => {
   assert.equal(STAGES.length, 10)
-  assert.deepEqual(STAGES, [1, 2, 3, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2])
+  assert.deepEqual(STAGES, [1, 2, 3, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 3])
   assert.equal(STAGES[LAYERS_STAGE], 3)
-  assert.equal(STAGES.reduce((a, b) => a + b, 0), 17)
+  assert.equal(STAGES.reduce((a, b) => a + b, 0), 18)
 })
 
 test('progressToStage follows the DOM: p spans (total − 1) screens of scroll', () => {
   assert.deepEqual(progressToStage(0), { k: 0, u: 0 })
   assert.deepEqual(progressToStage(1), { k: 9, u: 1 })
-  const scrollable = STAGES.reduce((a, b) => a + b, 0) - 1   // 16 screens
+  const scrollable = STAGES.reduce((a, b) => a + b, 0) - 1   // 17 screens
   const at = (screens) => progressToStage(screens / scrollable)
   // section tops: 0, 1, 3, 6, 7.5, 9, 10.5, 12, 13.5, 15 screens
   const h0 = at(0.5); assert.equal(h0.k, 0); assert.ok(Math.abs(h0.u - 0.5) < 1e-9)
@@ -23,9 +23,9 @@ test('progressToStage follows the DOM: p spans (total − 1) screens of scroll',
   const h3 = at(6.75); assert.equal(h3.k, 3); assert.ok(Math.abs(h3.u - 0.5) < 1e-9)   // half of a 1.5-screen chapter
   const s7 = at(12); assert.equal(s7.k, 7); assert.ok(Math.abs(s7.u) < 1e-9)           // hybrid chapter
   const s8 = at(13.5); assert.equal(s8.k, 8); assert.ok(Math.abs(s8.u) < 1e-9)
-  // finale: its top reaches the viewport at 15 screens, and the one remaining screen is u 0→1
+  // finale: its top reaches the viewport at 15 screens, and the two remaining screens are u 0→1
   const s9 = at(15); assert.equal(s9.k, 9); assert.ok(Math.abs(s9.u) < 1e-9)
-  const m9 = at(15.5); assert.equal(m9.k, 9); assert.ok(Math.abs(m9.u - 0.5) < 1e-9)
+  const m9 = at(16); assert.equal(m9.k, 9); assert.ok(Math.abs(m9.u - 0.5) < 1e-9)
   assert.deepEqual(progressToStage(-1), { k: 0, u: 0 })
   assert.deepEqual(progressToStage(2), { k: 9, u: 1 })
 })

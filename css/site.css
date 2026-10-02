@@ -104,6 +104,7 @@ body.demo-open { overflow: hidden; }
 @keyframes hint { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
 
 .s-end .copy { max-width: 860px; }
+section.s-end { min-height: 300svh; }   /* pinned two screens: the tail panel slides over the second */
 .answer { font-size: clamp(1.8rem, 3.6vw, 2.8rem); font-weight: 300; }
 .answer em { font-style: normal; font-weight: 500; color: var(--gold); }
 .result { font-size: clamp(1.05rem, 1.6vw, 1.3rem) !important; color: var(--acc) !important; margin-bottom: 22px; letter-spacing: .02em; }

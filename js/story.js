@@ -9,11 +9,12 @@
  * Hero: one unpinned screen (the first scroll already moves the title; the camera leaves early, see HOLD).
  * Thesis: two screens (pinned one). Layers: three. Six chapters: 1.5 each — the sticky copy holds half a
  * screen, then scrolls out while the camera flies on; depth lives in the demos, not in the scroll.
- * The page can only scroll until the last section's top reaches the viewport top, so the finale's
- * second screen is the one screen of travel it actually has.
+ * Finale: three screens — two of pinned travel; the tail panel (latest post / concept) slides up
+ * over the second one. The page can only scroll until the last section's top reaches the viewport
+ * top, so a stage's last screen is never travelled.
  */
 export const LAYERS_STAGE = 2
-export const STAGES = [1, 2, 3, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2]
+export const STAGES = [1, 2, 3, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 3]
 /** Fraction of a stage the camera holds before easing to the next stage (hero: almost none). */
 export const HOLD = STAGES.map((_, k) => (k === 0 ? 0.2 : 0.5))
 const TOTAL = STAGES.reduce((a, b) => a + b, 0)
