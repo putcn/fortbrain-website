@@ -1,0 +1,1131 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>私人助理消息分组 · 手机版概念稿</title>
+<style>
+/* ════ 下面这一大段是产品真实的样式,原样内嵌(tokens.css + fb.css + ChatListViewMobile 的 scoped 样式)
+       ——概念稿不自造一套观感,不然「看着还行」到了代码里就不是那么回事 ════ */
+/* ── Fortbrain UI 令牌(docs/design/ui-standard.md §2)──
+   唯一的颜色 / 表面 / 阴影 / 圆角 / 动效 / 层级来源。组件只能引用这些变量,不得写十六进制色。
+   暗色在 html.dark 下重定义同名变量;组件里不写 dark: 变体。 */
+:root {
+  /* 颜色 */
+  --fb-bg: #eef0f3;
+  --fb-bg-2: #e6e9ed;
+  --fb-ink: #111827;
+  --fb-ink-2: #374151;
+  --fb-ink-3: #6b7280;
+  --fb-ink-4: #9ca3af;
+  --fb-line: rgba(17, 24, 39, .06);
+  --fb-line-2: rgba(17, 24, 39, .10);
+  --fb-live: #22c55e;
+  --fb-live-ink: #15803d;
+  --fb-live-soft: rgba(34, 197, 94, .14);
+  --fb-bad: #ef4444;
+  --fb-bad-ink: #b91c1c;
+  --fb-bad-soft: rgba(239, 68, 68, .12);
+  --fb-warn: #f59e0b;
+  --fb-warn-ink: #b45309;
+  --fb-warn-soft: rgba(245, 158, 11, .14);
+  --fb-info: #3b82f6;
+  --fb-info-soft: rgba(59, 130, 246, .12);
+  --fb-chart-1: #3b82f6;
+  --fb-chart-2: #93c5fd;
+  --fb-chart-3: #1d4ed8;
+  --fb-chart-4: #22c55e;
+  --fb-chart-5: #9ca3af;
+  --fb-chart-6: #d1d5db;
+  --fb-glow: rgba(34, 197, 94, .28);
+  --fb-grid: rgba(17, 24, 39, .045);
+  --fb-mute-soft: rgba(17, 24, 39, .06);
+  --fb-hover: rgba(255, 255, 255, .45);
+  --fb-row-hover: rgba(255, 255, 255, .35);
+  --fb-row-on: rgba(255, 255, 255, .60);
+  --fb-well: rgba(17, 24, 39, .04);          /* 分段 tab 的槽、灰色凹槽 */
+  --fb-inverse: #111827;                       /* 主按钮、tooltip:黑 */
+  --fb-inverse-ink: #ffffff;
+  --fb-inverse-soft: rgba(255, 255, 255, .16);   /* 反色底上的浅面(气泡里的附件、代码) */
+  /* 聊天气泡走 iOS 的口径:自己 = 系统蓝底白字,对方 = 浅灰底黑字 */
+  --fb-bubble-me: #007aff;
+  --fb-bubble-me-ink: #ffffff;
+  --fb-bubble-them: rgba(120, 120, 128, .12);
+  --fb-bubble-them-ink: var(--fb-ink);
+  /* iOS 风格的成组列表:整块不透明底,分隔线缩进到文字起点 */
+  --fb-list-surface: #ffffff;
+  --fb-on-accent-soft: rgba(255, 255, 255, .22);
+  --fb-on-accent-soft-hi: rgba(255, 255, 255, .32);
+
+  /* 表面 */
+  --fb-l0: rgba(255, 255, 255, .50);
+  --fb-l1: rgba(255, 255, 255, .62);
+  --fb-l2: rgba(255, 255, 255, .74);
+  --fb-l3: rgba(255, 255, 255, .80);
+  --fb-l4: rgba(255, 255, 255, .86);
+  --fb-card: rgba(255, 255, 255, .82);
+  --fb-card-edge: rgba(255, 255, 255, .70);
+  /* 「一摞」:分组卡自己的面 + 底下两张纸边。越往下越接近背景色——
+     亮度梯度才是厚度的来源;三层同色会糊成一张更高的卡。 */
+  --fb-stack-face: rgba(255, 255, 255, .46);
+  --fb-stack-face-hover: rgba(255, 255, 255, .60);
+  --fb-stack-edge: rgba(17, 24, 39, .11);
+  --fb-stack-sheet-1: rgba(17, 24, 39, .055);
+  --fb-stack-sheet-2: rgba(17, 24, 39, .085);
+  /* 输入框是「凹」的:底比白卡更透,边是深色发丝线——白卡那条白边在浅玻璃上等于没有边 */
+  --fb-field: rgba(255, 255, 255, .70);
+  --fb-field-edge: rgba(17, 24, 39, .14);
+  --fb-field-edge-hover: rgba(17, 24, 39, .26);
+  --fb-field-inset: inset 0 1px 2px rgba(17, 24, 39, .05);
+  --fb-avatar-bg: rgba(17, 24, 39, .08);
+  --fb-avatar-ink: #374151;
+  --fb-edge: rgba(255, 255, 255, .80);
+  --fb-blur: 28px;
+  --fb-highlight: rgba(255, 255, 255, .8);     /* 玻璃顶部 1px 内高光 */
+
+  /* 阴影 */
+  --fb-shade: 31, 41, 55;
+  --fb-shadow-l0: 0 14px 30px -26px rgba(var(--fb-shade), .20), 0 1px 0 rgba(255,255,255,.5) inset;
+  --fb-shadow-l1: -8px 0 24px -18px rgba(var(--fb-shade), .20), 0 26px 50px -30px rgba(var(--fb-shade), .20), 0 1px 0 rgba(255,255,255,.65) inset;
+  --fb-shadow-l2: -10px 0 30px -18px rgba(var(--fb-shade), .20), 0 40px 80px -38px rgba(var(--fb-shade), .20), 0 10px 26px -18px rgba(var(--fb-shade), .08), 0 1px 0 rgba(255,255,255,.8) inset;
+  --fb-shadow-l3: -14px 0 40px -22px rgba(var(--fb-shade), .20), 0 40px 80px -38px rgba(var(--fb-shade), .20), 0 1px 0 rgba(255,255,255,.85) inset;
+  --fb-shadow-l4: 0 0 0 1px rgba(255,255,255,.6), 0 60px 120px -40px rgba(17,24,39,.45), 0 24px 48px -24px rgba(17,24,39,.25), 0 1px 0 rgba(255,255,255,.9) inset;
+  --fb-shadow-card: 0 10px 22px -18px rgba(var(--fb-shade), .20), 0 1px 2px rgba(17,24,39,.03);
+  --fb-shadow-card-hover: 0 16px 30px -18px rgba(var(--fb-shade), .24), 0 1px 2px rgba(17,24,39,.03);
+  --fb-shadow-menu: 0 18px 40px -20px rgba(var(--fb-shade), .30), 0 2px 6px -2px rgba(var(--fb-shade), .10);
+  --fb-shadow-active: 0 0 0 1px rgba(34,197,94,.22), 0 0 32px -6px var(--fb-glow);
+  --fb-shadow-active-2: 0 0 0 1px rgba(34,197,94,.30), 0 0 40px -4px var(--fb-glow);
+
+  /* 圆角 */
+  --fb-r-layer: 18px;
+  --fb-r-card: 12px;
+  --fb-r-btn: 10px;
+  --fb-r-nav: 11px;
+  --fb-r-tab: 9px;
+  --fb-r-sm: 8px;
+  --fb-r-xs: 6px;
+
+  /* 尺寸 */
+  --fb-stage-pad: 18px;
+  --fb-overlap: 14px;
+  --fb-rail-w: 172px;
+
+  /* 动效 */
+  --fb-ease: cubic-bezier(.2, .8, .2, 1);
+  --fb-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --fb-dur: 460ms;
+  --fb-dur-2: 300ms;
+  --fb-dur-3: 250ms;
+
+  /* z-index */
+  --fb-z-page: 10;
+  --fb-z-drawer: 20;
+  --fb-z-scrim: 30;
+  --fb-z-modal: 40;
+  --fb-z-toast: 50;
+
+  /* 字体 */
+  --fb-font: -apple-system, "PingFang SC", "Helvetica Neue", "Inter Variable", Inter, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --fb-mono: ui-monospace, "SF Mono", Menlo, Consolas, "PingFang SC", monospace;
+
+  color-scheme: light;
+}
+
+html.dark {
+  --fb-bg: #14171c;
+  --fb-bg-2: #0f1115;
+  --fb-ink: #f3f4f6;
+  --fb-ink-2: #d1d5db;
+  --fb-ink-3: #9ca3af;
+  --fb-ink-4: #6b7280;
+  --fb-line: rgba(255, 255, 255, .06);
+  --fb-line-2: rgba(255, 255, 255, .10);
+  --fb-live: #4ade80;
+  --fb-live-ink: #86efac;
+  --fb-live-soft: rgba(74, 222, 128, .16);
+  --fb-bad: #f87171;
+  --fb-bad-ink: #fca5a5;
+  --fb-bad-soft: rgba(248, 113, 113, .16);
+  --fb-warn: #fbbf24;
+  --fb-warn-ink: #fbbf24;
+  --fb-warn-soft: rgba(251, 191, 36, .16);
+  --fb-info: #60a5fa;
+  --fb-info-soft: rgba(96, 165, 250, .16);
+  --fb-chart-2: #60a5fa;
+  --fb-chart-3: #2563eb;
+  --fb-chart-4: #4ade80;
+  --fb-chart-5: #6b7280;
+  --fb-chart-6: #4b5563;
+  --fb-glow: rgba(74, 222, 128, .22);
+  --fb-grid: rgba(255, 255, 255, .035);
+  --fb-mute-soft: rgba(255, 255, 255, .08);
+  --fb-hover: rgba(255, 255, 255, .05);
+  --fb-row-hover: rgba(255, 255, 255, .03);
+  --fb-row-on: rgba(255, 255, 255, .06);
+  --fb-well: rgba(255, 255, 255, .04);
+  --fb-inverse: #f3f4f6;
+  --fb-inverse-ink: #111827;
+  --fb-inverse-soft: rgba(17, 24, 39, .10);
+  --fb-bubble-me: #0a84ff;
+  --fb-bubble-me-ink: #ffffff;
+  --fb-bubble-them: rgba(120, 120, 128, .28);
+  --fb-bubble-them-ink: var(--fb-ink);
+  --fb-list-surface: #1c1f24;
+  --fb-on-accent-soft: rgba(255, 255, 255, .22);
+  --fb-on-accent-soft-hi: rgba(255, 255, 255, .32);
+
+  --fb-l0: rgba(255, 255, 255, .045);
+  --fb-l1: rgba(255, 255, 255, .065);
+  --fb-l2: rgba(255, 255, 255, .09);
+  --fb-l3: rgba(255, 255, 255, .10);
+  --fb-l4: rgba(38, 42, 50, .92);
+  --fb-card: rgba(255, 255, 255, .07);
+  --fb-card-edge: rgba(255, 255, 255, .06);
+  --fb-stack-face: rgba(255, 255, 255, .035);
+  --fb-stack-face-hover: rgba(255, 255, 255, .055);
+  --fb-stack-edge: rgba(0, 0, 0, .30);
+  --fb-stack-sheet-1: rgba(0, 0, 0, .18);
+  --fb-stack-sheet-2: rgba(0, 0, 0, .26);
+  --fb-field: rgba(255, 255, 255, .05);
+  --fb-field-edge: rgba(255, 255, 255, .16);
+  --fb-field-edge-hover: rgba(255, 255, 255, .28);
+  --fb-field-inset: inset 0 1px 2px rgba(0, 0, 0, .25);
+  --fb-avatar-bg: rgba(255, 255, 255, .12);
+  --fb-avatar-ink: #e5e7eb;
+  --fb-edge: rgba(255, 255, 255, .09);
+  --fb-highlight: rgba(255, 255, 255, .08);
+
+  --fb-shade: 0, 0, 0;
+  --fb-shadow-l0: 0 14px 30px -26px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.05) inset;
+  --fb-shadow-l1: -8px 0 24px -18px rgba(0,0,0,.6), 0 26px 50px -30px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.06) inset;
+  --fb-shadow-l2: -10px 0 30px -18px rgba(0,0,0,.6), 0 40px 80px -38px rgba(0,0,0,.65), 0 10px 26px -18px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.08) inset;
+  --fb-shadow-l3: -14px 0 40px -22px rgba(0,0,0,.65), 0 40px 80px -38px rgba(0,0,0,.65), 0 1px 0 rgba(255,255,255,.08) inset;
+  --fb-shadow-l4: 0 0 0 1px rgba(255,255,255,.08), 0 60px 120px -40px rgba(0,0,0,.9), 0 24px 48px -24px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.08) inset;
+  --fb-shadow-card: 0 10px 22px -18px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.2);
+  --fb-shadow-card-hover: 0 16px 30px -18px rgba(0,0,0,.7), 0 1px 2px rgba(0,0,0,.2);
+  --fb-shadow-menu: 0 18px 40px -20px rgba(0,0,0,.8), 0 2px 6px -2px rgba(0,0,0,.4);
+  --fb-shadow-active: 0 0 0 1px rgba(74,222,128,.22), 0 0 32px -6px var(--fb-glow);
+  --fb-shadow-active-2: 0 0 0 1px rgba(74,222,128,.30), 0 0 40px -4px var(--fb-glow);
+
+  color-scheme: dark;
+}
+
+/* ── Fortbrain 语义类(docs/design/ui-standard.md §4)──
+   纯 CSS + 令牌,不用 @apply:要覆盖 hover / dark 变体,且 addon 也要能用。
+   Tailwind 工具类只管布局、间距、排版、显隐;颜色 / 圆角 / 阴影 / 边框 / 背景只能来自这里。 */
+
+/* ═══ 0. 全局 ═══ */
+html { font-family: var(--fb-font); }
+body { background: var(--fb-bg); color: var(--fb-ink); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.fb-num, .fb-table td, .fb-kpi .v, .fb-amount { font-variant-numeric: tabular-nums; }
+::selection { background: var(--fb-live-soft); }
+* { scrollbar-width: thin; scrollbar-color: var(--fb-line-2) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--fb-line-2); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ═══ 1. 地面与舞台 ═══ */
+.fb-floor { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,.9), transparent 60%), linear-gradient(180deg, var(--fb-bg), var(--fb-bg-2)); }
+html.dark .fb-floor { background: radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,.06), transparent 60%), linear-gradient(180deg, var(--fb-bg), var(--fb-bg-2)); }
+.fb-floor::before { content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(var(--fb-grid) 1px, transparent 1px), linear-gradient(90deg, var(--fb-grid) 1px, transparent 1px); background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(80% 80% at 50% 40%, #000 30%, transparent 100%); mask-image: radial-gradient(80% 80% at 50% 40%, #000 30%, transparent 100%); }
+
+.fb-stage { position: relative; z-index: 1; height: 100vh; height: 100dvh; padding: var(--fb-stage-pad); display: flex; align-items: stretch; overflow: hidden;
+  transform-origin: 50% 50%; transition: transform var(--fb-dur) var(--fb-ease), filter var(--fb-dur) var(--fb-ease); }
+.fb-stage > .fb-floor { z-index: -1; }
+/* 层容器:玻璃 */
+.fb-glass { position: relative; border: 1px solid var(--fb-edge); border-radius: var(--fb-r-layer); background: var(--fb-l1);
+  -webkit-backdrop-filter: blur(var(--fb-blur)) saturate(140%); backdrop-filter: blur(var(--fb-blur)) saturate(140%);
+  box-shadow: var(--fb-shadow-l1);
+  transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease), box-shadow var(--fb-dur) var(--fb-ease), filter var(--fb-dur) var(--fb-ease), background var(--fb-dur) var(--fb-ease); }
+.fb-glass.l0 { z-index: 1; background: var(--fb-l0); box-shadow: var(--fb-shadow-l0); }
+.fb-glass.l1 { z-index: 2; background: var(--fb-l1); box-shadow: var(--fb-shadow-l1); }
+.fb-glass.l2 { z-index: 3; background: var(--fb-l2); box-shadow: var(--fb-shadow-l2); }
+.fb-glass.l3 { z-index: var(--fb-z-drawer); background: var(--fb-l3); box-shadow: var(--fb-shadow-l3); }
+.fb-glass.l4 { z-index: var(--fb-z-modal); background: var(--fb-l4); box-shadow: var(--fb-shadow-l4); }
+/* 叠层:高层压住低层 14px。全铺画布的包(.fb-layer-raw)也要压住左栏,不然它和左栏之间会露出一条缝 */
+.fb-stage > .fb-layer + .fb-layer, .fb-stage > .fb-glass + .fb-layer,
+.fb-stage > .fb-layer + .fb-layer-raw, .fb-stage > .fb-glass + .fb-layer-raw { margin-left: calc(-1 * var(--fb-overlap)); }
+.fb-layer { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.fb-layer.solo { flex: 1; }
+/* 被上层压住的 14px 不能放内容 */
+.fb-stage > .fb-layer.l1:not(.solo) { padding-right: var(--fb-overlap); }
+.fb-layer-raw > .fb-glass.l1 { padding-right: var(--fb-overlap); }
+/* 全铺画布的包:壳给一个无玻璃的槽,包在里面自己摆 .fb-glass.l1 + .fb-glass.l2(彼此重叠 14px)*/
+.fb-layer-raw { display: flex; align-items: stretch; min-width: 0; z-index: 2; position: relative; }
+.fb-layer-raw > .fb-glass + .fb-glass { margin-left: calc(-1 * var(--fb-overlap)); }
+.fb-layer-raw > .fb-glass.l1 { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.fb-layer-raw > .fb-glass.l2 { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+/* 上面有层压着时,下面的层退后、略暗 */
+.fb-stage[data-depth="1"] > .l0 { transform: scale(.992); filter: brightness(.985); }
+.fb-stage[data-depth="2"] > .l0 { transform: scale(.985); filter: brightness(.97); }
+.fb-stage[data-depth="2"] > .l1 { transform: scale(.995); filter: brightness(.985); }
+html.dark .fb-stage[data-depth] > .l0, html.dark .fb-stage[data-depth="2"] > .l1 { filter: brightness(.85); }
+/* 抽屉 / 对话框在上时,整个舞台退后 */
+.fb-stage.under-drawer { transform: scale(.992); filter: brightness(.965); }
+html.dark .fb-stage.under-drawer { filter: brightness(.8); }
+.fb-stage.under-modal, .fb-drawer.under-modal { transform: scale(.975); filter: brightness(.9) blur(1.5px); }
+html.dark .fb-stage.under-modal, html.dark .fb-drawer.under-modal { filter: brightness(.7) blur(1.5px); }
+/* 层的进出(Vue Transition 名 fb-l1 / fb-l2):从下一层后面滑出;收回时缩回去 */
+.fb-l1-enter-active, .fb-l1-leave-active, .fb-l2-enter-active, .fb-l2-leave-active { transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease); }
+/* 进入的先后由 FbStage 按实际时序算(inline transition-delay);收回时高层先走、列表晚 120ms */
+.fb-l1-leave-active { transition-delay: 120ms; }
+.fb-l1-enter-from, .fb-l1-leave-to { transform: translateX(-56px) scale(.98); opacity: 0; }
+.fb-l2-enter-from, .fb-l2-leave-to { transform: translateX(-72px) scale(.985); opacity: 0; }
+.fb-l1-leave-active, .fb-l2-leave-active { pointer-events: none; }
+
+/* ═══ 2. 壳与导航 ═══ */
+.fb-rail { width: var(--fb-rail-w); flex: 0 0 var(--fb-rail-w); padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; overflow-x: hidden; }
+.fb-brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14px; padding: 4px 8px 16px; color: var(--fb-ink); }
+.fb-logo { width: 26px; height: 26px; border-radius: var(--fb-r-sm); display: grid; place-items: center; background: var(--fb-inverse); color: var(--fb-inverse-ink); font-weight: 700; font-size: 12px; overflow: hidden; flex: 0 0 26px; }
+.fb-section { font-size: 10px; letter-spacing: .12em; color: var(--fb-ink-4); padding: 14px 10px 4px; text-transform: uppercase; user-select: none; }
+/* 可折叠的套件标题:整行可点,箭头收起时转 −90°;收起时右边写还有几项,
+   让人知道是折起来了而不是东西没了 */
+.fb-section-fold { display: flex; align-items: center; gap: 5px; border-radius: var(--fb-r-sm); transition: color var(--fb-dur-2) var(--fb-ease); }
+.fb-section-fold:hover { color: var(--fb-ink-2); }
+.fb-section-fold .fold-caret { width: 12px; height: 12px; flex: 0 0 12px; transition: transform var(--fb-dur-2) var(--fb-ease); }
+.fb-section-fold.folded .fold-caret { transform: rotate(-90deg); }
+.fb-section-fold .fold-n { margin-left: auto; font-size: 9.5px; letter-spacing: 0; color: var(--fb-ink-4); opacity: .7; }
+.fb-nav { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px; border-radius: var(--fb-r-nav); color: var(--fb-ink-3); font-size: 13px; line-height: 1.5; cursor: pointer; user-select: none; text-align: left; background: transparent; border: 0; outline: 0; font: inherit; font-size: 13px;
+  transition: color var(--fb-dur-2) var(--fb-ease), padding-left var(--fb-dur) var(--fb-ease), background-color var(--fb-dur-2) var(--fb-ease); }
+.fb-nav svg, .fb-nav .ic { width: 16px; height: 16px; flex: 0 0 16px; opacity: .8; transition: opacity var(--fb-dur-2); }
+.fb-nav:hover { color: var(--fb-ink); background: var(--fb-hover); }
+.fb-nav.on { color: var(--fb-ink); padding-left: 18px; background: transparent; }
+.fb-nav.on svg { opacity: 1; }
+.fb-nav:disabled { color: var(--fb-ink-4); opacity: .5; cursor: not-allowed; }
+.fb-nav::before { content: ""; position: absolute; left: 6px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--fb-live); box-shadow: 0 0 8px var(--fb-glow);
+  opacity: 0; transform: scale(.2); transition: opacity .35s var(--fb-ease) .12s, transform .45s var(--fb-spring) .12s; }
+.fb-nav.on::before { opacity: 1; transform: scale(1); }
+.fb-nav.plain::before { display: none; }
+.fb-nav.plain.on { padding-left: 10px; }
+/* 滑动高亮块:容器 position:relative,高亮块由 useCursor 定位 */
+.fb-cursor { position: absolute; left: 0; top: 0; border-radius: var(--fb-r-nav); z-index: 0; pointer-events: none;
+  background: var(--fb-card); border: 1px solid var(--fb-card-edge); box-shadow: var(--fb-shadow-card);
+  opacity: 0; transition: transform var(--fb-dur) var(--fb-ease), width var(--fb-dur-2) var(--fb-ease), height var(--fb-dur-2) var(--fb-ease), opacity var(--fb-dur-2) var(--fb-ease); }
+.fb-cursor.on { opacity: 1; }
+/* 列表里有「一摞」时:那层卡面在 DOM 里排在滑块后面,同层会把滑块盖住。
+   抬到 1 —— 条目自己也是 1 且更靠后,所以文字仍然压在滑块之上。 */
+.fb-cursor.above-stacks { z-index: 1; }
+.fb-cursor.glow, .fb-glass.l1 .fb-cursor { border-radius: var(--fb-r-card); box-shadow: 0 0 0 1px rgba(34,197,94,.18), var(--fb-shadow-card), 0 0 22px -8px var(--fb-glow); }
+/* 分段 tab 的滑块在列表层里也只是个白片,不要绿环 */
+.fb-glass.l1 .fb-tabs .fb-cursor { border-radius: var(--fb-r-tab); box-shadow: 0 6px 14px -10px rgba(var(--fb-shade), .3), 0 1px 2px rgba(17,24,39,.04); }
+/* ── 「一摞」:一类提醒在列表里就是一叠卡 ────────────────────────────────
+   叠得起来的前提是**最上面得有张卡**:所以分组行没被选中时也有卡面(比选中
+   滑块 --fb-card 淡一档),而普通对话行仍然是透明的。纸边只露在卡片下沿之外,
+   并且**画在滑块之下**——压在上面会把选中框那圈绿光咬掉一截。 */
+.fb-stack { position: relative; margin-bottom: 3px; border-radius: var(--fb-r-card);
+  background: var(--fb-stack-face);
+  box-shadow: inset 0 0 0 1px var(--fb-stack-edge), 0 2px 5px -3px rgba(17,24,39,.4);
+  transition: background-color var(--fb-dur-2) var(--fb-ease); }
+.fb-stack:hover { background: var(--fb-stack-face-hover); }
+.fb-stack.deep { margin-bottom: 10px; }
+.fb-stack.deeper { margin-bottom: 17px; }
+.fb-stack::before, .fb-stack::after { content: ""; position: absolute; left: 7px; right: 7px;
+  border: 1px solid var(--fb-stack-edge); border-top: 0;
+  border-radius: 0 0 var(--fb-r-card) var(--fb-r-card);
+  z-index: 0; pointer-events: none;
+  transition: bottom var(--fb-dur-2) var(--fb-ease); }
+.fb-stack::before { bottom: -5px; height: 5px; background: var(--fb-stack-sheet-1); }
+.fb-stack::after  { bottom: -11px; left: 15px; right: 15px; height: 5px; background: var(--fb-stack-sheet-2); }
+.fb-stack:not(.deep):not(.deeper)::before, .fb-stack:not(.deep):not(.deeper)::after { display: none; }
+.fb-stack.deep::after { display: none; }
+.fb-stack:hover::before { bottom: -6px; height: 6px; }
+.fb-stack:hover::after { bottom: -13px; height: 6px; }
+.fb-stack > .fb-item { position: relative; z-index: 2; }
+
+/* 免扰:标题降一档、图标淡一点。安静,但不是残废 */
+.fb-item.muted .h { color: var(--fb-ink-3); }
+.fb-item.muted > svg { opacity: .6; }
+/* 行尾「⋯」:悬停才出,给不知道能右键的人一条明路 */
+.fb-item .fb-more-btn { opacity: 0; width: 20px; height: 20px; display: grid; place-items: center;
+  border-radius: 6px; color: var(--fb-ink-4); font-size: 15px; line-height: 1;
+  transition: opacity var(--fb-dur-2) var(--fb-ease), background-color var(--fb-dur-2) var(--fb-ease); }
+.fb-item:hover .fb-more-btn { opacity: 1; }
+.fb-item .fb-more-btn:hover { background: var(--fb-hover); color: var(--fb-ink-2); }
+/* 钉在列表底部的「已处理」:它在滑块容器**外面**(滑块滑不过来),
+   所以选中态用静态卡面,而不是假装有个滑块 */
+.fb-done-row { display: flex; align-items: center; gap: 6px; width: 100%;
+  padding: 10px 14px; border: 0; border-top: 1px solid var(--fb-line); border-radius: 0;
+  background: transparent; font: inherit; font-size: 12px; color: var(--fb-ink-4);
+  cursor: pointer; text-align: left; outline: 0;
+  transition: background-color var(--fb-dur-2) var(--fb-ease), color var(--fb-dur-2) var(--fb-ease); }
+.fb-done-row:hover { background: var(--fb-hover); color: var(--fb-ink-3); }
+.fb-done-row.on { background: var(--fb-card); color: var(--fb-ink-2); box-shadow: inset 0 0 0 1px var(--fb-card-edge); }
+
+/* 可折叠的分区标题 */
+.fb-zone-cap { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.fb-zone-cap:hover { color: var(--fb-ink-3); }
+.fb-zone-cap .fold { margin-left: auto; font-size: 11px; display: inline-block;
+  transition: transform var(--fb-dur-2) var(--fb-ease); }
+.fb-zone-cap.closed .fold { transform: rotate(-90deg); }
+
+.fb-badge { margin-left: auto; font-size: 10px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--fb-bad); color: #fff; display: inline-grid; place-items: center; font-weight: 600; line-height: 1; }
+.fb-avatar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 12px; color: var(--fb-ink-3); }
+/* 头像块:中性浅底(黑底太抢;黑只留给主按钮与 logo)*/
+.fb-avatar b, .fb-avatar-block { width: 24px; height: 24px; border-radius: 7px; background: var(--fb-avatar-bg); color: var(--fb-avatar-ink); font-size: 11px; display: inline-grid; place-items: center; font-weight: 500; flex: 0 0 24px; }
+.fb-avatar-block.lg { width: 34px; height: 34px; border-radius: var(--fb-r-sm); font-size: 13px; flex-basis: 34px; }
+.fb-avatar-block.me { background: var(--fb-live-soft); color: var(--fb-live-ink); }
+/* 手机底栏 */
+.fb-tabbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: var(--fb-z-drawer); height: 56px; display: flex; padding-bottom: env(safe-area-inset-bottom);
+  background: var(--fb-l2); border-top: 1px solid var(--fb-edge); -webkit-backdrop-filter: blur(var(--fb-blur)) saturate(140%); backdrop-filter: blur(var(--fb-blur)) saturate(140%); box-shadow: 0 -10px 30px -24px rgba(var(--fb-shade), .3); }
+.fb-tab-btn { position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; line-height: 1.1; color: var(--fb-ink-4); background: transparent; border: 0; outline: 0; padding: 4px 0; min-width: 0; white-space: nowrap; cursor: pointer; transition: color var(--fb-dur-2); }
+.fb-tab-btn svg { width: 20px; height: 20px; }
+.fb-tab-btn.on { color: var(--fb-ink); }
+.fb-tab-btn.on::after { content: ""; position: absolute; top: 2px; left: 50%; margin-left: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--fb-live); box-shadow: 0 0 8px var(--fb-glow); }
+.fb-tab-btn .fb-badge { position: absolute; top: 4px; right: 50%; margin-right: -22px; margin-left: 0; }
+
+/* ═══ 3. 列表层 ═══ */
+.fb-list { padding: 16px 12px; }
+.fb-list-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 14px; color: var(--fb-ink);
+  /* 左边缘要和列表项对齐:项的内容起点 = .fb-list 的 10px + .fb-item 的 12px。
+     标题有时是 .fb-list 的兄弟(组织 / 告警),有时在它里面(库存),两种都落到 24px。 */
+  padding: 4px 24px 12px; }
+.fb-list > .fb-list-title { padding-left: 12px; padding-right: 12px; }
+:where(.fb-item) { display: block; width: 100%; }
+.fb-item { position: relative; z-index: 1; text-align: left; padding: 13px 12px; border-radius: var(--fb-r-card); cursor: pointer; user-select: none; background: transparent; border: 0; outline: 0; font: inherit; color: inherit; transition: background-color var(--fb-dur-2) var(--fb-ease); }
+/* 标题用主文字色:一整列都是灰字时,一眼扫不出哪行是哪行 */
+.fb-item .h { font-weight: 400; font-size: 13px; color: var(--fb-ink); display: flex; align-items: center; gap: 6px; min-width: 0; transition: color var(--fb-dur-2) var(--fb-ease); }
+.fb-item .h > .t, .fb-item .h > .truncate, .fb-item .h > span:first-child:not(.fb-tag):not(.fb-dot):not(.fb-badge) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 时间 / 计数这类附注靠右,把整行让给标题 */
+.fb-item .h > .meta { margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 400; color: var(--fb-ink-4); }
+.fb-item .s { font-size: 11px; color: var(--fb-ink-4); margin-top: 3px; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.fb-item .s > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fb-item .s > .t { flex: 1 1 auto; }
+.fb-item .s { overflow: hidden; }
+/* 副行直接写文字、靠 truncate 截断的老写法:弹性盒里裸文字不会出省略号,退回块级 */
+.fb-item .s.truncate { display: block; }
+.fb-item .s > .fb-tag, .fb-item .s > .fb-dot, .fb-item .s > .shrink-0 { flex: 0 0 auto; }
+.fb-item:hover { background: var(--fb-hover); }
+.fb-item.on { background: transparent; }
+/* 项与项之间一条内缩的发丝线:没有分隔,整屏文字会连成一片。选中卡的上下不画 */
+.fb-item + .fb-item::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; height: 1px; background: var(--fb-line); }
+.fb-item.on::before, .fb-item.on + .fb-item::before { opacity: 0; }
+.fb-item.on-solid { background: var(--fb-card); border: 1px solid var(--fb-card-edge); box-shadow: 0 0 0 1px rgba(34,197,94,.18), var(--fb-shadow-card), 0 0 22px -8px var(--fb-glow); }
+.fb-list-foot { margin-top: auto; padding: 10px 12px; font-size: 11px; color: var(--fb-ink-4); border-top: 1px solid var(--fb-line); }
+.fb-pill { font-size: 10px; padding: 3px 8px; border-radius: 999px; background: var(--fb-live-soft); color: var(--fb-live-ink); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.fb-pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--fb-live); }
+.fb-pill.warn { background: var(--fb-warn-soft); color: var(--fb-warn-ink); } .fb-pill.warn::before { background: var(--fb-warn); }
+.fb-pill.bad { background: var(--fb-bad-soft); color: var(--fb-bad-ink); } .fb-pill.bad::before { background: var(--fb-bad); }
+.fb-pill.mute { background: var(--fb-mute-soft); color: var(--fb-ink-3); } .fb-pill.mute::before { background: var(--fb-ink-4); }
+
+/* ═══ 4. 详情顶栏、面板头、分段 tab ═══ */
+.fb-topbar { display: flex; align-items: center; gap: 12px; padding: 14px 16px 12px 18px; border-bottom: 1px solid var(--fb-line); flex: 0 0 auto; min-height: 56px; }
+/* 标题不预留 6em:标题短的时候那段空白会把副标题推到天边 */
+.fb-topbar h1, .fb-topbar .h1 { font-size: 18px; font-weight: 500; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; color: var(--fb-ink); flex: 0 1 auto; min-width: 0; }
+/* 副标题是标题的注脚:紧跟着它(容器 gap 12 收回到 8),并且和标题同一条基线 */
+.fb-topbar h1 + .sub, .fb-topbar .h1 + .sub { margin-left: -4px; }
+.fb-topbar h1, .fb-topbar .h1, .fb-topbar > .sub, .fb-drawer .hd h2, .fb-drawer .hd .h2, .fb-drawer .hd > .sub, .fb-drawer .hd > .id { align-self: baseline; }
+.fb-topbar .sub { color: var(--fb-ink-4); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.fb-topbar .sp { flex: 1 1 12px; min-width: 12px; }
+/* 动作多的顶栏(扩展页、项目详情)不要把标题挤没:动作区自己横向滚 */
+.fb-topbar > :last-child { flex-shrink: 0; }
+@media (max-width: 1240px) { .fb-topbar .sub { display: none; } }
+.fb-panel-hd { display: flex; align-items: center; gap: 10px; padding: 12px 18px; min-height: 52px; border-bottom: 1px solid var(--fb-line); font-size: 12.5px; color: var(--fb-ink-3); flex: 0 0 auto; }
+.fb-panel-hd b, .fb-panel-hd .t { color: var(--fb-ink); font-weight: 600; font-size: 14px; }
+.fb-back { width: 34px; height: 34px; flex: 0 0 34px; border-radius: var(--fb-r-tab); display: grid; place-items: center; color: var(--fb-ink-3); cursor: pointer; border: 1px solid var(--fb-card-edge); background: var(--fb-card); box-shadow: var(--fb-shadow-card); padding: 0; outline: 0; transition: color var(--fb-dur-3), box-shadow var(--fb-dur-3); }
+.fb-back svg { width: 18px; height: 18px; } .fb-back:hover { color: var(--fb-ink); }
+.fb-tabs { position: relative; display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--fb-r-card); background: var(--fb-well); }
+.fb-tab { position: relative; z-index: 1; white-space: nowrap; padding: 6px 12px; border-radius: var(--fb-r-tab); font-size: 12px; color: var(--fb-ink-3); cursor: pointer; background: transparent; border: 0; outline: 0; font: inherit; font-size: 12px; transition: color var(--fb-dur-2); display: inline-flex; align-items: center; gap: 6px; }
+.fb-tab:hover { color: var(--fb-ink); }
+.fb-tab.on { color: var(--fb-ink); font-weight: 500; }
+.fb-tabs .fb-cursor { border-radius: var(--fb-r-tab); box-shadow: 0 6px 14px -10px rgba(var(--fb-shade), .3), 0 1px 2px rgba(17,24,39,.04); }
+.fb-tab .fb-badge { margin-left: 0; }
+
+/* ═══ 5. 容器 ═══ */
+.fb-card { position: relative; background: var(--fb-card); border: 1px solid var(--fb-card-edge); border-radius: var(--fb-r-card); box-shadow: var(--fb-shadow-card); transition: box-shadow var(--fb-dur-2) var(--fb-ease), transform var(--fb-dur-2) var(--fb-ease); }
+.fb-card.hoverable { cursor: pointer; } .fb-card.hoverable:hover { transform: translateY(-2px); box-shadow: var(--fb-shadow-card-hover); }
+.fb-card.flat { box-shadow: none; }
+.fb-card.well { background: var(--fb-well); border-color: transparent; box-shadow: none; }
+.fb-card.active, .fb-glass.active { box-shadow: var(--fb-shadow-active), var(--fb-shadow-card); animation: fb-breathe 5s ease-in-out infinite; }
+.fb-glass.active { background: var(--fb-l3); }
+@keyframes fb-breathe { 0%, 100% { box-shadow: var(--fb-shadow-active), var(--fb-shadow-card); } 50% { box-shadow: var(--fb-shadow-active-2), var(--fb-shadow-card); } }
+.fb-fold-hd { display: flex; align-items: center; gap: 8px; padding: 10px 0; cursor: pointer; user-select: none; border-bottom: 1px solid var(--fb-line); color: var(--fb-ink-2); font-size: 13px; }
+.fb-fold-hd .chev { width: 14px; height: 14px; transition: transform var(--fb-dur-2) var(--fb-ease); color: var(--fb-ink-4); }
+.fb-fold-hd.open .chev { transform: rotate(180deg); }
+.fb-resize { position: absolute; top: 0; right: -3px; width: 6px; height: 100%; cursor: col-resize; z-index: 5; }
+.fb-resize::after { content: ""; position: absolute; top: 0; bottom: 0; left: 2px; width: 2px; background: transparent; transition: background var(--fb-dur-3); }
+.fb-resize:hover::after, .fb-resize:active::after { background: var(--fb-live); }
+.fb-body { padding: 16px 18px; overflow: auto; display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; }
+/* 弹性列 + 滚动:子项默认 flex-shrink:1,浏览器会按「压缩后的布局」算 scrollHeight,
+   于是最后一张很高的卡被当成零高度——滚到底也看不到它(库存后台的「最近审计」就这么消失的)。 */
+.fb-body > * { flex-shrink: 0; min-width: 0; max-width: 100%; }
+.fb-divider { border: 0; border-top: 1px solid var(--fb-line); margin: 0; }
+
+/* ═══ 6. 数据展示 ═══ */
+.fb-kpi { padding: 14px 16px 12px; }
+.fb-kpi .k { font-size: 11px; color: var(--fb-ink-4); display: flex; align-items: center; gap: 6px; }
+.fb-kpi .v { font-size: 28px; font-weight: 400; margin-top: 6px; letter-spacing: -.02em; white-space: nowrap; line-height: 1.1; color: var(--fb-ink); }
+.fb-kpi .v small { font-size: 12px; color: var(--fb-ink-4); font-weight: 400; margin-left: 4px; letter-spacing: 0; }
+.fb-kpi .d { font-size: 11px; color: var(--fb-ink-3); margin-top: 8px; }
+.fb-kpi .d.ok { color: var(--fb-live-ink); } .fb-kpi .d.warn { color: var(--fb-warn-ink); } .fb-kpi .d.bad { color: var(--fb-bad-ink); }
+.fb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fb-live); display: inline-block; flex: 0 0 6px; }
+.fb-dot.warn { background: var(--fb-warn); } .fb-dot.bad { background: var(--fb-bad); } .fb-dot.mute { background: var(--fb-ink-4); } .fb-dot.info { background: var(--fb-info); }
+.fb-dot.live { box-shadow: 0 0 0 3px var(--fb-live-soft); }
+.fb-spark { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin-top: 12px; }
+.fb-spark i { flex: 1; background: var(--fb-mute-soft); border-radius: 1px; min-height: 2px; }
+.fb-spark i.g { background: var(--fb-live); }
+.fb-sparkline { stroke: var(--fb-live); stroke-width: 1.5; fill: none; }
+.fb-amount { font-size: 26px; font-weight: 400; letter-spacing: -.02em; color: var(--fb-ink); display: flex; align-items: baseline; gap: 6px; }
+.fb-amount small { font-size: 12px; color: var(--fb-ink-4); letter-spacing: 0; }
+.fb-amount.up::before { content: "↗"; font-size: 11px; color: #fff; background: var(--fb-live); border-radius: 4px; width: 16px; height: 16px; display: inline-grid; place-items: center; align-self: center; }
+
+.fb-table-wrap { overflow: auto; }
+.fb-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+.fb-table th { position: sticky; top: 0; z-index: 1; text-align: left; font-weight: 500; color: var(--fb-ink-4); font-size: 11px; padding: 8px 12px; border-bottom: 1px solid var(--fb-line); white-space: nowrap; background: var(--fb-card); }
+.fb-table td { padding: 11px 12px; border-bottom: 1px solid var(--fb-line); color: var(--fb-ink-2); white-space: nowrap; }
+.fb-table th:first-child, .fb-table td:first-child { padding-left: 18px; }
+.fb-table .r { text-align: right; }
+/* 表格里那一列「主要文字」(商品名 / 单号 / 地点)= 列表项的标题,两处必须同一个样子:
+   同是 400、同是主文字色。用 500 的时候它比左边列表的标题还重,一屏里两种「主要文字」(2026-09-12) */
+.fb-table .strong { color: var(--fb-ink); font-weight: 400; }
+.fb-table .mute, .fb-mute { color: var(--fb-ink-4); }
+/* 表头里的单位:件 / 元/件 / 件每箱。单位放进表头,格子里就只剩数字——数字列不该为了带单位而变窄 */
+.fb-table th .fb-unit { display: block; font-weight: 400; font-size: 10px; opacity: .72; margin-top: 1px; }
+.fb-table tbody tr:hover td { background: var(--fb-row-hover); }
+/* 分组行:表格里按供应商分堆时的那条横带。不用卡片是为了让各组的数字列仍然对齐——
+   分成一张张卡之后,列就各对各的,比不了了 */
+.fb-table tbody tr.grp td { background: var(--fb-mute-soft); border-bottom: 1px solid var(--fb-line); padding: 7px 12px; }
+.fb-table tbody tr.grp:hover td { background: var(--fb-mute-soft); }
+.fb-table tbody tr.on td { background: var(--fb-row-on); color: var(--fb-ink); }
+.fb-table tbody tr.on td:first-child { box-shadow: inset 3px 0 0 var(--fb-live); font-weight: 500; }
+.fb-table tbody tr.link td { cursor: pointer; }
+.fb-table tbody tr.expand td { padding: 0; background: var(--fb-well); }
+.fb-table tbody tr:last-child td { border-bottom: 0; }
+.fb-table .wrap { white-space: normal; }
+.fb-kv { padding: 4px 14px; }
+.fb-kv .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 12.5px; border-bottom: 1px solid var(--fb-line); }
+.fb-kv .row:last-child { border-bottom: 0; }
+.fb-kv .row > :first-child { color: var(--fb-ink-4); flex: 0 0 auto; }
+.fb-kv .row > :last-child { color: var(--fb-ink); font-weight: 500; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.fb-tl { display: flex; flex-direction: column; padding: 6px 14px; }
+.fb-tl .t { display: flex; gap: 10px; padding: 6px 0; font-size: 12px; color: var(--fb-ink-2); align-items: flex-start; }
+.fb-tl .t::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fb-ink-4); margin-top: 5px; flex: 0 0 8px; }
+.fb-tl .t.done::before { background: var(--fb-live); }
+.fb-tl .t.now::before { background: var(--fb-live); box-shadow: 0 0 0 4px var(--fb-live-soft); }
+.fb-tl .t.bad::before { background: var(--fb-bad); }
+.fb-tl .t .when { margin-left: auto; color: var(--fb-ink-4); font-size: 11px; white-space: nowrap; }
+.fb-prog { height: 6px; border-radius: 3px; background: var(--fb-mute-soft); overflow: hidden; }
+.fb-prog i, .fb-prog > span { display: block; height: 100%; background: var(--fb-live); border-radius: 3px; transition: width var(--fb-dur) var(--fb-ease); }
+.fb-prog.warn i { background: var(--fb-warn); } .fb-prog.bad i { background: var(--fb-bad); } .fb-prog.info i { background: var(--fb-info); }
+.fb-mix { display: flex; height: 5px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.fb-mix i { display: block; height: 100%; }
+.fb-c1 { background: var(--fb-chart-1); } .fb-c2 { background: var(--fb-chart-2); } .fb-c3 { background: var(--fb-chart-3); } .fb-c4 { background: var(--fb-chart-4); } .fb-c5 { background: var(--fb-chart-5); } .fb-c6 { background: var(--fb-chart-6); }
+
+.fb-tag { font-size: 10.5px; padding: 3px 8px; border-radius: 999px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; line-height: 1.3; background: var(--fb-mute-soft); color: var(--fb-ink-3); }
+.fb-tag::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: 0 0 5px; }
+.fb-tag.better, .fb-tag.ok, .fb-tag.live { background: var(--fb-live-soft); color: var(--fb-live-ink); }
+.fb-tag.tie, .fb-tag.mute { background: var(--fb-mute-soft); color: var(--fb-ink-3); }
+.fb-tag.worse, .fb-tag.bad { background: var(--fb-bad-soft); color: var(--fb-bad-ink); }
+.fb-tag.warn { background: var(--fb-warn-soft); color: var(--fb-warn-ink); }
+.fb-tag.info { background: var(--fb-info-soft); color: var(--fb-info); }
+.fb-tag.solid { background: var(--fb-live); color: #fff; } .fb-tag.solid::before { display: none; }
+.fb-tag.nodot::before { display: none; }
+.fb-chip { font-size: 11.5px; padding: 5px 10px; border-radius: 999px; background: var(--fb-mute-soft); color: var(--fb-ink-3); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; border: 1px solid transparent; outline: 0; font: inherit; font-size: 11px; transition: background-color var(--fb-dur-3), color var(--fb-dur-3), box-shadow var(--fb-dur-3); }
+.fb-chip:hover { color: var(--fb-ink); }
+.fb-chip.on, .fb-chip.win { background: var(--fb-live-soft); color: var(--fb-live-ink); font-weight: 500; }
+.fb-chip.on.bad { background: var(--fb-bad-soft); color: var(--fb-bad-ink); }
+.fb-chip.on.warn { background: var(--fb-warn-soft); color: var(--fb-warn-ink); }
+.fb-chip.on.info { background: var(--fb-info-soft); color: var(--fb-info); }
+.fb-chip .x { opacity: .6; } .fb-chip .x:hover { opacity: 1; }
+.fb-empty { margin: auto; text-align: center; color: var(--fb-ink-4); font-size: 12px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.fb-empty .t { color: var(--fb-ink-4); font-size: 12px; }
+.fb-skeleton { border-radius: var(--fb-r-sm); background: var(--fb-mute-soft); background-image: linear-gradient(90deg, transparent 25%, rgba(255,255,255,.35) 50%, transparent 75%); background-size: 200% 100%; animation: fb-shimmer 1.4s linear infinite; }
+html.dark .fb-skeleton { background-image: linear-gradient(90deg, transparent 25%, rgba(255,255,255,.08) 50%, transparent 75%); }
+@keyframes fb-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+:where(.fb-spinner) { width: 18px; height: 18px; }
+.fb-spinner { border-radius: 50%; border: 2px solid var(--fb-line-2); border-top-color: var(--fb-live); animation: fb-spin .8s linear infinite; display: inline-block; }
+@keyframes fb-spin { to { transform: rotate(360deg); } }
+/* 日历 */
+.fb-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.fb-cal .dow { font-size: 10px; color: var(--fb-ink-4); text-align: center; padding: 4px 0; letter-spacing: .08em; }
+.fb-cal .day { min-width: 0; overflow: hidden; min-height: 74px; padding: 6px 8px; border-radius: 10px; background: var(--fb-hover); border: 1px solid var(--fb-card-edge); font-size: 11px; color: var(--fb-ink-3); transition: box-shadow var(--fb-dur-2); }
+html.dark .fb-cal .day { background: rgba(255,255,255,.03); }
+.fb-cal .day.today { background: var(--fb-card); box-shadow: var(--fb-shadow-active); color: var(--fb-ink); }
+.fb-cal .day.past { opacity: .7; }
+.fb-cal .day.other { opacity: .4; }
+.fb-ev { display: block; margin-top: 4px; padding: 2px 6px; border-radius: var(--fb-r-xs); font-size: 10.5px; background: var(--fb-mute-soft); color: var(--fb-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.fb-ev.live { background: var(--fb-live-soft); color: var(--fb-live-ink); }
+.fb-ev.bad { background: var(--fb-bad-soft); color: var(--fb-bad-ink); }
+.fb-ev.warn { background: var(--fb-warn-soft); color: var(--fb-warn-ink); }
+.fb-ev.info { background: var(--fb-info-soft); color: var(--fb-info); }
+/* 看板 / 甘特 */
+.fb-kanban { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }
+.fb-kanban .col { flex: 0 0 240px; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: var(--fb-r-card); background: var(--fb-well); }
+.fb-kanban .col-hd { font-size: 11px; color: var(--fb-ink-4); padding: 2px 4px 4px; display: flex; justify-content: space-between; }
+.fb-gantt-bar { height: 8px; border-radius: 4px; background: var(--fb-live); }
+.fb-gantt-bar.mute { background: var(--fb-ink-4); }
+
+/* ═══ 7. 按钮与输入 ═══ */
+.fb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 7px 12px; border-radius: var(--fb-r-btn); font-size: 12px; line-height: 1.3; border: 1px solid var(--fb-card-edge); background: var(--fb-card); color: var(--fb-ink); cursor: pointer; box-shadow: var(--fb-shadow-card); outline: 0; font-family: inherit; font-weight: 400;
+  transition: color var(--fb-dur-3), background-color var(--fb-dur-3), box-shadow var(--fb-dur-3), transform var(--fb-dur-3), opacity var(--fb-dur-3); }
+.fb-btn:hover { color: var(--fb-ink); box-shadow: var(--fb-shadow-card-hover); }
+.fb-btn:active { transform: translateY(1px); }
+.fb-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.fb-btn:focus-visible { box-shadow: 0 0 0 3px var(--fb-live-soft), var(--fb-shadow-card); }
+.fb-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }   /* 不许被弹性盒压扁 */
+.fb-btn.primary { color: var(--fb-inverse-ink); border-color: var(--fb-inverse); background: var(--fb-inverse); box-shadow: 0 10px 20px -12px rgba(17,24,39,.6); }
+.fb-btn.primary:hover { color: var(--fb-inverse-ink); opacity: .92; }
+.fb-btn.ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--fb-ink-2); }
+/* 面板头 / 顶栏 / 列表标题里的动作键:玻璃上没有底就几乎看不见,统一给白卡面 */
+.fb-panel-hd .fb-btn.ghost, .fb-list-title .fb-btn.ghost, .fb-topbar .fb-btn.ghost, .fb-drawer .hd .fb-btn.ghost {
+  background: var(--fb-card); border-color: var(--fb-card-edge); box-shadow: var(--fb-shadow-card); color: var(--fb-ink-2); }
+.fb-panel-hd .fb-btn.ghost:hover, .fb-list-title .fb-btn.ghost:hover, .fb-topbar .fb-btn.ghost:hover, .fb-drawer .hd .fb-btn.ghost:hover { color: var(--fb-ink); box-shadow: var(--fb-shadow-card-hover); }
+/* 行内动作键(列表项 / 表格行尾):悬停才出面,但图标本身要够大够深 */
+.fb-item .fb-btn.ghost, .fb-table .fb-btn.ghost { color: var(--fb-ink-3); }
+/* 列表项里的动作键比头部的小一号:行本身就矮,32 的方块几乎顶满一行 */
+.fb-item .fb-btn.icon, .fb-item .fb-btn.sm.icon { width: 28px; height: 28px; flex-basis: 28px; padding: 0; }
+.fb-item .fb-btn.icon svg, .fb-item .fb-btn.sm.icon svg { width: 17px; height: 17px; }
+.fb-item .fb-btn.xs.icon { width: 24px; height: 24px; flex-basis: 24px; }
+.fb-item .fb-btn.xs.icon svg { width: 15px; height: 15px; }
+.fb-item .fb-btn.ghost:hover, .fb-table .fb-btn.ghost:hover { color: var(--fb-ink); background: var(--fb-card); border-color: var(--fb-card-edge); box-shadow: var(--fb-shadow-card); }
+.fb-btn.ghost:hover { background: var(--fb-hover); color: var(--fb-ink); }
+.fb-btn.danger { color: var(--fb-bad-ink); }
+.fb-btn.danger.primary { background: var(--fb-bad); border-color: var(--fb-bad); color: #fff; }
+.fb-btn.live { color: var(--fb-live-ink); }
+/* 该动手了:琥珀实底。表格里一行行扫过去,只描边的按钮太容易被略过;
+   又不能用 primary 的黑底——缺货的行可能有几十条,一屏黑块反而看不出轻重(2026-09-13) */
+.fb-btn.warn { background: var(--fb-warn-soft); border-color: transparent; color: var(--fb-warn-ink); box-shadow: none; font-weight: 500; }
+.fb-btn.warn:hover { background: var(--fb-warn-soft); color: var(--fb-warn-ink); box-shadow: 0 0 0 1px var(--fb-warn) inset; }
+.fb-btn.warn:focus-visible { box-shadow: 0 0 0 3px var(--fb-warn-soft), 0 0 0 1px var(--fb-warn) inset; }
+.fb-btn.icon { width: 34px; height: 34px; padding: 0; flex: 0 0 34px; }
+.fb-btn.icon svg { width: 20px; height: 20px; stroke-width: 2; }
+.fb-btn.sm { padding: 6px 11px; font-size: 12px; border-radius: var(--fb-r-sm); }
+.fb-btn.sm svg { width: 15px; height: 15px; }
+/* .sm 的左右内边距 11px 会跟到图标按钮上,把 18px 的图标挤成 8px —— 图标按钮一律零内边距 */
+.fb-btn.sm.icon { width: 32px; height: 32px; flex-basis: 32px; padding: 0; }
+.fb-btn.sm.icon svg { width: 19px; height: 19px; stroke-width: 2; }
+.fb-btn.xs { padding: 3px 8px; font-size: 11px; border-radius: var(--fb-r-xs); box-shadow: none; gap: 4px; }
+.fb-btn.xs svg { width: 13px; height: 13px; }      /* 默认 16 的图标塞进 11px 的按钮会顶满 */
+.fb-btn.xs.icon { width: 28px; height: 28px; flex-basis: 28px; padding: 0; }
+.fb-btn.xs.icon svg { width: 17px; height: 17px; stroke-width: 2; }
+.fb-btn.lg { padding: 9px 16px; font-size: 13px; }
+.fb-btn.lg.icon { width: 40px; height: 40px; flex-basis: 40px; padding: 0; }
+.fb-btn.lg.icon svg { width: 22px; height: 22px; stroke-width: 2; }
+.fb-btn.block { width: 100%; }
+:where(.fb-input, .fb-select, .fb-textarea) { display: block; width: 100%; }
+/* 表单域:深色发丝边 + 轻微内凹,和白卡(白边 + 外阴影)区分开——不然在玻璃上根本找不到输入框在哪 */
+.fb-input, .fb-select, .fb-textarea { padding: 7px 12px; border-radius: var(--fb-r-btn); border: 1px solid var(--fb-field-edge); background: var(--fb-field); color: var(--fb-ink); font: inherit; font-size: 13px; outline: 0; box-shadow: var(--fb-field-inset); transition: border-color var(--fb-dur-3), box-shadow var(--fb-dur-3), background-color var(--fb-dur-3); }
+.fb-input:hover, .fb-select:hover, .fb-textarea:hover { border-color: var(--fb-field-edge-hover); }
+.fb-input::placeholder, .fb-textarea::placeholder { color: var(--fb-ink-4); }
+.fb-input:focus, .fb-select:focus, .fb-textarea:focus { border-color: var(--fb-info); background: var(--fb-card); box-shadow: 0 0 0 3px var(--fb-info-soft); }
+.fb-input:disabled, .fb-select:disabled, .fb-textarea:disabled { opacity: .55; cursor: not-allowed; }
+.fb-input.invalid, .fb-textarea.invalid { border-color: var(--fb-bad); }
+.fb-input.sm, .fb-select.sm { padding: 4px 9px; font-size: 12px; border-radius: var(--fb-r-sm); }
+.fb-select.sm { padding-right: 26px; }
+.fb-input.qty { width: 64px; text-align: right; display: inline-block; }
+.fb-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+.fb-select { appearance: none; -webkit-appearance: none; padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, var(--fb-ink-3) 50%), linear-gradient(135deg, var(--fb-ink-3) 50%, transparent 50%); background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+.fb-label { display: block; font-size: 11px; color: var(--fb-ink-3); margin-bottom: 4px; }   /* 表单标签要比脚注实一点 */
+.fb-field { display: flex; flex-direction: column; gap: 4px; }
+.fb-help { font-size: 11px; color: var(--fb-ink-4); }
+.fb-error { font-size: 11px; color: var(--fb-bad-ink); }
+input[type="checkbox"].fb-check, input[type="radio"].fb-check { accent-color: var(--fb-live); width: 14px; height: 14px; }
+.fb-switch { position: relative; display: inline-block; width: 34px; height: 20px; border-radius: 999px; background: var(--fb-line-2); cursor: pointer; transition: background-color var(--fb-dur-3); flex: 0 0 34px; border: 0; padding: 0; outline: 0; }
+.fb-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform var(--fb-dur-3) var(--fb-ease); }
+.fb-switch.on, .fb-switch[aria-checked="true"] { background: var(--fb-live); }
+.fb-switch.on::after, .fb-switch[aria-checked="true"]::after { transform: translateX(14px); }
+.fb-switch:disabled { opacity: .5; cursor: not-allowed; }
+.fb-opt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--fb-r-card); border: 1px solid var(--fb-line-2); background: var(--fb-hover); cursor: pointer; font-size: 12.5px; color: var(--fb-ink-2); transition: box-shadow var(--fb-dur-3), border-color var(--fb-dur-3), background-color var(--fb-dur-3); }
+html.dark .fb-opt { background: rgba(255,255,255,.04); }
+.fb-opt .rb { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--fb-ink-4); flex: 0 0 14px; transition: border-color var(--fb-dur-3); }
+.fb-opt.on { background: var(--fb-card); border-color: rgba(34,197,94,.35); box-shadow: 0 0 0 1px rgba(34,197,94,.14), 0 0 18px -8px var(--fb-glow); color: var(--fb-ink); }
+.fb-opt.on .rb { border-color: var(--fb-live); background: radial-gradient(circle, var(--fb-live) 45%, transparent 50%); }
+.fb-opt .s { color: var(--fb-ink-4); font-size: 11px; margin-left: auto; white-space: nowrap; }
+.fb-search { position: relative; }
+.fb-search > svg { position: absolute; left: 10px; top: 50%; margin-top: -7px; width: 14px; height: 14px; color: var(--fb-ink-4); pointer-events: none; }
+.fb-search > .fb-input { padding-left: 30px; }
+.fb-search > .x { position: absolute; right: 8px; top: 50%; margin-top: -9px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; color: var(--fb-ink-4); cursor: pointer; background: transparent; border: 0; }
+.fb-search > .x:hover { color: var(--fb-ink); background: var(--fb-mute-soft); }
+.fb-drop { border: 1px dashed var(--fb-line-2); border-radius: var(--fb-r-card); padding: 18px; text-align: center; color: var(--fb-ink-4); font-size: 12px; transition: border-color var(--fb-dur-3), background-color var(--fb-dur-3); }
+.fb-drop.over { border-color: var(--fb-live); background: var(--fb-live-soft); }
+.fb-composer { display: block; width: 100%; min-height: 48px; box-sizing: border-box; padding: 13px 14px; border: 1px solid var(--fb-card-edge); border-radius: var(--fb-r-card); background: var(--fb-card); color: var(--fb-ink); font-size: 14px; line-height: 1.4; outline: 0; resize: none; max-height: 120px; font-family: inherit; box-shadow: var(--fb-shadow-card); transition: border-color var(--fb-dur-3), box-shadow var(--fb-dur-3); }
+.fb-composer:focus { border-color: rgba(59,130,246,.5); box-shadow: 0 0 0 3px var(--fb-info-soft); }
+.fb-composer::placeholder { color: var(--fb-ink-4); }
+
+/* ═══ 8. 浮层 ═══ */
+.fb-drawer { position: fixed; top: var(--fb-stage-pad); right: var(--fb-stage-pad); bottom: var(--fb-stage-pad); width: min(440px, 34vw); min-width: min(400px, calc(100vw - 36px)); max-width: calc(100vw - 36px); z-index: var(--fb-z-drawer);
+  display: flex; flex-direction: column; overflow: hidden; background: var(--fb-l3); box-shadow: var(--fb-shadow-l3);
+  transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease), filter var(--fb-dur) var(--fb-ease); }
+.fb-drawer.wide { width: min(640px, 48vw); }
+.fb-drawer .hd { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--fb-line); flex: 0 0 auto; }
+.fb-drawer .hd h2, .fb-drawer .hd .h2 { margin: 0; font-size: 15px; font-weight: 500; color: var(--fb-ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fb-drawer .hd .id, .fb-drawer .hd .sub { font-size: 11px; color: var(--fb-ink-4); white-space: nowrap; }
+.fb-drawer .hd .x { margin-left: auto; }
+.fb-drawer .bd { padding: 14px 16px; overflow: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+.fb-drawer .ft { padding: 12px 16px; border-top: 1px solid var(--fb-line); display: flex; gap: 8px; justify-content: flex-end; align-items: center; background: var(--fb-hover); flex: 0 0 auto; }
+html.dark .fb-drawer .ft { background: rgba(255,255,255,.03); }
+.fb-drawer-enter-active, .fb-drawer-leave-active { transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease); }
+.fb-drawer-enter-from, .fb-drawer-leave-to { transform: translateX(64px) scale(.985); opacity: 0; }
+@media (max-width: 720px) {
+  .fb-drawer, .fb-drawer.wide { top: auto; left: 0; right: 0; bottom: 0; width: 100%; min-width: 0; max-width: none; max-height: 86vh; border-radius: var(--fb-r-layer) var(--fb-r-layer) 0 0; }
+  .fb-drawer-enter-from, .fb-drawer-leave-to { transform: translateY(40px); opacity: 0; }
+}
+.fb-scrim { position: fixed; inset: 0; z-index: var(--fb-z-scrim); background: rgba(17,24,39,.22); }
+html.dark .fb-scrim { background: rgba(0,0,0,.5); }
+.fb-scrim-enter-active, .fb-scrim-leave-active { transition: opacity var(--fb-dur) var(--fb-ease); }
+.fb-scrim-enter-from, .fb-scrim-leave-to { opacity: 0; }
+.fb-modal { position: fixed; left: 50%; top: 50%; z-index: var(--fb-z-modal); width: 460px; max-width: calc(100vw - 36px); max-height: calc(100vh - 36px); transform: translate(-50%, -50%); display: flex; flex-direction: column; overflow: hidden;
+  background: var(--fb-l4); box-shadow: var(--fb-shadow-l4); border: 1px solid var(--fb-edge); border-radius: var(--fb-r-layer);
+  -webkit-backdrop-filter: blur(var(--fb-blur)) saturate(140%); backdrop-filter: blur(var(--fb-blur)) saturate(140%); }
+.fb-modal.md { width: 560px; } .fb-modal.lg { width: 720px; } .fb-modal.xl { width: 900px; } .fb-modal.sm { width: 380px; }
+.fb-modal .hd { padding: 18px 20px 6px; flex: 0 0 auto; display: flex; align-items: flex-start; gap: 10px; }
+.fb-modal .hd h2, .fb-modal .hd .h2 { margin: 0; font-size: 16px; font-weight: 500; color: var(--fb-ink); }
+.fb-modal .hd p, .fb-modal .hd .p { margin: 6px 0 0; color: var(--fb-ink-3); font-size: 12.5px; }
+.fb-modal .hd .x { margin-left: auto; }
+.fb-modal .bd { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; overflow: auto; flex: 1; min-height: 0; }
+.fb-modal .ft { padding: 12px 20px 18px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex: 0 0 auto; }
+.fb-modal-enter-active, .fb-modal-leave-active { transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease); }
+.fb-modal-enter-from, .fb-modal-leave-to { transform: translate(-50%, -50%) translateY(18px) scale(.965); opacity: 0; }
+.fb-menu { position: absolute; z-index: var(--fb-z-page); min-width: 160px; padding: 6px; border-radius: var(--fb-r-card); background: var(--fb-l4); border: 1px solid var(--fb-edge); box-shadow: var(--fb-shadow-menu); -webkit-backdrop-filter: blur(var(--fb-blur)); backdrop-filter: blur(var(--fb-blur)); }
+.fb-menu .mi, .fb-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--fb-r-sm); font-size: 12.5px; color: var(--fb-ink-2); cursor: pointer; background: transparent; border: 0; outline: 0; font-family: inherit; white-space: nowrap; }
+.fb-menu .mi:hover, .fb-menu-item:hover { background: var(--fb-hover); color: var(--fb-ink); }
+.fb-menu .mi.danger, .fb-menu-item.danger { color: var(--fb-bad-ink); }
+.fb-menu .mi svg, .fb-menu-item svg { width: 14px; height: 14px; }
+.fb-menu .sep { height: 1px; background: var(--fb-line); margin: 4px 6px; }
+.fb-menu-enter-active, .fb-menu-leave-active { transition: transform var(--fb-dur-3) var(--fb-ease), opacity var(--fb-dur-3) var(--fb-ease); }
+.fb-menu-enter-from, .fb-menu-leave-to { transform: translateY(-4px); opacity: 0; }
+.fb-tip { position: absolute; z-index: var(--fb-z-page); padding: 5px 8px; border-radius: var(--fb-r-sm); background: var(--fb-inverse); color: var(--fb-inverse-ink); font-size: 11px; white-space: nowrap; pointer-events: none; box-shadow: var(--fb-shadow-menu); }
+.fb-toast-stack { position: fixed; right: 20px; bottom: 20px; z-index: var(--fb-z-toast); display: flex; flex-direction: column-reverse; gap: 10px; width: 340px; max-width: calc(100vw - 40px); pointer-events: none; }
+.fb-toast { position: relative; pointer-events: auto; width: 100%; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; background: var(--fb-l3); border: 1px solid var(--fb-edge); border-radius: var(--fb-r-layer); box-shadow: var(--fb-shadow-active), var(--fb-shadow-l3); -webkit-backdrop-filter: blur(var(--fb-blur)) saturate(140%); backdrop-filter: blur(var(--fb-blur)) saturate(140%); }
+.fb-toast.bad { box-shadow: 0 0 0 1px rgba(239,68,68,.25), 0 0 32px -6px rgba(239,68,68,.3), var(--fb-shadow-l3); }
+.fb-toast.warn { box-shadow: 0 0 0 1px rgba(245,158,11,.3), 0 0 32px -6px rgba(245,158,11,.3), var(--fb-shadow-l3); }
+.fb-toast.plain { box-shadow: var(--fb-shadow-l3); }
+.fb-toast .t { font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--fb-ink); min-width: 0; }
+.fb-toast .m { font-size: 12px; color: var(--fb-ink-3); margin-top: 4px; overflow-wrap: anywhere; }
+.fb-toast .x { margin-left: auto; color: var(--fb-ink-4); cursor: pointer; font-size: 16px; line-height: 1; background: transparent; border: 0; padding: 0 2px; flex: 0 0 auto; }
+.fb-toast .x:hover { color: var(--fb-ink); }
+.fb-toast-enter-active, .fb-toast-leave-active, .fb-toast-move { transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease); }
+.fb-toast-enter-from, .fb-toast-leave-to { transform: translateX(24px) scale(.98); opacity: 0; }
+.fb-toast-leave-active { position: absolute; }
+@media (max-width: 720px) { .fb-toast-stack { right: 12px; left: 12px; bottom: calc(64px + env(safe-area-inset-bottom)); width: auto; } }
+.fb-lightbox { position: fixed; inset: 0; z-index: var(--fb-z-modal); background: rgba(17,24,39,.85); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.fb-dropzone-overlay { position: fixed; inset: 0; z-index: var(--fb-z-modal); display: flex; align-items: center; justify-content: center; background: rgba(34,197,94,.08); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); border: 3px dashed var(--fb-live); pointer-events: none; }
+
+/* ═══ 9. Markdown 正文(保留原 .md-body 的排版,颜色改令牌)═══ */
+.fb-link, .md-body a, a.wiki-link { color: var(--fb-info); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+a.wiki-link { text-decoration-style: dashed; } a.wiki-link:hover { text-decoration-style: solid; }
+.wiki-link-disabled { color: var(--fb-ink-4); text-decoration: underline dashed; text-underline-offset: 2px; cursor: help; }
+.fb-code, .md-body code { font-family: var(--fb-mono); font-size: .9em; background: var(--fb-mute-soft); padding: .1em .35em; border-radius: 4px; }
+
+/* ═══ 11. 聊天气泡、附件、通知角标、补充修饰 ═══ */
+/* iOS 口径:圆角 18px,发送方一侧的下角收成 5px,自己 = 系统蓝底白字,对方 = 浅灰底黑字 */
+.fb-bubble { position: relative; border-radius: 18px; padding: 9px 14px; min-width: 0; font-size: 15px; line-height: 1.42; }
+.fb-bubble.me { background: var(--fb-bubble-me); color: var(--fb-bubble-me-ink); border-bottom-right-radius: 5px; }
+/* 气泡里的正文按 iOS 的阅读尺寸,比列表正文大一号 */
+.fb-bubble .md-body { font-size: 15px; line-height: 1.5; color: inherit; }
+.fb-bubble.me .md-body, .fb-bubble.me a { color: inherit; }
+.fb-bubble.me code, .fb-bubble.me .fb-code { background: var(--fb-on-accent-soft); color: inherit; }
+.fb-bubble.them { background: var(--fb-bubble-them); color: var(--fb-bubble-them-ink); border-bottom-left-radius: 5px; }
+.fb-attach { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--fb-r-sm); background: var(--fb-mute-soft); color: inherit; transition: background-color var(--fb-dur-3); }
+.fb-bubble.me .fb-attach { background: var(--fb-on-accent-soft); }
+.fb-bubble.me .fb-attach:hover { background: var(--fb-on-accent-soft-hi); }
+.fb-badge.mute { background: var(--fb-ink-4); }
+/* 纯计数(页签里的条数)用中性底:红色是「要你处理」的意思,拿来数数会让人以为出事了 */
+.fb-badge.count { background: var(--fb-mute-soft); color: var(--fb-ink-3); font-weight: 500; }
+.fb-tab.on .fb-badge.count { background: var(--fb-well); color: var(--fb-ink-2); }
+.fb-avatar-block.round { border-radius: 50%; }
+.fb-sheet { border-radius: var(--fb-r-layer) var(--fb-r-layer) 0 0; }
+.fb-item.row { display: flex; align-items: center; gap: 8px; }
+.fb-kanban.fill .col { flex: 1 1 0; min-width: 0; }
+/* 通知角标:待你决定 / 已处理 / 第 N 次提醒(桌面列表、手机列表、横幅共用) */
+.notif-badge { font-size: 10px; line-height: 16px; padding: 0 6px; border-radius: 8px; font-weight: 500; white-space: nowrap; }
+.notif-badge--decision { background: var(--fb-bad-soft); color: var(--fb-bad-ink); }
+.notif-badge--done { background: var(--fb-mute-soft); color: var(--fb-ink-3); }
+.notif-badge--repeat { background: var(--fb-warn-soft); color: var(--fb-warn-ink); }
+/* 聊天里的步骤块(思考 / 工具 / 反思)流式中的呼吸 */
+.step-streaming { animation: fb-step-pulse 1.6s ease-in-out infinite; }
+@keyframes fb-step-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* ═══ 12. 手机 / 贴边 / 底部 sheet ═══ */
+.fb-glass.flush { border-radius: 0; border-width: 0; }
+.fb-glass.flush-top { border-radius: 0; border-width: 0 0 1px; }
+.fb-glass.flush-bottom { border-radius: 0; border-width: 1px 0 0; }
+.fb-sheet { border-radius: var(--fb-r-layer) var(--fb-r-layer) 0 0; border-width: 1px 0 0; }
+.fb-sheet-enter-active, .fb-sheet-leave-active { transition: transform var(--fb-dur) var(--fb-ease), opacity var(--fb-dur) var(--fb-ease); }
+.fb-sheet-enter-from, .fb-sheet-leave-to { transform: translateY(100%); opacity: .6; }
+.fb-chip.on.mute { background: var(--fb-mute-soft); color: var(--fb-ink-2); }
+
+/* 日历周 / 日视图:时间格里的事件条与「+N」折叠条 */
+.cal-more { display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 500; border-radius: var(--fb-r-xs);
+  background: var(--fb-card); border: 1px solid var(--fb-card-edge); color: var(--fb-ink-2); box-shadow: var(--fb-shadow-card); padding: 0 4px; }
+.cal-more:hover { color: var(--fb-ink); }
+
+/* 通用淡入淡出(分区切换等)*/
+.fb-fade-enter-active, .fb-fade-leave-active { transition: opacity var(--fb-dur-3) var(--fb-ease); }
+.fb-fade-enter-from, .fb-fade-leave-to { opacity: 0; }
+
+/* ═══ 10. 减少动效 ═══ */
+@media (prefers-reduced-motion: reduce) {
+  .fb-glass, .fb-stage, .fb-nav, .fb-cursor, .fb-drawer, .fb-modal, .fb-card, .fb-btn { transition-duration: 120ms !important; }
+  .fb-nav::before { transition: opacity 120ms !important; transform: none !important; }
+  .fb-l1-enter-from, .fb-l1-leave-to, .fb-l2-enter-from, .fb-l2-leave-to, .fb-drawer-enter-from, .fb-drawer-leave-to, .fb-modal-enter-from, .fb-modal-leave-to { transform: none !important; }
+  .fb-modal-enter-from, .fb-modal-leave-to { transform: translate(-50%, -50%) !important; }
+  .fb-stage[data-depth] > .l0, .fb-stage[data-depth] > .l1, .fb-stage.under-drawer, .fb-stage.under-modal, .fb-drawer.under-modal { transform: none !important; filter: none !important; }
+  .fb-card.active, .fb-glass.active { animation: none !important; }
+  .fb-cursor { transition: opacity 120ms !important; }
+  .fb-sheet-enter-from, .fb-sheet-leave-to { transform: none !important; opacity: 0; }
+}
+
+/* ── 微信语音气泡(ui/src/utils/voiceBubble.js):像微信那样一个可点的条,播放键 + 时间/发送人 + 时长 ── */
+.fb-voice { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin: 3px 6px 3px 0; padding: 6px 12px 6px 10px; border-radius: 999px; border: 1px solid var(--fb-line); background: var(--fb-live-soft); color: var(--fb-ink); font-size: 12.5px; line-height: 1.3; cursor: pointer; vertical-align: middle; text-align: left; }
+.fb-voice:hover { filter: brightness(.97); }
+.fb-voice__play { width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent var(--fb-live-ink); flex: 0 0 auto; }
+.fb-voice.is-playing .fb-voice__play { width: 10px; height: 12px; border-width: 0 3px 0 3px; border-color: var(--fb-live-ink); border-style: solid; box-sizing: border-box; }
+.fb-voice.is-loading .fb-voice__play { opacity: .4; }
+.fb-voice.is-playing { box-shadow: 0 0 0 2px var(--fb-live-soft); animation: fb-voice-pulse 1.2s ease-in-out infinite; }
+.fb-voice.is-error { background: var(--fb-bad-soft, var(--fb-mute-soft)); color: var(--fb-bad-ink, var(--fb-ink-3)); }
+.fb-voice.is-error .fb-voice__play { border-left-color: currentColor; }
+.fb-voice__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fb-voice__dur { color: var(--fb-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@keyframes fb-voice-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
+
+/* ── 手机会话列表的真实样式(ChatListViewMobile.vue 原样搬过来)── */
+
+.clv { display: flex; flex-direction: column; height: 100%; position: relative; }
+.clv__chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; }
+.clv__search { padding: 8px 12px; }
+.clv__loading { padding: 4px 12px; }
+.clv__skel { height: 68px; margin-bottom: 6px; }
+.clv__empty { flex: 1; }
+/* iOS 的成组列表:整块不透明底通到两边,行之间是缩进到文字起点的细线 */
+.clv__list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0; background: var(--fb-list-surface); }
+.clv__item-wrap { position: relative; overflow: hidden; }
+/* 行是 fb-item;底要不透明,左滑时盖住下面的「删除」 */
+.clv__item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-height: 68px; background: var(--fb-list-surface); border-radius: 0; -webkit-tap-highlight-color: transparent; transition: transform var(--fb-dur-3) var(--fb-ease), background-color var(--fb-dur-2) var(--fb-ease); }
+.clv__item:active { background: var(--fb-hover); }
+.clv__item-wrap + .clv__item-wrap .clv__item::before { content: ""; position: absolute; left: 68px; right: 0; top: 0; height: 1px; background: var(--fb-line); }
+.clv__item--swiped { transform: translateX(-64px); }
+.clv__icon { width: 40px; height: 40px; flex-basis: 40px; }
+.clv__body { flex: 1; min-width: 0; }
+.clv__top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+.clv__title { font-size: 16px; font-weight: 590; color: var(--fb-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clv__time { font-size: 12.5px; color: var(--fb-ink-4); flex-shrink: 0; margin-left: 8px; }
+.clv__bot { display: flex; justify-content: space-between; align-items: center; }
+.clv__prev { font-size: 14px; line-height: 1.35; color: var(--fb-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.clv__badge { margin-left: 8px; flex-shrink: 0; }
+/* 免打扰:未读照记,但灰色——与桌面端口径一致 */
+.clv__badge--muted { background: var(--fb-ink-4); }
+.clv__del { position: absolute; right: 0; top: 0; bottom: 0; width: 64px; border-radius: 0; font-size: 13px; }
+.clv__fab-wrap { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; z-index: var(--fb-z-page); }
+.clv__fab { width: 52px; height: 52px; flex-basis: 52px; border-radius: 999px; }
+.clv__fab svg { width: 22px; height: 22px; }
+.clv__fab-menu { position: relative; min-width: 140px; }
+.clv__backdrop { position: absolute; inset: 0; z-index: var(--fb-z-page); background: transparent; }
+.mu-enter-active, .mu-leave-active { transition: opacity var(--fb-dur-3) var(--fb-ease), transform var(--fb-dur-3) var(--fb-ease); }
+.mu-enter-from, .mu-leave-to { opacity: 0; transform: translateY(8px); }
+/* 建群 sheet(Teleport 到 body,scoped 属性仍在) */
+.gn-backdrop { display: flex; align-items: flex-end; }
+.gn-sheet { width: 100%; border-radius: var(--fb-r-layer) var(--fb-r-layer) 0 0; border-width: 1px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+.gn-sheet h3 { font-size: 15px; font-weight: 500; color: var(--fb-ink); margin: 0; }
+.gn-sub { font-size: 12px; color: var(--fb-ink-4); margin: 2px 0 12px; }
+.gn-btn { margin-top: 12px; }
+.gn-enter-active, .gn-leave-active { transition: opacity var(--fb-dur) var(--fb-ease); }
+.gn-enter-active .gn-sheet, .gn-leave-active .gn-sheet { transition: transform var(--fb-dur) var(--fb-ease); }
+.gn-enter-from, .gn-leave-to { opacity: 0; }
+.gn-enter-from .gn-sheet, .gn-leave-to .gn-sheet { transform: translateY(100%); }
+
+/* Tailwind 的 preflight(全局重置)内嵌不进来(它是构建期生成的),这里补等价的几条。
+   少了 box-sizing:border-box,每一行都会比容器宽出两倍 padding —— 第一版就是这么歪的。 */
+*,*::before,*::after{box-sizing:border-box}
+button{background:none;border:0;font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+h1,h3,h4,p,ul{margin:0}
+ul{padding-left:18px}
+/* ════ 概念稿自己的东西:手机外壳 + 说明排版 ════ */
+body{background:var(--fb-bg);color:var(--fb-ink);margin:0;font-family:var(--fb-font);font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 22px 60px}
+h1{font-size:19px;margin:0 0 4px}.sub{color:var(--fb-ink-3);font-size:13px;margin:0 0 20px;max-width:900px}
+.rack{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.slot{width:340px}
+.slot h4{font-size:13px;margin:0 0 3px;font-weight:600}
+.slot p{font-size:12px;color:var(--fb-ink-4);margin:0 0 10px;min-height:32px}
+/* 手机外壳:只是个壳,里面是真实的类名 */
+.phone{width:340px;height:660px;border-radius:38px;background:var(--fb-bg-2,#0f1115);padding:10px;
+  box-shadow:0 20px 50px -24px rgba(17,24,39,.5),0 0 0 1px rgba(17,24,39,.12);position:relative}
+.screen{width:100%;height:100%;border-radius:29px;overflow:hidden;background:var(--fb-list-surface);
+  display:flex;flex-direction:column;position:relative}
+.statusbar{height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;font-size:10.5px;color:var(--fb-ink-3);background:var(--fb-list-surface)}
+/* 导航条 = MobileNavBar 的形状 */
+.navbar{flex:0 0 44px;display:flex;align-items:center;gap:6px;padding:0 10px;
+  background:var(--fb-list-surface);border-bottom:1px solid var(--fb-line);font-weight:590;font-size:16px}
+.navbar .back{background:none;border:0;font:inherit;font-size:15px;color:var(--fb-info);cursor:pointer;padding:0 4px}
+.navbar .sp{flex:1}
+.navbar .act{background:none;border:0;color:var(--fb-ink-4);cursor:pointer;padding:4px}
+/* 底部页签 = MobileTabBar 的形状 */
+.tabbar{flex:0 0 52px;display:flex;border-top:1px solid var(--fb-line);background:var(--fb-list-surface)}
+.tabbar button{flex:1;background:none;border:0;font:inherit;font-size:10px;color:var(--fb-ink-4);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.tabbar button.on{color:var(--fb-ink)}
+.tabbar i{width:18px;height:18px;display:block;border-radius:5px;background:currentColor;opacity:.75}
+/* iOS 的分区标题 */
+.sec{font-size:11.5px;color:var(--fb-ink-4);padding:16px 16px 6px;background:var(--fb-bg);
+  display:flex;align-items:center;gap:6px;user-select:none;cursor:pointer}
+.sec .fold{margin-left:auto;font-size:11px;transition:transform var(--fb-dur-2) var(--fb-ease);display:inline-block}
+.sec.closed .fold{transform:rotate(-90deg)}
+.sec .fb-badge{margin-left:0}
+.body{flex:1;overflow-y:auto;background:var(--fb-bg)}
+.note{background:var(--fb-surface);border:1px solid var(--fb-line);border-radius:var(--fb-r-card);
+  padding:14px 18px;margin-top:22px;box-shadow:var(--fb-sh-1)}
+.note h3{font-size:14px;margin:0 0 8px}
+.note li{font-size:13px;color:var(--fb-ink-2);margin-bottom:7px}
+.note b{color:var(--fb-ink)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--fb-mute-soft);color:var(--fb-ink-3);margin-left:6px}
+.tag.new{background:var(--fb-live-soft);color:var(--fb-live-ink)}
+.tag.diff{background:var(--fb-warn-soft);color:var(--fb-warn-ink)}
+/* 分组详情里的卡片 */
+.gcard{background:var(--fb-surface);border-bottom:1px solid var(--fb-line);padding:13px 16px}
+.gcard .l1{display:flex;align-items:flex-start;gap:6px}
+.gcard b{font-size:14.5px;font-weight:590;flex:1;min-width:0}
+.gcard .t{font-size:12px;color:var(--fb-ink-4);flex:0 0 auto}
+.gcard .bd{font-size:13.5px;color:var(--fb-ink-2);margin-top:5px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.gcard .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.gmeta{font-size:12px;color:var(--fb-ink-4);padding:10px 16px;background:var(--fb-bg)}
+/* 左滑露出的动作:和现有「删除」同一套(绝对定位在行下面) */
+.clv__acts{position:absolute;right:0;top:0;bottom:0;display:flex}
+.clv__acts button{width:64px;border:0;border-radius:0;font:inherit;font-size:12.5px;color:#fff;cursor:pointer}
+.clv__acts .read{background:var(--fb-ink-4)}
+.clv__acts .mute{background:var(--fb-warn-ink)}
+.swiped .clv__item{transform:translateX(-128px)}
+/* 底部 sheet 里的动作 = iOS 的动作列表:整行可点、细线分隔,不是三个按钮 */
+.sheet-acts{background:var(--fb-surface);border:1px solid var(--fb-line);border-radius:var(--fb-r-card);overflow:hidden}
+.sheet-acts button{display:block;width:100%;text-align:left;padding:13px 14px;font-size:14.5px;color:var(--fb-ink)}
+.sheet-acts button + button{border-top:1px solid var(--fb-line)}
+.sheet-acts button:active{background:var(--fb-hover)}
+/* 「一摞」在手机上的两种画法,供比较 */
+.stackish{position:relative}
+.stackish::after{content:"";position:absolute;left:16px;right:16px;bottom:-3px;height:3px;
+  border-radius:0 0 8px 8px;background:var(--fb-line-2);opacity:.9}
+</style></head><body><div class="wrap">
+<h1>私人助理 · 消息分组(手机版)<span style="font-size:13px;color:var(--fb-ink-4)"> 概念稿 v1</span></h1><p class="sub">2026-09-22。桌面版已经上线;这是把同一套规则搬到手机上的概念稿。<b>观感不是我画的</b>——下面每一台手机里用的都是产品真实的类名和样式(<code>tokens.css</code> + <code>fb.css</code> + <code>ChatListViewMobile.vue</code> 的 scoped 样式原样内嵌),所以这里长什么样,做出来就该是什么样。手机壳、分区标题和分组详情那一屏是新加的,已在下面注明。</p><div class="rack"><div class="slot"><h4>① 现在的样子</h4><p>办完的、没办完的、我自己问的,混在一条时间线里。手机屏更窄,一屏只看得见七八行,翻起来更累。</p>
+<div class="phone"><div class="screen"><div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div><div class="navbar">私人助理<span class="sp"></span><span class="act">👤</span></div><div class="clv__search"><div class="fb-search" style="pointer-events:none"><input class="clv__search-input fb-input" placeholder="搜索对话…"></div></div><div class="body" style="background:var(--fb-list-surface)"><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">⏰</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">自动任务 · 9dc2648d-afe8…</span><span class="clv__time">00:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">门店 12每日数据洞察 · 数据日 2026-09…</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🗄</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">库存 · 门店 07 · 2 个商品</span><span class="clv__time">昨天</span></div>
+      <div class="clv__bot"><span class="clv__prev">助理:已处理,无需回复</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🗄</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">库存 · 仓库 · 3 个商品</span><span class="clv__time">昨天</span></div>
+      <div class="clv__bot"><span class="clv__prev">助理:已处理,无需回复</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">📅</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">会议变更 · 产品评审</span><span class="clv__time">昨天</span></div>
+      <div class="clv__bot"><span class="clv__prev">助理:已处理,无需回复</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🗄</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">库存 · 仓库 · 2 个商品</span><span class="clv__time">前天</span></div>
+      <div class="clv__bot"><span class="clv__prev">助理:已处理,无需回复</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🤖</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">查看新邮件</span><span class="clv__time">17:06</span></div>
+      <div class="clv__bot"><span class="clv__prev">最新那条是 09-20 17:06 的…</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🤖</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">列出授权目录文件</span><span class="clv__time">16:20</span></div>
+      <div class="clv__bot"><span class="clv__prev">桥接在线,授权根目录是 ~/Desktop…</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🎯</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">检查点临期 · 门店改造</span><span class="clv__time">周三</span></div>
+      <div class="clv__bot"><span class="clv__prev">助理:已处理,无需回复</span></div>
+    </div>
+  </div>
+</div></div><div class="tabbar"><button class="on"><i></i>对话</button><button><i></i>今日</button><button><i></i>通知</button><button><i></i>更多</button></div></div></div></div><div class="slot"><h4>② 分组之后 <span class='tag new'>主张</span></h4><p>分成两区:上面「助理找我的」按类聚合,下面「我和助理」只有我自己开的对话。「已处理」跟在分组区后面。</p>
+<div class="phone"><div class="screen"><div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div><div class="navbar">私人助理<span class="sp"></span><span class="act">👤</span></div><div class="clv__search"><div class="fb-search" style="pointer-events:none"><input class="clv__search-input fb-input" placeholder="搜索对话…"></div></div><div class="body"><div class="sec"><span class="fb-dot"></span>助理找我的 · 4 类 · 16 件<span class="fold">▾</span></div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🗄</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">库存警报</span><span class="clv__time">18:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">6 件待办 · 门店 07 桂花雪梨老酸奶</span><span class="clv__badge fb-badge">1</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">📅</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">会议变更</span><span class="clv__time">10:12</span></div>
+      <div class="clv__bot"><span class="clv__prev">2 件待办 · 周五的产品评审改到下周一</span><span class="clv__badge fb-badge">2</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">⏰</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">自动任务</span><span class="clv__time">00:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">7 件 · 门店 12每日数据洞察</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🎯</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">项目检查点</span><span class="clv__time">周三</span></div>
+      <div class="clv__bot"><span class="clv__prev">1 件待办 · 「门店改造」还有 2 天到期</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap"><div class="clv__item fb-item" style="min-height:52px"><span style="color:var(--fb-ink-4);font-size:13px">✓ 已处理 510</span><span style="flex:1"></span><span style="color:var(--fb-ink-4)">›</span></div></div><div class="sec">我和助理</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🤖</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">查看新邮件</span><span class="clv__time">17:06</span></div>
+      <div class="clv__bot"><span class="clv__prev">最新那条是 09-20 17:06 的…</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🤖</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">列出授权目录文件</span><span class="clv__time">16:20</span></div>
+      <div class="clv__bot"><span class="clv__prev">桥接在线,授权根目录是 ~/Desktop…</span></div>
+    </div>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🤖</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">搜发票消息并看图片</span><span class="clv__time">昨天</span></div>
+      <div class="clv__bot"><span class="clv__prev">我先做两件事:搜含「发票」的聊天记录…</span></div>
+    </div>
+  </div>
+</div></div><div class="tabbar"><button class="on"><i></i>对话</button><button><i></i>今日</button><button><i></i>通知</button><button><i></i>更多</button></div></div></div></div><div class="slot"><h4>③ 左滑 <span class='tag diff'>和桌面不同</span></h4><p>桌面是右键;手机上顺着已有的「左滑删除」长出来——左滑露出「已读 / 免扰」。画的是<b>手指滑到底</b>那一刻,行整体左移,标题滑出屏外(iOS 的行为)。</p>
+<div class="phone"><div class="screen"><div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div><div class="navbar">私人助理<span class="sp"></span><span class="act">👤</span></div><div class="body"><div class="sec"><span class="fb-dot"></span>助理找我的 · 4 类 · 16 件<span class="fold">▾</span></div><div class="clv__item-wrap swiped stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🗄</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">库存警报</span><span class="clv__time">18:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">6 件待办 · 门店 07 桂花雪梨老酸奶</span><span class="clv__badge fb-badge">1</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+  <div class="clv__acts"><button class="read">已读</button><button class="mute">免扰</button></div>
+</div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">📅</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">会议变更</span><span class="clv__time">10:12</span></div>
+      <div class="clv__bot"><span class="clv__prev">2 件待办 · 周五的产品评审改到下周一</span><span class="clv__badge fb-badge">2</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">⏰</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">自动任务</span><span class="clv__time">00:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">7 件 · 门店 12每日数据洞察</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div></div><div class="tabbar"><button class="on"><i></i>对话</button><button><i></i>今日</button><button><i></i>通知</button><button><i></i>更多</button></div></div></div></div><div class="slot"><h4>④ 长按 → 底部 sheet</h4><p>左滑是隐藏动作,得有条明路:长按那一行弹底部 sheet(和「建群」「账户」同一套 sheet)。</p>
+<div class="phone"><div class="screen"><div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div><div class="navbar">私人助理<span class="sp"></span><span class="act">👤</span></div><div class="body"><div class="sec"><span class="fb-dot"></span>助理找我的 · 4 类 · 16 件<span class="fold">▾</span></div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🗄</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">库存警报</span><span class="clv__time">18:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">6 件待办 · 门店 07 桂花雪梨老酸奶</span><span class="clv__badge fb-badge">1</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">📅</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">会议变更</span><span class="clv__time">10:12</span></div>
+      <div class="clv__bot"><span class="clv__prev">2 件待办 · 周五的产品评审改到下周一</span><span class="clv__badge fb-badge">2</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  stackish">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">⏰</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">自动任务</span><span class="clv__time">00:02</span></div>
+      <div class="clv__bot"><span class="clv__prev">7 件 · 门店 12每日数据洞察</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div><div class="clv__item-wrap  ">
+  <div class="clv__item fb-item">
+    <span class="clv__icon fb-avatar-block lg round">🎯</span>
+    <div class="clv__body">
+      <div class="clv__top"><span class="clv__title">项目检查点</span><span class="clv__time">周三</span></div>
+      <div class="clv__bot"><span class="clv__prev">1 件待办 · 「门店改造」还有 2 天到期</span></div>
+    </div><span style="color:var(--fb-ink-4);font-size:15px;margin-left:6px;flex:0 0 auto">›</span>
+  </div>
+</div></div><div class="tabbar"><button class="on"><i></i>对话</button><button><i></i>今日</button><button><i></i>通知</button><button><i></i>更多</button></div><div class="fb-scrim" style="position:absolute;inset:0;display:flex;align-items:flex-end"><div class="fb-glass l3" style="width:100%;border-radius:var(--fb-r-layer) var(--fb-r-layer) 0 0;border-width:1px 0 0;padding:14px 16px 22px"><h3 style="font-size:15px;font-weight:500;margin:0">库存警报</h3><p style="font-size:12px;color:var(--fb-ink-4);margin:2px 0 12px">6 件 · 1 条未读</p><div class="sheet-acts"><button>本组标为已读 · 1 条</button><button>全部标为已读 · 3 条</button><button>本组免扰</button></div><p style="font-size:11px;color:var(--fb-ink-4);margin:10px 2px 12px">免扰后不再提醒、也不算进上面那个未读数;新消息照收,徽标变成灰色的计数。</p><button class="fb-btn block">取消</button></div></div></div></div></div><div class="slot"><h4>⑤ 点进一类 <span class='tag diff'>和桌面不同</span></h4><p>桌面是第三列并排;手机上是 push 进新一屏,左上角「‹ 私人助理」退回。</p>
+<div class="phone"><div class="screen"><div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div><div class="navbar"><button class="back">‹ 私人助理</button><span class="sp"></span><span style="font-size:15px">库存警报</span><span class="sp"></span><span class="act">⋯</span></div><div class="body"><div class="gmeta">6 件 · 1 条未读 · 常见的决定在这一页点完</div><div class="gcard"><div class="l1"><b>门店 07 · 桂花雪梨老酸奶<span class="fb-tag nodot warn" style="margin-left:4px">第 3 次提醒</span></b><span class="t">18:02</span></div><div class="bd">昨天 18:00 起<b>负库存 −7 件</b>,今天还有 3 单要发。上一次补货是 9 月 12 日,这三天日均卖 21 份。</div><div class="acts"><button class="fb-btn primary sm">知道了</button><button class="fb-btn ghost sm">7 天不提</button><span style="flex:1"></span><button class="fb-btn ghost sm">接着问助理 ›</button></div></div><div class="gcard"><div class="l1"><b>仓库 · 茉莉青提老酸奶</b><span class="t">09:15</span></div><div class="bd">低于补货点 12 件。</div><div class="acts"><button class="fb-btn primary sm">知道了</button><span style="flex:1"></span><button class="fb-btn ghost sm">接着问助理 ›</button></div></div><div class="gcard"><div class="l1"><b>仓库 · 桂花米酒</b><span class="t">前天</span></div><div class="bd">低于补货点 3 件。</div><div class="acts"><button class="fb-btn primary sm">知道了</button><span style="flex:1"></span><button class="fb-btn ghost sm">接着问助理 ›</button></div></div></div></div></div></div></div>
+<div class="note">
+<h3>手机版和桌面版,哪些一样、哪些必须不一样</h3>
+<ul>
+<li><b>一样的(口径必须一致,否则同一件事在两端语义不同):</b>分组的粒度(按 <code>resource_type</code>)、
+「已读只清红点不代表办完」、<b>免扰 = 不提醒 + 不进汇总,不是不计数</b>(灰色计数徽标)、
+「已处理」是办完的归宿。这些是产品规则,不是界面选择。</li>
+<li><b>不一样的:动作怎么触发。</b>桌面有右键和悬停,手机没有。手机上顺着<b>已经存在的左滑</b>
+(现在用来删除)长出「已读 / 免扰」,再用<b>长按 → 底部 sheet</b> 作为看得见的那条路。
+不要在手机上塞一个「⋯」按钮——68px 高的行里再塞一个热区,误触率会很高。</li>
+<li><b>不一样的:详情怎么展开。</b>桌面是第三列并排;手机是 push 一屏,回退靠左上角。</li>
+<li><b>不一样的:「已处理」放哪。</b>桌面钉在列表底部(因为它下面还有几十条对话,不钉住就要翻到底);
+手机上放在<b>分组区的末尾</b>就够——分组区只有三五行,本来就在第一屏里。
+钉一条常驻底栏会吃掉手机本来就不多的高度,还和页签栏打架。</li>
+<li><b>「一摞」在手机上要收着画。</b>手机列表是 iOS 成组列表(整块白底通到两边、没有卡片),
+桌面那种「卡片 + 两层纸边」搬过来会很违和。这一版只在行底留<b>一条 3px 的浅色边</b>暗示「里面不止一件」,
+真正说清楚数量的是副标题里的「6 件待办」和行尾的 <code>›</code>。
+<b>这条我拿不准,想听你的</b>——要更明显的话可以把分组区改成 iOS「内嵌成组」(圆角卡片、左右留边),
+那样就能把纸边画出来,代价是同一屏出现两种列表样式。</li>
+</ul>
+</div>
+
+<div class="note">
+<h3>还需要你拍板的三件事</h3>
+<ul>
+<li><b>分组区要不要能折叠?</b>桌面上能折。手机上分组区只有三五行,折叠的收益不大,
+但「一屏之内先看见自己的对话」对重度用户有意义。我倾向<b>保留折叠</b>(和桌面一致),但默认展开。</li>
+<li><b>左滑露两个还是三个动作?</b>现在画的是「已读 / 免扰」。普通对话那一行原本是「删除」——
+分组行<b>不该有删除</b>(那是一类事,不是一条会话)。三个动作在 375pt 宽的屏上会挤。</li>
+<li><b>长按还是「⋯」?</b>我选长按(iOS 惯例、不占行内空间),代价是新用户不一定发现。
+底部 sheet 里我放了「全部标为已读」,它在左滑里没有位置。</li>
+</ul>
+</div>
+
+<div class="note">
+<h3>做的时候要注意的(从桌面那一轮踩出来的)</h3>
+<ul>
+<li><b>别把桌面的 <code>selectedGroupKey</code> 那套直接搬过来。</b>桌面翻车过一次:详情槽是所有板块共用的,
+没判板块就把产品页顶掉了。手机是路由 push,天然没有这个问题——<b>分组详情应该是一个独立路由</b>
+(<code>/m/assistant/group/:key</code>),而不是在列表页里切状态。</li>
+<li><b>免扰的灰徽标手机上已经有了</b>(<code>.clv__badge--muted</code>),口径和桌面一致,不用新造。</li>
+<li><b>数据全部复用</b>:分组、免扰、整组已读、已处理,后端那几个接口桌面端已经在用,手机端只是换个壳。</li>
+</ul>
+</div>
+</div><script src="preview.js"></script>
+</body></html>
+
+</body></html>
