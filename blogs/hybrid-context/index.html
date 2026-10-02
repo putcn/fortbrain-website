@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="员工电脑上的文件、命令、浏览器登录态，助理直接调用；内容不经服务器保存，只出站、不开端口，一个总闸随时拉。">
+<meta property="og:title" content="端云同境：本地的留在本地，助理照样干活 · Fortbrain Blog">
+<meta property="og:description" content="员工电脑上的文件、命令、浏览器登录态，助理直接调用；内容不经服务器保存，只出站、不开端口，一个总闸随时拉。">
+<meta name="theme-color" content="#050b18">
+<link rel="canonical" href="https://fortbrain.ai/blogs/hybrid-context/">
+<title>端云同境：本地的留在本地，助理照样干活 · Fortbrain Blog</title>
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/css/sub.css">
+</head>
+<body class="sub sub-blog">
+<header class="topbar">
+  <a class="brand" href="/">Fortbrain</a>
+  <span class="site"><span lang="zh-CN">Blog</span><span lang="en">Blog</span></span>
+  <nav class="links">
+    <a href="/blogs/">Blog</a>
+    <a href="/concepts/">UX Sandbox</a>
+    <button id="langBtn" type="button" aria-label="Switch language"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+  </nav>
+</header>
+<main class="wrap">
+<a class="back" href="/blogs/"><span lang="zh-CN">← 全部文章</span><span lang="en">← All posts</span></a>
+<article class="article">
+  <header>
+    <div class="meta"><time datetime="2026-10-02">2026-10-02</time><span class="chip chip-tech"><span lang="zh-CN">技术</span><span lang="en">Tech</span></span></div>
+    <h1><span lang="zh-CN">端云同境：本地的留在本地，助理照样干活</span><span lang="en">Hybrid Context: local stays local, the assistant still does the work</span></h1>
+    <p class="lede"><span lang="zh-CN">员工电脑上的文件、命令、浏览器登录态，助理直接调用；内容不经服务器保存，只出站、不开端口，一个总闸随时拉。</span><span lang="en">Files, commands and browser sessions on an employee&#x27;s own computer, used directly by the assistant; content never stored on the server, outbound only, with a kill switch.</span></p>
+  </header>
+  <div class="body" lang="zh-CN">
+<p>企业用 AI 助理，很快会撞上一堵墙：真正有用的东西，一半在平台上（订单、库存、知识库），另一半在<strong>员工自己的电脑上</strong>（一份供应商 Excel、一个登录过的网站、一条只有在本机才能跑的命令）。把后者搬到云上，既不现实，也不该。</p>
+<p>端云同境（Hybrid Context）就是为这堵墙做的：让平台上的助理能用到员工电脑上的能力，而<strong>内容不离开那台电脑</strong>。</p>
+<h2 id="_1">一条只出站的通道</h2>
+<p>员工电脑上跑一个很小的常驻程序，它主动连到平台，平台永远不反向连它，电脑上也不开任何端口。助理要调一个本地工具时，请求顺着这条通道下来，结果顺着同一条通道回去，在服务器内存里过一道就转给助理，<strong>不落库、不落盘</strong>。</p>
+<p>四条规矩从第一天起就是硬的：</p>
+<ul>
+<li><strong>只出站，不监听</strong>。</li>
+<li><strong>服务器不留副本</strong>。工具结果不写任何持久化存储。</li>
+<li><strong>绑定到人</strong>。一台电脑配对到某个用户名下，只有他自己的助理能用它。</li>
+<li><strong>平台编排，本地执行</strong>。AI 决定调什么，真正的动作发生在本地。</li>
+</ul>
+<h2 id="_2">装什么、开放什么，用户自己挑</h2>
+<p>通道装好只是一条空管道。要让助理能看哪个目录、跑哪些命令，用户在页面上从目录里挑「连接器」装上：装是守护进程做的，进度推回页面；装好不等于启用，启用前先在表单里填清楚授权目录、允许的命令。<strong>全程不用用户手打任何路径</strong>——上一版原型就栽在这里，产品不能让人填 <code>/某个/venv/bin/python</code>。</p>
+<p>每个连接器在页面上只有有限几种状态，而且每种状态都写明下一步：未安装、安装中、已安装未启用、在跑、起不来（把原因原文摆出来）、已停用。状态由守护进程一处算出来推上来，页面不做第二套判断。</p>
+<h2 id="_3">三层总闸</h2>
+<ul>
+<li><strong>本地总闸</strong>：菜单栏或页面一按，所有调用一律拒绝，守护进程仍在线，重启后也还是关的，直到人工恢复。</li>
+<li><strong>单连接器闸</strong>：停掉某一个，别的照常。</li>
+<li><strong>服务端闸</strong>：撤销设备令牌。本地闸防「我现在不想让它读」，服务端闸防「这台电脑不在我手上了」。</li>
+</ul>
+<p>拉闸时助理收到的是一句人话：「用户暂停了这台电脑，现在读不到任何本地内容」，并且明说不要重试。</p>
+<h2 id="_4">它长什么样</h2>
+<p>一句话的事：「供应商列表.xlsx 里有哪些供应商，Fortbrain 里他们的采购价是多少？」助理在本机读表、在平台查价、合成一张小表回给你。表没有离开过你的电脑，价格没有离开过平台。</p>
+<p>首页第 05 章有一个可以点的演示，走的就是这条路。</p>
+  </div>
+  <div class="body" lang="en">
+<p>Companies that adopt AI assistants soon hit a wall: half of what is useful lives on the platform (orders, stock, knowledge bases) and the other half lives on <strong>the employee's own computer</strong> (a supplier spreadsheet, a website they are logged into, a command that only runs locally). Moving the second half to the cloud is neither realistic nor right.</p>
+<p>Hybrid Context exists for that wall: the assistant on the platform can use what is on the employee's computer, and <strong>the content never leaves that computer</strong>.</p>
+<h2 id="an-outbound-only-channel">An outbound-only channel</h2>
+<p>A small resident program on the employee's computer dials out to the platform. The platform never connects back, and nothing listens on the computer. When the assistant calls a local tool, the request travels down that channel and the result travels back up it, passing through server memory once on its way to the assistant: <strong>never written to a database, never written to disk</strong>.</p>
+<p>Four rules have been hard from day one:</p>
+<ul>
+<li><strong>Outbound only, nothing listens.</strong></li>
+<li><strong>The server keeps no copy.</strong> Tool results never touch persistent storage.</li>
+<li><strong>Bound to a person.</strong> A computer is paired to one user, and only that user's assistant can use it.</li>
+<li><strong>The platform orchestrates, the computer executes.</strong> The AI decides what to call; the action happens locally.</li>
+</ul>
+<h2 id="the-user-chooses-what-to-install-and-what-to-open">The user chooses what to install and what to open</h2>
+<p>A freshly installed bridge is an empty pipe. To let the assistant see a folder or run commands, the user picks "connectors" from a catalogue on the page. The daemon installs them and reports progress back; installed is not enabled, and enabling first means filling in a form: the allowed folder, the allowed commands. <strong>The user never types a path.</strong> The previous prototype failed exactly there: a product cannot ask people to type <code>/some/venv/bin/python</code>.</p>
+<p>Each connector has only a handful of states on the page, and every state names the next step: not installed, installing, installed but off, running, failed (with the raw reason shown), stopped. The daemon computes the state in one place and pushes it; the page does not run a second judgement.</p>
+<h2 id="three-kill-switches">Three kill switches</h2>
+<ul>
+<li><strong>Local:</strong> one press in the menu bar or on the page refuses every call. The daemon stays online, and the switch survives a restart until a person lifts it.</li>
+<li><strong>Per connector:</strong> stop one, the rest keep working.</li>
+<li><strong>Server side:</strong> revoke the device token. The local switch covers "I don't want it reading right now"; the server switch covers "that computer is no longer in my hands".</li>
+</ul>
+<p>When the switch is down the assistant gets a plain sentence: "The user paused this computer; no local content can be read", with an explicit "do not retry".</p>
+<h2 id="what-it-looks-like">What it looks like</h2>
+<p>One sentence: "Which suppliers are in suppliers.xlsx, and what are their purchase prices in Fortbrain?" The assistant reads the sheet on your machine, looks up prices on the platform, and returns a small table. The sheet never left your computer; the prices never left the platform.</p>
+<p>Chapter 05 on the homepage has a clickable demo that walks exactly this path.</p>
+  </div>
+</article>
+<nav class="pn"><span></span><a class="next" href="/blogs/flowboard-cards/"><small><span lang="zh-CN">下一篇</span><span lang="en">Next</span></small><span lang="zh-CN">产品动线牌桌：为什么是一副牌</span><span lang="en">The product flow card table: why a deck of cards</span></a></nav>
+</main>
+<footer class="foot"><span lang="zh-CN">Fortbrain · 概念稿只用示例数据，不连任何真实服务</span><span lang="en">Fortbrain · Concepts use sample data only and talk to no real service</span> · <a href="/">fortbrain.ai</a></footer>
+<script type="module" src="/js/sub.js"></script>
+</body>
+</html>

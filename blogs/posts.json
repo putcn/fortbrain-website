@@ -1,0 +1,36 @@
+[
+  {
+    "slug": "hybrid-context",
+    "date": "2026-10-02",
+    "tags": [
+      "tech"
+    ],
+    "title": {
+      "zh": "端云同境：本地的留在本地，助理照样干活",
+      "en": "Hybrid Context: local stays local, the assistant still does the work"
+    },
+    "summary": {
+      "zh": "员工电脑上的文件、命令、浏览器登录态，助理直接调用；内容不经服务器保存，只出站、不开端口，一个总闸随时拉。",
+      "en": "Files, commands and browser sessions on an employee's own computer, used directly by the assistant; content never stored on the server, outbound only, with a kill switch."
+    },
+    "url": "/blogs/hybrid-context/",
+    "hasEn": true
+  },
+  {
+    "slug": "flowboard-cards",
+    "date": "2026-10-01",
+    "tags": [
+      "concept"
+    ],
+    "title": {
+      "zh": "产品动线牌桌：为什么是一副牌",
+      "en": "The product flow card table: why a deck of cards"
+    },
+    "summary": {
+      "zh": "产品动线看板从「楼层、传送带、河流」三个方向开始，被否掉之后变成了一副牌。这篇讲它是怎么一步步变成现在这张 3D 牌桌的。",
+      "en": "The product flow board started as a building, a conveyor and a river, all rejected, and became a deck of cards. This is how it turned into the 3D table it is now."
+    },
+    "url": "/blogs/flowboard-cards/",
+    "hasEn": true
+  }
+]

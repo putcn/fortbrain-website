@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="产品动线看板从「楼层、传送带、河流」三个方向开始，被否掉之后变成了一副牌。这篇讲它是怎么一步步变成现在这张 3D 牌桌的。">
+<meta property="og:title" content="产品动线牌桌：为什么是一副牌 · Fortbrain Blog">
+<meta property="og:description" content="产品动线看板从「楼层、传送带、河流」三个方向开始，被否掉之后变成了一副牌。这篇讲它是怎么一步步变成现在这张 3D 牌桌的。">
+<meta name="theme-color" content="#050b18">
+<link rel="canonical" href="https://fortbrain.ai/blogs/flowboard-cards/">
+<title>产品动线牌桌：为什么是一副牌 · Fortbrain Blog</title>
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/css/sub.css">
+</head>
+<body class="sub sub-blog">
+<header class="topbar">
+  <a class="brand" href="/">Fortbrain</a>
+  <span class="site"><span lang="zh-CN">Blog</span><span lang="en">Blog</span></span>
+  <nav class="links">
+    <a href="/blogs/">Blog</a>
+    <a href="/concepts/">UX Sandbox</a>
+    <button id="langBtn" type="button" aria-label="Switch language"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+  </nav>
+</header>
+<main class="wrap">
+<a class="back" href="/blogs/"><span lang="zh-CN">← 全部文章</span><span lang="en">← All posts</span></a>
+<article class="article">
+  <header>
+    <div class="meta"><time datetime="2026-10-01">2026-10-01</time><span class="chip chip-concept"><span lang="zh-CN">概念</span><span lang="en">Concept</span></span></div>
+    <h1><span lang="zh-CN">产品动线牌桌：为什么是一副牌</span><span lang="en">The product flow card table: why a deck of cards</span></h1>
+    <p class="lede"><span lang="zh-CN">产品动线看板从「楼层、传送带、河流」三个方向开始，被否掉之后变成了一副牌。这篇讲它是怎么一步步变成现在这张 3D 牌桌的。</span><span lang="en">The product flow board started as a building, a conveyor and a river, all rejected, and became a deck of cards. This is how it turned into the 3D table it is now.</span></p>
+  </header>
+  <div class="body" lang="zh-CN">
+<p>「产品动线」要回答的是一个很具体的问题：几十个项目同时在走，哪几个卡住了、卡在哪一步、谁该动。做这个看板，我们一共走了三轮。</p>
+<h2 id="_1">第一轮：三个看起来很像看板的方向</h2>
+<p>最早的三个方向都挺好看：楼层等于阶段的立体楼，项目在楼里往上爬；一条流水线传送带，项目在带子上往前走；一条河流分叉，项目顺流而下。</p>
+<p>它们都被否掉了，原因是同一个：<strong>它们从「看板」出发，而不是从用户要做的事出发</strong>。用户打开这页不是来欣赏一座楼的，是来找「我今天该管哪几个」。楼层、传送带、河流都把「正常」和「有问题」画得一样显眼。</p>
+<h2 id="_2">第二轮：一副平面的牌</h2>
+<p>于是换了个比喻：一个项目一张牌。平面牌桌，按状态、步骤、负责人、更新时间分堆，点开一张牌看它的步骤时间线。</p>
+<p>这一版把问题抓住了——有问题的牌和正常的牌终于长得不一样——但做出来之后又出现两个新问题：不够 3D，放在销售大屏旁边像两个产品；牌堆的交互也不对，点一摞牌弹出一个列表，和「牌」这个比喻打架。</p>
+<h2 id="_3">第三轮：把牌桌搬进空间</h2>
+<p>现在这版（v9）是从第二版长出来的：</p>
+<ul>
+<li><strong>有问题的牌沿弧线摊开</strong>，一眼能数；正常的叠成牌堆，不占注意力。</li>
+<li><strong>点牌堆，牌在空间里摊成扇面</strong>，可以直接翻，不弹列表。</li>
+<li><strong>点一张牌，它飞上时间轴</strong>，每一步排成一行。</li>
+<li><strong>点某一步，放大成步骤页</strong>，图像博物馆的画框一样挂在墙上，灯一盏盏点亮。</li>
+<li>牌是毛玻璃，边缘发光；飞行路径算过，不穿模；大屏模式可以轮播。</li>
+</ul>
+<p>材质是在一张单独的玻璃实验台上定的：同一个场景里放四件玻璃，七盏灯可以单独开关，四种灯光预设，看磨砂和透明在不同光下的差别。</p>
+<h2 id="_4">为什么这件事值得写</h2>
+<p>因为它是我们定交互的方法：先做三个方向比，否掉的理由要能说清楚；换比喻之后先做平面版，把「问题是什么」抓住；最后才上空间和材质。每一轮的稿子都留着，索引页上标成「早期对照」，不删。</p>
+<p>三轮的稿子都在 UX Sandbox 里，可以拖、可以点。</p>
+  </div>
+  <div class="body" lang="en">
+<p>The "product flow" board answers one concrete question: dozens of projects are moving at once, which ones are stuck, at which step, and who should act. We went through three rounds to get it right.</p>
+<h2 id="round-one-three-things-that-looked-like-boards">Round one: three things that looked like boards</h2>
+<p>The earliest directions were all handsome: a building whose floors are stages, with projects climbing; a conveyor belt with projects moving along it; a river branching, with projects floating downstream.</p>
+<p>All three were rejected for the same reason: <strong>they started from the board, not from what the user came to do</strong>. Nobody opens this page to admire a building; they open it to find "which ones do I need to handle today". The building, the belt and the river all drew "fine" and "in trouble" equally loudly.</p>
+<h2 id="round-two-a-flat-deck">Round two: a flat deck</h2>
+<p>So the metaphor changed: one project, one card. A flat table, stacks by status, step, owner and last update, and a step timeline when you open a card.</p>
+<p>That version caught the problem (troubled cards finally looked different from healthy ones) but raised two new ones. It was not spatial enough: next to the sales big screen it looked like a different product. And the stack interaction was wrong: tapping a stack popped up a list, which fought the card metaphor.</p>
+<h2 id="round-three-the-table-moves-into-space">Round three: the table moves into space</h2>
+<p>The current version (v9) grew out of the second:</p>
+<ul>
+<li><strong>Troubled cards fan out along an arc</strong>, countable at a glance; healthy ones stack and stay quiet.</li>
+<li><strong>Tap a stack and the cards fan open in space</strong>, ready to flip, no list.</li>
+<li><strong>Tap a card and it flies onto the timeline</strong>, every step in a row.</li>
+<li><strong>Tap a step and it zooms into its own page</strong>, images hung on a wall like museum frames, lights coming on one by one.</li>
+<li>Cards are frosted glass with glowing edges; flight paths are computed so nothing clips; a big-screen mode runs a carousel.</li>
+</ul>
+<p>The material was settled on a separate glass lab: four pieces of glass in the same scene, seven lights that switch individually, four lighting presets, to see frosted against clear under different light.</p>
+<h2 id="why-this-is-worth-writing-down">Why this is worth writing down</h2>
+<p>Because it is how we settle interaction: build three directions and compare, with rejection reasons that can be said out loud; after changing metaphor, build the flat version first to pin down the problem; only then add space and material. Every round's draft is kept and labelled "early" on the index, never deleted.</p>
+<p>All three rounds are in the UX Sandbox: drag them, click them.</p>
+  </div>
+  <aside class="concept-card">
+    <div class="eyebrow">UX Sandbox</div>
+    <b><span lang="zh-CN">产品动线牌桌（3D 卡牌）</span><span lang="en">Product flow card table (3D)</span></b>
+    <a class="btn" href="/concepts/flowboard-3d.html" target="_blank" rel="noopener"><span lang="zh-CN">打开实验 →</span><span lang="en">Open the experiment →</span></a>
+  </aside>
+</article>
+<nav class="pn"><a class="prev" href="/blogs/hybrid-context/"><small><span lang="zh-CN">上一篇</span><span lang="en">Previous</span></small><span lang="zh-CN">端云同境：本地的留在本地，助理照样干活</span><span lang="en">Hybrid Context: local stays local, the assistant still does the work</span></a><span></span></nav>
+</main>
+<footer class="foot"><span lang="zh-CN">Fortbrain · 概念稿只用示例数据，不连任何真实服务</span><span lang="en">Fortbrain · Concepts use sample data only and talk to no real service</span> · <a href="/">fortbrain.ai</a></footer>
+<script type="module" src="/js/sub.js"></script>
+</body>
+</html>

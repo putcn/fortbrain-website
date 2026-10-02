@@ -17,6 +17,12 @@ open http://127.0.0.1:8931/
 
 调试参数：`?lang=zh|en` 强制语言；`?nogl=1` 强制走 canvas 2D 极光降级层。`#demo=hybrid|data|forecast|decide|agents|trust` 直接打开某个演示。控制台 `window.__fb` 有 view / story / demos / errors。
 
+## 写文章 / 加概念
+
+- 文章：`blogs/posts/<slug>/zh.md`（必须）+ `en.md`（可选），头信息 `title / date / tags(concept|tech) / summary / concept(可选, concepts.json 里的 id)`。
+- 概念：往 `concepts/concepts.json` 加一条（id / file / date / status(final|lab|early) / live / title / summary），概念页末尾加 `<script src="preview.js"></script>`。
+- 生成并提交：`python3 scripts/build-site.py`（`--check` 只校验）。产物 `blogs/**`、`concepts/index.html` 进仓库。
+
 ## 测试
 
 ```bash
