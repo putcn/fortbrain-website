@@ -7,8 +7,8 @@
       "tech"
     ],
     "title": {
-      "zh": "把 UI 画进 3D 空间：一块玻璃按钮改了十一轮",
-      "en": "Drawing UI inside 3D space: one glass button, eleven rounds"
+      "zh": "把 UI 画进 3D 空间：11 轮迭代下的精雕细琢",
+      "en": "Drawing UI inside 3D space: eleven rounds of polish"
     },
     "summary": {
       "zh": "UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。我们在 three.js 里从零做一套 Liquid Glass 风格的 3D 组件库，这篇讲为什么要这么做，以及一块玻璃按钮从「平面假 3D」到「真玻璃块」改了哪些东西、为什么改。",

@@ -1,5 +1,5 @@
 ---
-title: Drawing UI inside 3D space: one glass button, eleven rounds
+title: Drawing UI inside 3D space: eleven rounds of polish
 date: 2026-10-08
 tags: concept, tech
 summary: If UI is now mostly written by AI, it no longer has to live inside HTML and the DOM. We are building a Liquid Glass style 3D component library on three.js from scratch. This post is about why, and about what changed, and why, as one glass button went from "fake 3D on a plane" to a real block of glass.
