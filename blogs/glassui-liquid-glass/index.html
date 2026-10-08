@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。我们在 three.js 里从零做一套 Liquid Glass 风格的 3D 组件库，这篇讲为什么要这么做，以及一块玻璃按钮从「平面假 3D」到「真玻璃块」改了哪些东西、为什么改。">
+<meta property="og:title" content="把 UI 画进 3D 空间：一块玻璃按钮改了十一轮 · Fortbrain Blog">
+<meta property="og:description" content="UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。我们在 three.js 里从零做一套 Liquid Glass 风格的 3D 组件库，这篇讲为什么要这么做，以及一块玻璃按钮从「平面假 3D」到「真玻璃块」改了哪些东西、为什么改。">
+<meta name="theme-color" content="#050b18">
+<link rel="canonical" href="https://fortbrain.ai/blogs/glassui-liquid-glass/">
+<title>把 UI 画进 3D 空间：一块玻璃按钮改了十一轮 · Fortbrain Blog</title>
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/css/sub.css">
+</head>
+<body class="sub sub-blog">
+<header class="topbar">
+  <a class="brand" href="/">Fortbrain</a>
+  <span class="site"><span lang="zh-CN">Blog</span><span lang="en">Blog</span></span>
+  <nav class="links">
+    <a href="/blogs/">Blog</a>
+    <a href="/concepts/">UX Sandbox</a>
+    <button id="langBtn" type="button" aria-label="Switch language"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+  </nav>
+</header>
+<main class="wrap">
+<a class="back" href="/blogs/"><span lang="zh-CN">← 全部文章</span><span lang="en">← All posts</span></a>
+<article class="article">
+  <header>
+    <div class="meta"><time datetime="2026-10-08">2026-10-08</time><span class="chip chip-concept"><span lang="zh-CN">概念</span><span lang="en">Concept</span></span><span class="chip chip-tech"><span lang="zh-CN">技术</span><span lang="en">Tech</span></span></div>
+    <h1><span lang="zh-CN">把 UI 画进 3D 空间：一块玻璃按钮改了十一轮</span><span lang="en">Drawing UI inside 3D space: one glass button, eleven rounds</span></h1>
+    <p class="lede"><span lang="zh-CN">UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。我们在 three.js 里从零做一套 Liquid Glass 风格的 3D 组件库，这篇讲为什么要这么做，以及一块玻璃按钮从「平面假 3D」到「真玻璃块」改了哪些东西、为什么改。</span><span lang="en">If UI is now mostly written by AI, it no longer has to live inside HTML and the DOM. We are building a Liquid Glass style 3D component library on three.js from scratch. This post is about why, and about what changed, and why, as one glass button went from &quot;fake 3D on a plane&quot; to a real block of glass.</span></p>
+  </header>
+  <div class="body" lang="zh-CN">
+<p>先看结果：右上角「打开实验」是一张完整的注册表单，画在 three.js 的 canvas 里，没有一个 DOM 元素。按钮是有厚度的透明玻璃块，颜色从玻璃内部发出来，影子投在底板上，底板倒映着按钮。拖一下可以转过来看厚度。</p>
+<p>这是我们正在开源的 3D UI 框架 <strong>ThreeDUI</strong> 的第一个样张（<a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>）。下面讲为什么做它，以及这块玻璃是怎么一步步改出来的。</p>
+<h2 id="ui-3d">为什么把 UI 画进 3D 空间</h2>
+<p>四个原因，按重要性排：</p>
+<ol>
+<li><strong>写 UI 的主体变了。</strong> 现在界面代码主要由 AI coding agent 来写，人只负责看结果、提意见。过去「3D UI 太复杂、没人能维护」这个顾虑，前提是人在写。当复杂度由 agent 承担，我们可以把 API 做得复杂一点、描述清楚一点，换来远超 DOM 的可定制性——只要文档对 agent 足够清楚。</li>
+<li><strong>表现力。</strong> DOM 只能在平面上模拟厚度、光影、材质。放进 3D 引擎之后，厚度、折射、反射、投影、透视都是真的，而且和场景里其它东西共享同一套光。这篇后面会反复看到：<strong>真的东西不需要调，假的东西永远调不完</strong>。</li>
+<li><strong>GPU 越来越强。</strong> 手机 GPU 已经能稳定跑这种每帧几次全屏采样、带阴影贴图和平面反射的场景。three.js 的 WebGPURenderer 在 WebGPU 不可用时自动回落 WebGL2，同一套代码。</li>
+<li><strong>跨平台。</strong> 画在 canvas 里的东西，在浏览器、Electron、Tauri、各种 webview 乃至 XR 头显里长得一样，交互也在 canvas 内闭环。</li>
+</ol>
+<p>所以目标是：<strong>一套 Vue 语法可写的 3D 组件库，容器可以放进任意 3D 场景，视觉按苹果最新的 Liquid Glass 来，基础组件覆盖 Tailwind 的那一套，以完整框架 + UI 标准的方式开源。</strong></p>
+<h2 id="_1">先回答「怎么渲染」</h2>
+<p>动手前做了两轮调研。结论简单说：</p>
+<ul>
+<li>生态里最成熟的 canvas UI 库（pmndrs/uikit）只支持 WebGL、中文基本不可用、输入法代理放在屏幕外，而且它自己的 v2 准备重写渲染层。所以我们自己写内核，只借它的设计。</li>
+<li>渲染后端选 three.js 的 <strong>WebGPURenderer + TSL</strong>：一套节点材质两个后端，内置 backdrop 采样节点，玻璃折射几乎是免费的。</li>
+<li>布局用 Yoga（flexbox），文字第一版用 Canvas2D 按需栅格到 atlas（永远不缺中文字），输入法用 Flutter web 的做法（把代理输入框定位到光标处）。</li>
+</ul>
+<p>然后就开始做那块玻璃。</p>
+<h2 id="3d">第一版：平面上伪造的 3D</h2>
+<p><img alt="第一版：SDF 平面玻璃" src="01-flat-sdf.jpg" /></p>
+<p>第一版是一个平面 quad，用 shader 算出圆角矩形的距离场，再从距离场推出边缘高度、法线、折射偏移、色散、高光。这是 CSS/SVG 玻璃实现的思路，三小时就出效果，WebGPU 和 WebGL2 两个后端像素级一致。</p>
+<p>它被否掉了，理由是对的：<strong>既然已经在 3D 空间里渲染，厚度、高光、阴影就应该用 3D 的方式来做，而不是 2D 模拟</strong>。模拟的东西每加一个特征就要多写一段公式，而且它们永远不会和场景里其它物体的光照一致。</p>
+<h2 id="_2">第二版：真几何、真光照、真阴影</h2>
+<p><img alt="第二版：真 3D，但像塑料" src="02-first-real-3d.jpg" /></p>
+<p>于是玻璃变成了真实的实体网格：圆角矩形轮廓拉出厚度，边缘有倒角剖面。材质基于 three.js 的 PBR 节点材质，用它内置的 <code>backdropNode</code> 钩子替换透射项——高光、Fresnel、环境反射全部由引擎提供，我们只写「透过玻璃看到后面的像」这一项。阴影是方差阴影贴图，按钮投到面板上，面板投到墙上。</p>
+<p>第一次出图之前还踩了一个典型的坑：网格绕序反了，正面被剔除，看到的一直是平的背面，表现为「怎么调都没高光」。用法线采样定位后一行改好。</p>
+<p>出来的东西是对的，但像塑料糖。原因有三：倒角做成了整个半圆的枕形；双层高光加强环境反射给了大面积的柔和高光，这正是塑料的特征；散射项太重，不透。</p>
+<h2 id="_3">第三版到第六版：学参考图</h2>
+<p>接下来几轮都在对着一张参考图改。每一轮改的都是一个具体的、能说清原因的东西：</p>
+<p><img alt="棚拍环境图与彩色阴影" src="03-studio-light.jpg" /></p>
+<ul>
+<li><strong>顶边那条细亮线</strong> 出不来，是因为环境贴图太均匀。换成程序化的棚拍环境（左上一个大柔光箱、底部一条细光带），倒角面真实反射它，亮线就有了。</li>
+<li><strong>彩色玻璃下面应该有同色的光晕。</strong> 阴影贴图是二值的。我先手写了一个「从灯光视角渲染透过率」的 pass，然后发现 three.js 原生支持彩色透射阴影（<code>shadowMap.transmitted</code> + <code>castShadowNode</code>），删掉自己写的换成引擎的。</li>
+<li><strong>投在背景墙上的影子被删掉了。</strong> 它透过半透明面板看起来像污渍。UI 元素只投到自己的面板上。</li>
+</ul>
+<p><img alt="按参考图还原的布局" src="04-reference-layout.jpg" /></p>
+<ul>
+<li>面板改成乳白磨砂，不再透出物体；布局按参考图逐元素量坐标还原。</li>
+</ul>
+<p><img alt="直壁 + 小圆角的剖面" src="05-fillet-side.jpg" /></p>
+<ul>
+<li><strong>按钮的剖面错了。</strong> 参考图是「直切下去的厚度 + 顶面一圈小圆角」，既有直角的干练又有圆润。枕形改成 fillet 剖面：竖直侧壁、顶圆角 5 pt、底圆角 3 pt。</li>
+<li><strong>底板要倒映组件。</strong> 面板加平面反射，按磨砂程度模糊后低比例混入。</li>
+<li><strong>不是所有东西都该是几何。</strong> checkbox 的方块、开关的滑块、输入框的图标都改成平面贴片，更干净。</li>
+</ul>
+<h2 id="_4">第七版：晶莹剔透</h2>
+<p><img alt="内部发光的玻璃" src="06-inner-glow.png" /></p>
+<p>到这里形体对了，质感还像「质量不好的塑料」。原因是散射：真玻璃散射接近零，它的视觉信息全部来自折射和边缘反光。于是：</p>
+<ul>
+<li>散射降到 5%，上下两条边都有圆角，<strong>先画背面再画正面</strong>，让底边那条亮带和内部反光出现；边缘按 Fresnel 加内发光。</li>
+<li>有颜色的元素不再用实心吸收色，而是<strong>透明玻璃里有一团同色的光</strong>：发光项按 Fresnel 加权，边缘更亮，像灯箱。开关的左半亮、右半不亮，是同一个材质按 uv 做的软分割，任何角度都不会出现贴片覆盖错误。</li>
+<li>每个元素下方加一团叠加混合的透射光晕，元素轮廓加细亮线和底边亮带。</li>
+</ul>
+<p>这一轮得到的反馈是「<strong>下面的色块加上面一层超薄的透明玻璃，效果出奇的好</strong>」。它也是我们最后定下来的按钮结构：<strong>发光层 + 透明玻璃壳 + 装饰层</strong>。真 3D 负责形体、厚度、投影、反射、透视；「晶莹感」那几样光学特征作为可配置的装饰层叠在几何上。</p>
+<h2 id="_5">第八到十一版：做成一个真的界面</h2>
+<p><img alt="注册表单" src="07-signup.jpg" /></p>
+<p>最后把展示用的元素换成一张真的注册表单，剩下的几轮都是精致度：侧面曲线再压平一些、开关的发光分界精确对到滑块中心、内边距统一成一套 token（边距 26、图标 28、间距 14、组内居中）、Apple 标志换成矢量路径、checkbox 做成一个 44 pt 的小玻璃按钮。这些数字直接成了组件库里 Button / Input 的默认值。</p>
+<h2 id="_6">接下来</h2>
+<p>这十一轮的结论已经写进了框架的设计文档，实现计划分三期：框架无关的内核（节点树、样式、布局、事件、文字），three.js 渲染层，Vue 渲染器与组件。全部开源在 <a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>，欢迎来提意见——尤其是那种「这块玻璃哪里看着不对」的意见，这篇文章里每一轮进步都来自这种意见。</p>
+  </div>
+  <div class="body" lang="en">
+<p>Look at the result first: "Open the concept" in the corner is a complete sign-up form drawn inside a three.js canvas, with no DOM elements at all. The buttons are transparent glass blocks with real thickness, the colour glows from inside the glass, shadows fall on the panel, and the panel reflects the buttons. Drag to turn it and see the depth.</p>
+<p>It is the first sample of <strong>ThreeDUI</strong>, the 3D UI framework we are building in the open (<a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>). Below: why we are doing this, and how that glass was changed, round by round.</p>
+<h2 id="why-draw-ui-inside-3d-space">Why draw UI inside 3D space</h2>
+<p>Four reasons, in order of importance:</p>
+<ol>
+<li><strong>Who writes the UI has changed.</strong> Interface code is now mostly written by AI coding agents; people look at the result and give feedback. The old worry, "3D UI is too complex, nobody can maintain it", assumed a person was writing it. When an agent carries the complexity, we can afford a more complex, more explicit API in exchange for far more control than the DOM offers, as long as the documentation is clear enough for the agent.</li>
+<li><strong>Expressiveness.</strong> The DOM can only simulate thickness, light and material on a plane. Inside a 3D engine, thickness, refraction, reflection, shadows and perspective are real, and they share one light with everything else in the scene. This post will keep coming back to one lesson: <strong>real things do not need tuning; fake things never stop needing it</strong>.</li>
+<li><strong>GPUs keep getting stronger.</strong> Phone GPUs already hold scenes like this, with several full-screen samples per frame, shadow maps and planar reflections. three.js's WebGPURenderer falls back to WebGL2 automatically when WebGPU is unavailable, same code.</li>
+<li><strong>Cross-platform.</strong> Something drawn in a canvas looks the same in a browser, Electron, Tauri, any webview, even an XR headset, and interaction stays inside the canvas.</li>
+</ol>
+<p>So the goal is: <strong>a 3D component library you write with Vue syntax, whose containers can sit anywhere in a 3D scene, styled after Apple's Liquid Glass, covering the Tailwind set of basic components, developed in the open as a complete framework and UI standard.</strong></p>
+<h2 id="first-how-to-render">First, how to render</h2>
+<p>Two rounds of research before touching code. In short:</p>
+<ul>
+<li>The most mature canvas UI library in the ecosystem (pmndrs/uikit) is WebGL-only, has no usable Chinese text, keeps its IME proxy off-screen, and its own v2 plans to rewrite the rendering layer. So we write our own core and borrow only its design.</li>
+<li>The renderer is three.js <strong>WebGPURenderer + TSL</strong>: one set of node materials, two backends, built-in backdrop sampling, so glass refraction is nearly free.</li>
+<li>Layout is Yoga (flexbox); the first text engine rasterises system fonts on demand into an atlas with Canvas2D (Chinese never misses a glyph); the IME follows Flutter web's approach of positioning a proxy input at the caret.</li>
+</ul>
+<p>Then we started on the glass.</p>
+<h2 id="round-one-3d-faked-on-a-plane">Round one: 3D faked on a plane</h2>
+<p><img alt="Round one: SDF glass on a plane" src="01-flat-sdf.jpg" /></p>
+<p>The first version was a flat quad. A shader computed a signed distance field for the rounded rectangle, then derived edge height, normals, refraction offsets, dispersion and highlights from it. This is how CSS and SVG glass is done; it took three hours, and the WebGPU and WebGL2 backends matched pixel for pixel.</p>
+<p>It was rejected, and rightly: <strong>if we are already rendering in 3D space, thickness, highlights and shadows should be done in 3D, not simulated in 2D</strong>. Every simulated feature needs another formula, and none of them will ever agree with the lighting of the other objects in the scene.</p>
+<h2 id="round-two-real-geometry-real-light-real-shadows">Round two: real geometry, real light, real shadows</h2>
+<p><img alt="Round two: real 3D, but plastic" src="02-first-real-3d.jpg" /></p>
+<p>So the glass became a real mesh: the rounded outline extruded with thickness and a bevelled edge. The material is built on three.js's PBR node material, using its built-in <code>backdropNode</code> hook to replace the transmitted term. Highlights, Fresnel and environment reflections all come from the engine; we only write "the image seen through the glass". Shadows are variance shadow maps: buttons onto the panel, the panel onto the wall.</p>
+<p>Before the first image there was a classic trap: the mesh winding was reversed, front faces were culled, and we were looking at the flat back face the whole time. It showed up as "no highlights no matter what we tune". A normal probe found it; one line fixed it.</p>
+<p>The result was correct but looked like candy. Three reasons: the bevel was a full half-circle pillow; a clearcoat on top of strong environment reflection gave broad soft highlights, which is exactly what plastic looks like; and the scattering term was too heavy, so nothing was transparent.</p>
+<h2 id="rounds-three-to-six-learning-from-the-reference">Rounds three to six: learning from the reference</h2>
+<p>The next rounds were all against one reference image. Each changed one concrete thing with a stated reason:</p>
+<p><img alt="Studio environment and coloured shadows" src="03-studio-light.jpg" /></p>
+<ul>
+<li><strong>The thin bright line on the top edge</strong> would not appear because the environment map was too uniform. A procedural studio environment (a large softbox top-left, a thin strip light below) gave the bevels something real to reflect, and the line appeared.</li>
+<li><strong>Coloured glass should pool coloured light beneath it.</strong> Shadow maps are binary. I first wrote a pass that renders transmittance from the light's view, then found three.js supports coloured transmitted shadows natively (<code>shadowMap.transmitted</code> + <code>castShadowNode</code>), deleted mine and used the engine's.</li>
+<li><strong>The shadow on the back wall was removed.</strong> Seen through a translucent panel it looked like dirt. UI elements only cast onto their own panel.</li>
+</ul>
+<p><img alt="Layout reproduced from the reference" src="04-reference-layout.jpg" /></p>
+<ul>
+<li>The panel became milky frosted glass that no longer shows objects through it; the layout was rebuilt by measuring the reference element by element.</li>
+</ul>
+<p><img alt="Straight walls with a small round-over" src="05-fillet-side.jpg" /></p>
+<ul>
+<li><strong>The button profile was wrong.</strong> The reference is "a straight-cut thickness with a small round-over on the top face": crisp like a right angle, yet soft. The pillow became a fillet profile: vertical walls, 5 pt top radius, 3 pt bottom radius.</li>
+<li><strong>The panel should reflect the controls.</strong> A planar reflection, blurred by frost, mixed in at a low ratio.</li>
+<li><strong>Not everything should be geometry.</strong> Checkbox boxes, the switch knob and input icons became flat decals; it is cleaner.</li>
+</ul>
+<h2 id="round-seven-crystal-clear">Round seven: crystal clear</h2>
+<p><img alt="Glass that glows from inside" src="06-inner-glow.png" /></p>
+<p>By now the shapes were right but the material still read as cheap plastic. The cause was scattering: real glass scatters almost nothing; all of its visual information comes from refraction and edge reflection. So:</p>
+<ul>
+<li>Scattering down to 5%, round-overs on both the top and bottom edges, <strong>back faces drawn before front faces</strong> so the bright band on the lower edge and the internal reflections appear; Fresnel-weighted inner glow along the edges.</li>
+<li>Coloured elements stopped being solid absorbing colour and became <strong>transparent glass with a pool of light of that colour inside</strong>: the emissive term is weighted by Fresnel, so edges glow more, like a light box. The switch's left half lit and right half unlit is a soft split of that same material along uv, so no decal can ever overlap wrongly from any angle.</li>
+<li>An additive light pool under every element, plus a thin outline and a lower-edge highlight band.</li>
+</ul>
+<p>The feedback on this round was "<strong>a colour block below and an ultra-thin sheet of transparent glass on top works surprisingly well</strong>". It is also the button structure we settled on: <strong>glow layer + transparent glass shell + decoration layer</strong>. Real 3D is responsible for shape, thickness, shadows, reflection and perspective; the handful of optical features that make glass look "crystal" are configurable decorations layered on the geometry.</p>
+<h2 id="rounds-eight-to-eleven-a-real-interface">Rounds eight to eleven: a real interface</h2>
+<p><img alt="The sign-up form" src="07-signup.jpg" /></p>
+<p>Finally the showcase elements were replaced with an actual sign-up form, and the remaining rounds were refinement: flatter side curves, the switch's glow boundary exactly at the knob's centre, one set of padding tokens (26 inset, 28 icon, 14 gap, group centring), a vector Apple mark, and a checkbox that is a 44 pt glass button. Those numbers became the defaults of the library's Button and Input.</p>
+<h2 id="next">Next</h2>
+<p>The conclusions of these eleven rounds are in the framework's design document, and implementation is planned in three parts: a framework-agnostic core (node tree, styling, layout, events, text), the three.js render layer, and the Vue renderer with components. All of it is open at <a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>. Feedback is welcome, especially of the kind "this glass looks wrong here"; every improvement in this post came from exactly that.</p>
+  </div>
+  <aside class="concept-card">
+    <div class="eyebrow">UX Sandbox</div>
+    <b><span lang="zh-CN">GlassUI · 真 3D 的 Liquid Glass 注册表单</span><span lang="en">GlassUI · a real-3D Liquid Glass sign-up form</span></b>
+    <a class="btn" href="/concepts/glassui-signup/index.html" target="_blank" rel="noopener"><span lang="zh-CN">打开实验 →</span><span lang="en">Open the experiment →</span></a>
+  </aside>
+</article>
+<nav class="pn"><span></span><a class="next" href="/blogs/sales-forecast-research/"><small><span lang="zh-CN">下一篇</span><span lang="en">Next</span></small><span lang="zh-CN">销量预测：在真实门店数据上，我们试了什么、准到什么程度</span><span lang="en">Sales forecasting: what we tried on real store data, and how accurate it got</span></a></nav>
+</main>
+<footer class="foot"><span lang="zh-CN">Fortbrain · 概念稿只用示例数据，不连任何真实服务</span><span lang="en">Fortbrain · Concepts use sample data only and talk to no real service</span> · <a href="/">fortbrain.ai</a></footer>
+<script type="module" src="/js/sub.js"></script>
+</body>
+</html>

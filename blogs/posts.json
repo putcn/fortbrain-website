@@ -1,5 +1,23 @@
 [
   {
+    "slug": "glassui-liquid-glass",
+    "date": "2026-10-08",
+    "tags": [
+      "concept",
+      "tech"
+    ],
+    "title": {
+      "zh": "把 UI 画进 3D 空间：一块玻璃按钮改了十一轮",
+      "en": "Drawing UI inside 3D space: one glass button, eleven rounds"
+    },
+    "summary": {
+      "zh": "UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。我们在 three.js 里从零做一套 Liquid Glass 风格的 3D 组件库，这篇讲为什么要这么做，以及一块玻璃按钮从「平面假 3D」到「真玻璃块」改了哪些东西、为什么改。",
+      "en": "If UI is now mostly written by AI, it no longer has to live inside HTML and the DOM. We are building a Liquid Glass style 3D component library on three.js from scratch. This post is about why, and about what changed, and why, as one glass button went from \"fake 3D on a plane\" to a real block of glass."
+    },
+    "url": "/blogs/glassui-liquid-glass/",
+    "hasEn": true
+  },
+  {
     "slug": "sales-forecast-research",
     "date": "2026-10-02",
     "tags": [
