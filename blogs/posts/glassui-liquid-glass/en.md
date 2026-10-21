@@ -5,9 +5,9 @@ tags: concept, tech
 summary: If UI is now mostly written by AI, it no longer has to live inside HTML and the DOM. We are building a Liquid Glass style 3D component library on three.js from scratch. This post is about why, and about what changed, and why, as one glass button went from "fake 3D on a plane" to a real block of glass.
 ---
 
-Look at the result first: "Open the concept" in the corner is a complete sign-up form drawn inside a three.js canvas, with no DOM elements at all. The buttons are transparent glass blocks with real thickness, the colour glows from inside the glass, shadows fall on the panel, and the panel reflects the buttons. Drag to turn it and see the depth.
+Look at the result first: "Open the concept" in the corner is an editable sign-up form. Its visible interface is drawn inside a three.js canvas, with an IME proxy for text input. The buttons are transparent glass blocks with real thickness, the colour glows from inside the glass, shadows fall on the panel, and the panel reflects the buttons. Left-drag to pan, right-drag to rotate, and scroll to zoom.
 
-It is the first sample of **ThreeDUI**, the 3D UI framework we are building in the open ([github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI)). Below: why we are doing this, and how that glass was changed, round by round.
+It is the first sample of the open-source **ThreeDUI** framework ([github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI)). Below: why we are doing this, and how that glass was changed, round by round.
 
 ## Why draw UI inside 3D space
 
@@ -88,4 +88,4 @@ Finally the showcase elements were replaced with an actual sign-up form, and the
 
 ## Next
 
-The conclusions of these eleven rounds are in the framework's design document, and implementation is planned in three parts: a framework-agnostic core (node tree, styling, layout, events, text), the three.js render layer, and the Vue renderer with components. All of it is open at [github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI). Feedback is welcome, especially of the kind "this glass looks wrong here"; every improvement in this post came from exactly that.
+The lessons from these eleven rounds now live in the framework core, three.js renderer and Vue components. A [six-view application](/concepts/glassui-spatial/) tests this design language at business-app density. Code and documentation are open at [github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI). Feedback is welcome, especially of the kind "this glass looks wrong here"; every improvement in this post came from exactly that.

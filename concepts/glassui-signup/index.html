@@ -1,11 +1,14 @@
 <!doctype html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GlassUI · Liquid Glass 注册表单（真 3D）</title>
-  <style>html,body{background:#d9d4d2;height:100%;margin:0;overflow:hidden}canvas{display:block}#hud{color:#333;opacity:.7;pointer-events:none;font:12px/1.4 -apple-system,system-ui,sans-serif;position:fixed;bottom:10px;left:12px}</style>
-  <script type="module" crossorigin src="./assets/index-CO_taFg0.js"></script>
+  <title>ThreeDUI · 3D glass sign-up form</title>
+  <!-- no favicon request: a 404 would trip the visual harness's console-error gate -->
+  <link rel="icon" href="data:," />
+  <style>html,body{background:#d9d4d2;height:100%;margin:0;overflow:hidden}canvas{display:block}canvas:focus{outline:none}canvas:focus-visible{outline-offset:-2px;outline:2px solid #6b63f566}#hud{color:#333;opacity:.7;pointer-events:none;font:12px/1.4 -apple-system,system-ui,sans-serif;position:fixed;bottom:10px;left:12px}#hud.error{color:#b00020;opacity:1;white-space:pre-wrap;right:12px}</style>
+  <script>const params = new URLSearchParams(location.search); params.set('scene', 'signup'); if (params.has('preview')) params.set('hud', '0'); history.replaceState(null, "", location.pathname + "?" + params + location.hash);</script>
+  <script type="module" crossorigin src="./assets/playground-BJfx4oZy.js"></script>
 </head>
 <body>
   <div id="hud" class="hud"></div>

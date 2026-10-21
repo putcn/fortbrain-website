@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="从可输入的玻璃注册表单，到六视图业务工作空间：ThreeDUI 用 Vue 组件组织真实的 3D 界面，让图表、地图和仓储场景与日常操作共享空间。">
+<meta property="og:title" content="ThreeDUI 开源：让业务界面真正进入 3D 空间 · Fortbrain Blog">
+<meta property="og:description" content="从可输入的玻璃注册表单，到六视图业务工作空间：ThreeDUI 用 Vue 组件组织真实的 3D 界面，让图表、地图和仓储场景与日常操作共享空间。">
+<meta name="theme-color" content="#050b18">
+<link rel="canonical" href="https://fortbrain.ai/blogs/threedui-open-source/">
+<title>ThreeDUI 开源：让业务界面真正进入 3D 空间 · Fortbrain Blog</title>
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/css/sub.css">
+</head>
+<body class="sub sub-blog">
+<header class="topbar">
+  <a class="brand" href="/">Fortbrain</a>
+  <span class="site"><span lang="zh-CN">Blog</span><span lang="en">Blog</span></span>
+  <nav class="links">
+    <a href="/blogs/">Blog</a>
+    <a href="/concepts/">UX Sandbox</a>
+    <button id="langBtn" type="button" aria-label="Switch language"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+  </nav>
+</header>
+<main class="wrap">
+<a class="back" href="/blogs/"><span lang="zh-CN">← 全部文章</span><span lang="en">← All posts</span></a>
+<article class="article">
+  <header>
+    <div class="meta"><time datetime="2026-10-21">2026-10-21</time><span class="chip chip-concept"><span lang="zh-CN">概念</span><span lang="en">Concept</span></span><span class="chip chip-tech"><span lang="zh-CN">技术</span><span lang="en">Tech</span></span></div>
+    <h1><span lang="zh-CN">ThreeDUI 开源：让业务界面真正进入 3D 空间</span><span lang="en">ThreeDUI is open source: everyday interfaces in real 3D</span></h1>
+    <p class="lede"><span lang="zh-CN">从可输入的玻璃注册表单，到六视图业务工作空间：ThreeDUI 用 Vue 组件组织真实的 3D 界面，让图表、地图和仓储场景与日常操作共享空间。</span><span lang="en">From an editable glass sign-up form to a six-view workspace, ThreeDUI uses Vue components to put everyday controls, charts, maps and warehouse content in one 3D scene.</span></p>
+  </header>
+  <div class="body" lang="zh-CN">
+<p>我们已经把 <a href="https://github.com/putcn/ThreeDUI">ThreeDUI 开源</a>。它要解决的问题并不是把仓库做成尽可能逼真的数字孪生，而是让开发者像写 Vue 界面一样，把常用的控件、表单和业务视图放进三维空间。新增的深度应该帮助人理解数据之间的关系、找到当前操作的位置，而不只是给平面卡片加一点透视。</p>
+<p>现在可以直接打开两个演示：<a href="/concepts/glassui-signup/">可输入的注册表单</a>和<a href="/concepts/glassui-spatial/">六视图综合演示</a>。前者适合检查组件本身：点击输入框可以打字，左键拖动平移、右键拖动旋转、滚轮缩放，可以从不同角度看玻璃控件的厚度与光照。后者把订单、Dashboard、网络地图、仓储孪生、库存和设置放在同一个空间工作区；从总览聚焦到某个视图，图表、地图和场景内容与操作界面共享相机和空间位置。两个演示都使用示例数据。</p>
+<h2 id="_1">为什么需要第三个维度</h2>
+<p>传统网页擅长排版，却常常要把位置、层级和关联压成标签页与弹窗。ThreeDUI 的 <code>Space</code> 与 <code>Block</code> 让视图占据可理解的位置；聚焦一个视图时，镜头移动、邻近视图与场景内容仍然保留上下文。在仓储演示里，列表、路线、地图和库位模型是连续的工作流程，而不是六张互不相干的 2D 页面。</p>
+<p>这也给玻璃材质一个合理的用途。控件有真实几何、光照和投影；玻璃的透明度与层叠关系可以表达可操作对象与背景数据之间的距离。注册表单是这个设计语言的基础样张，综合演示则检验它能否承载实际业务密度。</p>
+<h2 id="_2">开发者如何使用</h2>
+<p>仓库提供 Vue 组件、布局与事件系统、文字输入和输入法支持、组件示例、完整演示、<a href="https://github.com/putcn/ThreeDUI/tree/main/docs">文档</a>以及供 coding agent 参考的 <a href="https://github.com/putcn/ThreeDUI/blob/main/.agents/skills/build-glassui/SKILL.md">skill</a>。<code>Surface</code> 定义界面所在层，<code>Space</code> 管理空间工作区，<code>Block</code> 组织可聚焦的业务视图。现阶段是仓库内的 pnpm workspace 包，尚未发布 npm 正式版本；可以克隆仓库运行演示，并在 workspace 中试用组件。</p>
+<p>我们会继续打磨性能、交互与视觉一致性。真正的检验标准不是某一张截图，而是开发者能否快速搭建、用户能否在有深度的界面里完成日常工作。</p>
+  </div>
+  <div class="body" lang="en">
+<p><a href="https://github.com/putcn/ThreeDUI">ThreeDUI is now open source</a>. Our goal is not the most photorealistic warehouse twin. It is to let developers build everyday interfaces in three-dimensional space with a workflow that feels like writing Vue. Depth should make relationships between data and actions easier to understand, rather than merely tilt a collection of flat cards.</p>
+<p>You can try two live examples: an <a href="/concepts/glassui-signup/">editable sign-up form</a> and a <a href="/concepts/glassui-spatial/">six-view application</a>. In the form, click a field and type; left-drag to pan, right-drag to rotate, and scroll to zoom. This makes the controls' real thickness and lighting inspectable. The application brings orders, dashboard, network map, warehouse twin, inventory and settings into one workspace. Move from the overview into a view while charts, maps and scene content keep their spatial context. Both examples use sample data.</p>
+<h2 id="what-the-third-dimension-adds">What the third dimension adds</h2>
+<p>Conventional web pages are excellent at layout, but often squeeze position, hierarchy and relationships into tabs and modal dialogs. ThreeDUI's <code>Space</code> and <code>Block</code> give views understandable positions. When a view receives focus, the camera moves while its neighbours and the shared scene preserve context. In the warehouse example, lists, routes, maps and locations form a connected workflow rather than six unrelated pages.</p>
+<p>Glass also has a job to do here. Controls have real geometry, lighting and shadows. Transparency and layering can express the distance between an actionable surface and the data behind it. The sign-up form establishes the visual language; the full application tests whether it can carry realistic business density.</p>
+<h2 id="building-with-it">Building with it</h2>
+<p>The repository includes Vue components, layout and events, text entry and IME support, component examples, a complete demo, <a href="https://github.com/putcn/ThreeDUI/tree/main/docs">documentation</a>, and an <a href="https://github.com/putcn/ThreeDUI/blob/main/.agents/skills/build-glassui/SKILL.md">agent skill</a>. <code>Surface</code> places an interface layer, <code>Space</code> manages a workspace, and <code>Block</code> groups a focusable view. These are currently pnpm workspace packages in the repository; no stable npm release has been published yet. Clone the repository to run the demos and try the components within the workspace.</p>
+<p>We will keep refining performance, interaction and visual consistency. The real test is whether developers can build quickly and people can finish ordinary tasks in an interface with depth.</p>
+  </div>
+  <aside class="concept-card">
+    <div class="eyebrow">UX Sandbox</div>
+    <b><span lang="zh-CN">ThreeDUI · 六视图空间业务系统</span><span lang="en">ThreeDUI · six-view spatial application</span></b>
+    <a class="btn" href="/concepts/glassui-spatial/index.html" target="_blank" rel="noopener"><span lang="zh-CN">打开实验 →</span><span lang="en">Open the experiment →</span></a>
+  </aside>
+</article>
+<nav class="pn"><span></span><a class="next" href="/blogs/glassui-liquid-glass/"><small><span lang="zh-CN">下一篇</span><span lang="en">Next</span></small><span lang="zh-CN">把 UI 画进 3D 空间：11 轮迭代下的精雕细琢</span><span lang="en">Drawing UI inside 3D space: eleven rounds of polish</span></a></nav>
+</main>
+<footer class="foot"><span lang="zh-CN">Fortbrain · 概念稿只用示例数据，不连任何真实服务</span><span lang="en">Fortbrain · Concepts use sample data only and talk to no real service</span> · <a href="/">fortbrain.ai</a></footer>
+<script type="module" src="/js/sub.js"></script>
+</body>
+</html>

@@ -1,5 +1,23 @@
 [
   {
+    "slug": "threedui-open-source",
+    "date": "2026-10-21",
+    "tags": [
+      "concept",
+      "tech"
+    ],
+    "title": {
+      "zh": "ThreeDUI 开源：让业务界面真正进入 3D 空间",
+      "en": "ThreeDUI is open source: everyday interfaces in real 3D"
+    },
+    "summary": {
+      "zh": "从可输入的玻璃注册表单，到六视图业务工作空间：ThreeDUI 用 Vue 组件组织真实的 3D 界面，让图表、地图和仓储场景与日常操作共享空间。",
+      "en": "From an editable glass sign-up form to a six-view workspace, ThreeDUI uses Vue components to put everyday controls, charts, maps and warehouse content in one 3D scene."
+    },
+    "url": "/blogs/threedui-open-source/",
+    "hasEn": true
+  },
+  {
     "slug": "glassui-liquid-glass",
     "date": "2026-10-08",
     "tags": [

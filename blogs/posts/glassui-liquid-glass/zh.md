@@ -6,9 +6,9 @@ summary: UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。�
 concept: glassui-signup
 ---
 
-先看结果：右上角「打开实验」是一张完整的注册表单，画在 three.js 的 canvas 里，没有一个 DOM 元素。按钮是有厚度的透明玻璃块，颜色从玻璃内部发出来，影子投在底板上，底板倒映着按钮。拖一下可以转过来看厚度。
+先看结果：右上角「打开实验」是一张可输入的注册表单，可见界面画在 three.js 的 canvas 里，文字输入使用输入法代理。按钮是有厚度的透明玻璃块，颜色从玻璃内部发出来，影子投在底板上，底板倒映着按钮。左键拖动平移、右键拖动旋转、滚轮缩放，可以从不同视角看厚度。
 
-这是我们正在开源的 3D UI 框架 **ThreeDUI** 的第一个样张（[github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI)）。下面讲为什么做它，以及这块玻璃是怎么一步步改出来的。
+这是开源 3D UI 框架 **ThreeDUI** 的第一个样张（[github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI)）。下面讲为什么做它，以及这块玻璃是怎么一步步改出来的。
 
 ## 为什么把 UI 画进 3D 空间
 
@@ -89,4 +89,4 @@ concept: glassui-signup
 
 ## 接下来
 
-这十一轮的结论已经写进了框架的设计文档，实现计划分三期：框架无关的内核（节点树、样式、布局、事件、文字），three.js 渲染层，Vue 渲染器与组件。全部开源在 [github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI)，欢迎来提意见——尤其是那种「这块玻璃哪里看着不对」的意见，这篇文章里每一轮进步都来自这种意见。
+这十一轮的结论已经进入框架的内核、three.js 渲染层和 Vue 组件。现在还有[六视图综合演示](/concepts/glassui-spatial/)来检验这套界面在真实业务密度下的表现。代码与文档都在 [github.com/putcn/ThreeDUI](https://github.com/putcn/ThreeDUI)，欢迎来提意见——尤其是那种「这块玻璃哪里看着不对」的意见，这篇文章里每一轮进步都来自这种意见。

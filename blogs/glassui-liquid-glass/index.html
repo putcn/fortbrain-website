@@ -31,8 +31,8 @@
     <p class="lede"><span lang="zh-CN">UI 既然主要由 AI 来写，就不必再被 HTML 和 DOM 限制。我们在 three.js 里从零做一套 Liquid Glass 风格的 3D 组件库，这篇讲为什么要这么做，以及一块玻璃按钮从「平面假 3D」到「真玻璃块」改了哪些东西、为什么改。</span><span lang="en">If UI is now mostly written by AI, it no longer has to live inside HTML and the DOM. We are building a Liquid Glass style 3D component library on three.js from scratch. This post is about why, and about what changed, and why, as one glass button went from &quot;fake 3D on a plane&quot; to a real block of glass.</span></p>
   </header>
   <div class="body" lang="zh-CN">
-<p>先看结果：右上角「打开实验」是一张完整的注册表单，画在 three.js 的 canvas 里，没有一个 DOM 元素。按钮是有厚度的透明玻璃块，颜色从玻璃内部发出来，影子投在底板上，底板倒映着按钮。拖一下可以转过来看厚度。</p>
-<p>这是我们正在开源的 3D UI 框架 <strong>ThreeDUI</strong> 的第一个样张（<a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>）。下面讲为什么做它，以及这块玻璃是怎么一步步改出来的。</p>
+<p>先看结果：右上角「打开实验」是一张可输入的注册表单，可见界面画在 three.js 的 canvas 里，文字输入使用输入法代理。按钮是有厚度的透明玻璃块，颜色从玻璃内部发出来，影子投在底板上，底板倒映着按钮。左键拖动平移、右键拖动旋转、滚轮缩放，可以从不同视角看厚度。</p>
+<p>这是开源 3D UI 框架 <strong>ThreeDUI</strong> 的第一个样张（<a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>）。下面讲为什么做它，以及这块玻璃是怎么一步步改出来的。</p>
 <h2 id="ui-3d">为什么把 UI 画进 3D 空间</h2>
 <p>四个原因，按重要性排：</p>
 <ol>
@@ -90,11 +90,11 @@
 <p><img alt="注册表单" src="07-signup.jpg" /></p>
 <p>最后把展示用的元素换成一张真的注册表单，剩下的几轮都是精致度：侧面曲线再压平一些、开关的发光分界精确对到滑块中心、内边距统一成一套 token（边距 26、图标 28、间距 14、组内居中）、Apple 标志换成矢量路径、checkbox 做成一个 44 pt 的小玻璃按钮。这些数字直接成了组件库里 Button / Input 的默认值。</p>
 <h2 id="_6">接下来</h2>
-<p>这十一轮的结论已经写进了框架的设计文档，实现计划分三期：框架无关的内核（节点树、样式、布局、事件、文字），three.js 渲染层，Vue 渲染器与组件。全部开源在 <a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>，欢迎来提意见——尤其是那种「这块玻璃哪里看着不对」的意见，这篇文章里每一轮进步都来自这种意见。</p>
+<p>这十一轮的结论已经进入框架的内核、three.js 渲染层和 Vue 组件。现在还有<a href="/concepts/glassui-spatial/">六视图综合演示</a>来检验这套界面在真实业务密度下的表现。代码与文档都在 <a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>，欢迎来提意见——尤其是那种「这块玻璃哪里看着不对」的意见，这篇文章里每一轮进步都来自这种意见。</p>
   </div>
   <div class="body" lang="en">
-<p>Look at the result first: "Open the concept" in the corner is a complete sign-up form drawn inside a three.js canvas, with no DOM elements at all. The buttons are transparent glass blocks with real thickness, the colour glows from inside the glass, shadows fall on the panel, and the panel reflects the buttons. Drag to turn it and see the depth.</p>
-<p>It is the first sample of <strong>ThreeDUI</strong>, the 3D UI framework we are building in the open (<a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>). Below: why we are doing this, and how that glass was changed, round by round.</p>
+<p>Look at the result first: "Open the concept" in the corner is an editable sign-up form. Its visible interface is drawn inside a three.js canvas, with an IME proxy for text input. The buttons are transparent glass blocks with real thickness, the colour glows from inside the glass, shadows fall on the panel, and the panel reflects the buttons. Left-drag to pan, right-drag to rotate, and scroll to zoom.</p>
+<p>It is the first sample of the open-source <strong>ThreeDUI</strong> framework (<a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>). Below: why we are doing this, and how that glass was changed, round by round.</p>
 <h2 id="why-draw-ui-inside-3d-space">Why draw UI inside 3D space</h2>
 <p>Four reasons, in order of importance:</p>
 <ol>
@@ -152,15 +152,15 @@
 <p><img alt="The sign-up form" src="07-signup.jpg" /></p>
 <p>Finally the showcase elements were replaced with an actual sign-up form, and the remaining rounds were refinement: flatter side curves, the switch's glow boundary exactly at the knob's centre, one set of padding tokens (26 inset, 28 icon, 14 gap, group centring), a vector Apple mark, and a checkbox that is a 44 pt glass button. Those numbers became the defaults of the library's Button and Input.</p>
 <h2 id="next">Next</h2>
-<p>The conclusions of these eleven rounds are in the framework's design document, and implementation is planned in three parts: a framework-agnostic core (node tree, styling, layout, events, text), the three.js render layer, and the Vue renderer with components. All of it is open at <a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>. Feedback is welcome, especially of the kind "this glass looks wrong here"; every improvement in this post came from exactly that.</p>
+<p>The lessons from these eleven rounds now live in the framework core, three.js renderer and Vue components. A <a href="/concepts/glassui-spatial/">six-view application</a> tests this design language at business-app density. Code and documentation are open at <a href="https://github.com/putcn/ThreeDUI">github.com/putcn/ThreeDUI</a>. Feedback is welcome, especially of the kind "this glass looks wrong here"; every improvement in this post came from exactly that.</p>
   </div>
   <aside class="concept-card">
     <div class="eyebrow">UX Sandbox</div>
-    <b><span lang="zh-CN">GlassUI · 真 3D 的 Liquid Glass 注册表单</span><span lang="en">GlassUI · a real-3D Liquid Glass sign-up form</span></b>
+    <b><span lang="zh-CN">ThreeDUI · 可交互的 3D 玻璃注册表单</span><span lang="en">ThreeDUI · interactive 3D glass sign-up form</span></b>
     <a class="btn" href="/concepts/glassui-signup/index.html" target="_blank" rel="noopener"><span lang="zh-CN">打开实验 →</span><span lang="en">Open the experiment →</span></a>
   </aside>
 </article>
-<nav class="pn"><span></span><a class="next" href="/blogs/sales-forecast-research/"><small><span lang="zh-CN">下一篇</span><span lang="en">Next</span></small><span lang="zh-CN">销量预测：在真实门店数据上，我们试了什么、准到什么程度</span><span lang="en">Sales forecasting: what we tried on real store data, and how accurate it got</span></a></nav>
+<nav class="pn"><a class="prev" href="/blogs/threedui-open-source/"><small><span lang="zh-CN">上一篇</span><span lang="en">Previous</span></small><span lang="zh-CN">ThreeDUI 开源：让业务界面真正进入 3D 空间</span><span lang="en">ThreeDUI is open source: everyday interfaces in real 3D</span></a><a class="next" href="/blogs/sales-forecast-research/"><small><span lang="zh-CN">下一篇</span><span lang="en">Next</span></small><span lang="zh-CN">销量预测：在真实门店数据上，我们试了什么、准到什么程度</span><span lang="en">Sales forecasting: what we tried on real store data, and how accurate it got</span></a></nav>
 </main>
 <footer class="foot"><span lang="zh-CN">Fortbrain · 概念稿只用示例数据，不连任何真实服务</span><span lang="en">Fortbrain · Concepts use sample data only and talk to no real service</span> · <a href="/">fortbrain.ai</a></footer>
 <script type="module" src="/js/sub.js"></script>
