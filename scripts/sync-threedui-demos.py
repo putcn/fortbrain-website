@@ -14,7 +14,7 @@ from pathlib import Path
 def concept_html(source: str, scene: str, script_path: str) -> str:
     params = "params.set('scene', '%s');" % scene
     if scene == 'spatial':
-        params += " if (!params.has('stage')) params.set('stage', 'overview');"
+        params += " params.set('stage', 'login'); params.delete('focus');"
     params += " if (params.has('preview')) params.set('hud', '0');"
     title = {'signup': 'ThreeDUI · 3D glass sign-up form',
              'spatial': 'ThreeDUI · six-view spatial application',
@@ -31,7 +31,6 @@ def concept_html(source: str, scene: str, script_path: str) -> str:
 def demo_index_html(source: str) -> str:
     links = {
         'href="./demos.html"': 'href="./"',
-        'href="./?scene=spatial&amp;stage=overview"': 'href="../glassui-spatial/?stage=overview"',
         'href="./?scene=spatial"': 'href="../glassui-spatial/?stage=login"',
         'href="./?scene=gallery"': 'href="../glassui-gallery/"',
         'href="./?scene=signup"': 'href="../glassui-signup/"',
