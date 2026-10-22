@@ -22,7 +22,7 @@ open http://127.0.0.1:8931/
 - 文章：`blogs/posts/<slug>/zh.md`（必须）+ `en.md`（可选），头信息 `title / date / tags(concept|tech) / summary / concept(可选, concepts.json 里的 id)`。
 - 概念：往 `concepts/concepts.json` 加一条（id / file / date / status(final|lab|early) / live / title / summary），概念页末尾加 `<script src="preview.js"></script>`。
 - 生成并提交：`python3 scripts/build-site.py`（`--check` 只校验）。产物 `blogs/**`、`concepts/index.html` 进仓库。
-- 更新 ThreeDUI 两个概念页：先在相邻的 `ThreeDUI` 仓库运行 `pnpm playground:build`，再运行 `python3 scripts/sync-threedui-demos.py`。脚本将最新的可输入注册表单和六视图演示同步到 `concepts/`，两个页面共用一份静态 JS 资源。
+- 更新 ThreeDUI 四个概念页：先在相邻的 `ThreeDUI` 仓库运行 `pnpm playground:build`，再运行 `python3 scripts/sync-threedui-demos.py`。脚本同步双语演示导航、组件 Gallery、可输入注册表单和六视图演示；三个 3D 页面共用一份静态 JS 资源。
 
 ## 测试
 
